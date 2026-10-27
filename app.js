@@ -1,4 +1,4 @@
-"use strict";
+
 
 /* ==========================================
    CRPF SMART MESS MANAGER
