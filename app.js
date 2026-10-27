@@ -1,4 +1,4 @@
-```javascript
+
 (() => {
   'use strict';
 
@@ -1217,4 +1217,4 @@
   render();
 
 })();
-```
+
