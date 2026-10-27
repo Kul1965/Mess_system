@@ -2,26 +2,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRPF Smart Mess Manager</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRPF Smart Mess Manager</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <header class="top">
   <div>
+    <small>MESS MANAGEMENT SYSTEM</small>
     <h1>🛡️ CRPF SMART MESS MANAGER</h1>
-    <p>Members • Meals • Jawan Accounts</p>
+    <p>Members · Ration Store · Recipes · Meals · Accounts</p>
   </div>
-  <button class="btn green" id="addTop">+ Add Member</button>
+  <button class="btn" id="quickAdd">+ Add Member</button>
 </header>
 
-<nav class="nav">
+<nav>
   <button class="tab active" data-page="dashboard">Dashboard</button>
   <button class="tab" data-page="members">Members</button>
-  <button class="tab" data-page="meals">Meals</button>
-  <button class="tab" data-page="accounts">Jawan Accounts</button>
+  <button class="tab" data-page="store">Ration Store</button>
+  <button class="tab" data-page="recipes">Recipes</button>
+  <button class="tab" data-page="meals">Meals & Orders</button>
+  <button class="tab" data-page="accounts">Accounts</button>
   <button class="tab" data-page="backup">Backup</button>
 </nav>
 
@@ -29,38 +32,184 @@
 
 <section id="dashboard" class="page active">
   <h2>Dashboard</h2>
+
   <div class="stats">
-    <div class="stat">Active Members <b id="activeCount">0</b></div>
-    <div class="stat">Meal Charges <b id="chargeTotal">Rs 0.00</b></div>
-    <div class="stat">Paid <b id="paidTotal">Rs 0.00</b></div>
-    <div class="stat">Unpaid <b id="dueTotal">Rs 0.00</b></div>
+    <div class="panel">Active members<b id="dMembers">0</b></div>
+    <div class="panel">Stock value<b id="dStock">Rs 0.00</b></div>
+    <div class="panel">Meal charges<b id="dCharges">Rs 0.00</b></div>
+    <div class="panel">Unpaid due<b id="dDue">Rs 0.00</b></div>
   </div>
+
   <div class="panel">
-    <h3>Member Accounts</h3>
-    <div class="table-scroll">
+    <h3>Member balances</h3>
+    <div class="scroll">
       <table>
-        <thead><tr><th>Member</th><th>Charges</th><th>Advance</th><th>Paid</th><th>Unpaid</th><th>Action</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Charges</th>
+            <th>Advance</th>
+            <th>Paid</th>
+            <th>Due</th>
+          </tr>
+        </thead>
         <tbody id="dashRows"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="notice">
+    Data is saved in this browser on this device.
+    Download backups regularly.
+  </p>
+</section>
+
+<section id="members" class="page">
+  <div class="head">
+    <div>
+      <h2>Members</h2>
+      <p>Member profile, photo and connected account.</p>
+    </div>
+    <button class="btn" id="addMember">+ Add Member</button>
+  </div>
+
+  <input id="memberSearch" class="search"
+    placeholder="Search name, ID, rank or phone">
+
+  <div id="memberCards" class="cards"></div>
+  <p id="noMembers">No members added yet.</p>
+</section>
+
+<section id="store" class="page">
+  <h2>Ration Store</h2>
+
+  <div class="panel">
+    <h3>Add stock / purchase</h3>
+
+    <form id="itemForm" class="grid">
+      <input type="hidden" id="itemId">
+
+      <label>Item name
+        <input id="itemName" required placeholder="Rice, dal, oil">
+      </label>
+
+      <label>Base unit
+        <select id="itemUnit">
+          <option value="g">Gram (g)</option>
+          <option value="ml">Millilitre (ml)</option>
+          <option value="pcs">Piece (pcs)</option>
+        </select>
+      </label>
+
+      <label>Quantity in base unit
+        <input id="itemQty" type="number" min="0.001"
+          step="0.001" required placeholder="25 kg = 25000 g">
+      </label>
+
+      <label>Total purchase cost (Rs)
+        <input id="itemCost" type="number" min="0"
+          step="0.01" required>
+      </label>
+
+      <button class="btn" type="submit">Save Purchase / Stock</button>
+    </form>
+
+    <p class="muted">
+      Example: 10 kg rice = 10000 g.
+      2 litres oil = 2000 ml.
+      Enter the total cost for the quantity purchased.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h3>Current stock</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Available</th>
+            <th>Average rate / unit</th>
+            <th>Stock value</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="storeRows"></tbody>
       </table>
     </div>
   </div>
 </section>
 
-<section id="members" class="page">
-  <div class="heading">
-    <h2>Members</h2>
-    <button class="btn green" id="addMember">+ Add Member</button>
+<section id="recipes" class="page">
+  <h2>Recipes</h2>
+
+  <div class="panel">
+    <h3>Create recipe (per person)</h3>
+
+    <form id="recipeForm" class="grid">
+      <input type="hidden" id="recipeId">
+
+      <label>Recipe name
+        <input id="recipeName" required placeholder="Dal Bhat">
+      </label>
+
+      <label>Notes
+        <input id="recipeNotes" placeholder="Optional">
+      </label>
+
+      <div class="wide">
+        <div class="head">
+          <h3>Ingredients per person</h3>
+          <button class="btn light" type="button" id="addIng">
+            + Ingredient
+          </button>
+        </div>
+        <div id="ingredients"></div>
+      </div>
+
+      <div class="wide total">
+        Cost per person: <b id="recipeCost">Rs 0.00</b>
+      </div>
+
+      <button class="btn" type="submit">Save Recipe</button>
+      <button class="btn light" type="button" id="clearRecipe">
+        Clear
+      </button>
+    </form>
   </div>
-  <input class="search" id="search" placeholder="Search name, ID, rank or phone">
-  <div id="memberList" class="member-grid"></div>
-  <div id="empty" class="empty">No members yet. Tap Add Member.</div>
+
+  <div class="panel">
+    <h3>Saved recipes</h3>
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Recipe</th>
+            <th>Ingredients</th>
+            <th>Cost/person</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="recipeRows"></tbody>
+      </table>
+    </div>
+  </div>
 </section>
 
 <section id="meals" class="page">
-  <h2>Meals</h2>
-  <form id="mealForm" class="panel form-grid">
-    <label>Date<input type="date" id="mealDate" required></label>
-    <label>Meal Type
+  <h2>Meals & Orders</h2>
+
+  <p class="muted">
+    Select a recipe and members. Confirming an order deducts stock
+    and posts meal charges to the selected members' accounts.
+  </p>
+
+  <form id="mealForm" class="panel grid">
+    <label>Date
+      <input id="mealDate" type="date" required>
+    </label>
+
+    <label>Meal type
       <select id="mealType">
         <option>Breakfast</option>
         <option>Lunch</option>
@@ -69,19 +218,61 @@
         <option>Afternoon Tea</option>
         <option>Evening Tea</option>
         <option>Snacks</option>
-        <option>Other</option>
       </select>
     </label>
-    <label>Member<select id="mealMember" required></select></label>
-    <label>Charge (Rs)<input id="mealCharge" type="number" min="0.01" step="0.01" required></label>
-    <label class="wide">Food Details<input id="mealDetails" placeholder="Rice, dal, vegetables"></label>
-    <button class="btn green wide" type="submit">Confirm Meal & Add Charge</button>
+
+    <label>Recipe
+      <select id="mealRecipe" required></select>
+    </label>
+
+    <label>Servings per member
+      <input id="servings" type="number" min="1"
+        step="1" value="1" required>
+    </label>
+
+    <div class="wide">
+      <div class="head">
+        <h3>Select members</h3>
+        <div>
+          <button class="link" type="button" id="selectAll">
+            Select all
+          </button>
+          <button class="link" type="button" id="clearAll">
+            Clear
+          </button>
+        </div>
+      </div>
+      <div id="mealMembers" class="checks"></div>
+    </div>
+
+    <div id="preview" class="total wide">
+      Select recipe and members.
+    </div>
+
+    <label class="wide">Order note
+      <input id="mealNote" placeholder="Optional">
+    </label>
+
+    <button class="btn wide" type="submit">
+      Confirm Order · Deduct Stock · Post Charges
+    </button>
   </form>
+
   <div class="panel">
-    <h3>Meal History</h3>
-    <div class="table-scroll">
+    <h3>Confirmed orders</h3>
+    <div class="scroll">
       <table>
-        <thead><tr><th>Date</th><th>Member</th><th>Meal</th><th>Details</th><th>Charge</th><th>Action</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Meal</th>
+            <th>Recipe</th>
+            <th>Members</th>
+            <th>Per person</th>
+            <th>Total</th>
+            <th>Action</th>
+          </tr>
+        </thead>
         <tbody id="mealRows"></tbody>
       </table>
     </div>
@@ -90,19 +281,45 @@
 
 <section id="accounts" class="page">
   <h2>Jawan Accounts</h2>
+  <p class="muted">
+    Meal charges are posted automatically.
+    Mess advance is account credit.
+  </p>
+
+  <input id="accountSearch" class="search"
+    placeholder="Search member">
+
   <div class="panel">
-    <div class="table-scroll">
+    <div class="scroll">
       <table>
-        <thead><tr><th>Member</th><th>Charges</th><th>Advance</th><th>Paid</th><th>Unpaid</th><th>Action</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Charges</th>
+            <th>Advance</th>
+            <th>Payments</th>
+            <th>Unpaid Due</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
         <tbody id="accountRows"></tbody>
       </table>
     </div>
   </div>
+
   <div class="panel">
-    <h3>Account Ledger</h3>
-    <div class="table-scroll">
+    <h3>Transaction ledger</h3>
+    <div class="scroll">
       <table>
-        <thead><tr><th>Date</th><th>Member</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Member</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
         <tbody id="ledgerRows"></tbody>
       </table>
     </div>
@@ -111,107 +328,145 @@
 
 <section id="backup" class="page">
   <h2>Backup & Restore</h2>
+
   <div class="panel">
-    <button class="btn green" id="backupBtn">Download JSON Backup</button>
-    <label class="btn pale">Restore Backup
-      <input id="restore" type="file" accept=".json,application/json" hidden>
+    <button class="btn" id="backupBtn">
+      Download JSON Backup
+    </button>
+
+    <label class="btn light">
+      Restore Backup
+      <input id="restore" type="file"
+        accept=".json,application/json" hidden>
     </label>
+
+    <button class="btn light" id="csvBtn">
+      Export Account CSV
+    </button>
   </div>
 </section>
 
 </main>
 
 <dialog id="memberDialog">
-<form id="memberForm">
-  <div class="dialoghead">
-    <h2 id="formTitle">Add Member</h2>
-    <button type="button" class="close" id="closeForm">✕</button>
-  </div>
+  <form id="memberForm">
+    <div class="head">
+      <h2 id="memberTitle">Add Member</h2>
+      <button class="x" type="button" id="closeMember">✕</button>
+    </div>
 
-  <input id="editId" type="hidden">
+    <input type="hidden" id="memberId">
 
-  <div class="photo-row">
-    <div id="photoPreview" class="photo-preview">PHOTO</div>
-    <label>Member Photo
-      <input id="photo" type="file" accept="image/*">
-    </label>
-    <button type="button" class="btn pale" id="removePhoto">Remove Photo</button>
-  </div>
+    <div class="photoarea">
+      <div id="photoPreview" class="bigphoto">PHOTO</div>
+      <div>
+        <label class="btn light">
+          Choose Photo
+          <input id="photoInput" type="file" accept="image/*" hidden>
+        </label>
+        <button class="link" id="removePhoto" type="button">
+          Remove Photo
+        </button>
+      </div>
+    </div>
 
-  <div class="form-grid">
-    <label>Service / Member ID *
-      <input id="serviceId" required placeholder="CRPF-001">
-    </label>
-    <label>Full Name *
-      <input id="name" required placeholder="Member full name">
-    </label>
-    <label>Rank
-      <select id="rank">
-        <option>Constable</option>
-        <option>Head Constable</option>
-        <option>ASI</option>
-        <option>SI</option>
-        <option>Inspector</option>
-        <option>Other</option>
-      </select>
-    </label>
-    <label>Mobile Number
-      <input id="phone" type="tel" placeholder="+97798XXXXXXXX">
-    </label>
-    <label>Mess Advance (Rs)
-      <input id="advance" type="number" min="0" step="0.01" value="0">
-    </label>
-    <label>Status
-      <select id="status">
-        <option>Active</option>
-        <option>Transferred</option>
-        <option>Inactive</option>
-      </select>
-    </label>
-    <label>Joining Date<input id="joining" type="date"></label>
-    <label class="wide">Notes<textarea id="notes" rows="2"></textarea></label>
-  </div>
+    <div class="grid">
+      <label>Service / Member ID *
+        <input id="serviceId" required>
+      </label>
 
-  <div class="dialog-actions">
-    <button type="button" class="btn pale" id="cancelForm">Cancel</button>
-    <button type="submit" class="btn green">Save Member</button>
-  </div>
-</form>
+      <label>Full name *
+        <input id="fullName" required>
+      </label>
+
+      <label>Rank
+        <select id="rank">
+          <option>Constable</option>
+          <option>Head Constable</option>
+          <option>ASI</option>
+          <option>SI</option>
+          <option>Inspector</option>
+          <option>Other</option>
+        </select>
+      </label>
+
+      <label>Phone with country code
+        <input id="phone" type="tel" placeholder="+977...">
+      </label>
+
+      <label>Mess advance received (Rs)
+        <input id="advance" type="number" min="0"
+          step="0.01" value="0">
+      </label>
+
+      <label>Status
+        <select id="status">
+          <option>Active</option>
+          <option>Transferred</option>
+          <option>Inactive</option>
+        </select>
+      </label>
+
+      <label>Joining date
+        <input id="joining" type="date">
+      </label>
+
+      <label class="wide">Notes
+        <textarea id="notes" rows="2"></textarea>
+      </label>
+    </div>
+
+    <p id="advanceHelp" class="muted"></p>
+    <div id="advanceInfo" class="total"></div>
+
+    <div class="actions right">
+      <button class="btn light" id="cancelMember" type="button">
+        Cancel
+      </button>
+      <button class="btn" type="submit">Save Member</button>
+    </div>
+  </form>
 </dialog>
 
 <dialog id="profileDialog">
-  <div class="dialoghead">
-    <h2 id="profileName">Member Profile</h2>
-    <button class="close" id="closeProfile">✕</button>
-  </div>
-  <div id="profileContent"></div>
-  <div class="dialog-actions">
-    <button class="btn pale" id="profileWhats">WhatsApp</button>
-    <button class="btn pale" id="profileEdit">Edit Profile</button>
-    <button class="btn green" id="profileDone">Done</button>
+  <div id="profileCard"></div>
+  <div class="actions right">
+    <button class="btn light" id="profileWhats">WhatsApp</button>
+    <button class="btn light" id="profileEdit">Edit Profile</button>
+    <button class="btn" id="profileClose">Close</button>
   </div>
 </dialog>
 
 <dialog id="payDialog">
-<form id="payForm">
-  <div class="dialoghead">
-    <h2>Record Payment</h2>
-    <button type="button" class="close" id="closePay">✕</button>
-  </div>
-  <input id="payId" type="hidden">
-  <p id="payInfo"></p>
-  <label>Amount Received (Rs)
-    <input id="payAmount" type="number" min="0.01" step="0.01" required>
-  </label>
-  <label>Payment Note<input id="payNote" placeholder="Cash / receipt reference"></label>
-  <div class="dialog-actions">
-    <button type="button" class="btn pale" id="cancelPay">Cancel</button>
-    <button type="submit" class="btn green">Save Payment</button>
-  </div>
-</form>
+  <form id="payForm">
+    <div class="head">
+      <h2 id="payTitle">Record Payment</h2>
+      <button class="x" id="closePay" type="button">✕</button>
+    </div>
+
+    <input id="payMemberId" type="hidden">
+    <p id="payInfo" class="muted"></p>
+
+    <label>Amount (Rs)
+      <input id="payAmount" type="number" min="0.01"
+        step="0.01" required>
+    </label>
+
+    <label>Note
+      <input id="payNote" placeholder="Cash / receipt reference">
+    </label>
+
+    <div class="actions right">
+      <button class="btn light" id="cancelPay" type="button">
+        Cancel
+      </button>
+      <button class="btn" type="submit">Save</button>
+    </div>
+  </form>
 </dialog>
 
 <div id="toast" class="toast"></div>
+
 <script src="app.js"></script>
 </body>
 </html>
