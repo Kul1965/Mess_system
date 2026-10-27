@@ -1631,3 +1631,107 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+/* ==========================================
+   FIX: MEMBER UNIT FIELD + STORE DELETE
+   Paste at the very end of app.js
+   ========================================== */
+
+(function addUnitAndStoreDeleteFix() {
+  const form = document.getElementById("memberForm");
+
+  if (form && !document.getElementById("memberUnit")) {
+    const label = document.createElement("label");
+    label.textContent = "Unit";
+
+    const input = document.createElement("input");
+    input.id = "memberUnit";
+    input.name = "unit";
+    input.type = "text";
+    input.placeholder = "Enter Unit";
+    input.autocomplete = "off";
+
+    label.appendChild(input);
+
+    const notes = document.getElementById("notes");
+    const notesLabel = notes ? notes.closest("label") : null;
+
+    if (notesLabel && notesLabel.parentNode) {
+      notesLabel.parentNode.insertBefore(label, notesLabel);
+    } else {
+      form.appendChild(label);
+    }
+  }
+
+  if (typeof openMemberDialog === "function") {
+    const originalOpenMemberDialog = openMemberDialog;
+
+    openMemberDialog = function (memberId = "") {
+      originalOpenMemberDialog(memberId);
+
+      const input = document.getElementById("memberUnit");
+      if (!input) return;
+
+      const member = memberId
+        ? db.members.find(m => m.id === memberId)
+        : null;
+
+      input.value = member ? (member.unit || "") : "";
+    };
+  }
+
+  const memberForm = document.getElementById("memberForm");
+
+  if (memberForm) {
+    memberForm.addEventListener("submit", function () {
+      setTimeout(function () {
+        const id = document.getElementById("memberId")?.value;
+        const input = document.getElementById("memberUnit");
+        const member = id ? db.members.find(m => m.id === id) : null;
+
+        if (member && input) {
+          member.unit = input.value.trim();
+          saveData();
+          renderAll();
+        }
+      }, 0);
+    });
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest(
+      '[data-action="delete-item"]'
+    );
+
+    if (!button) return;
+
+    const item = db.items.find(i => i.id === button.dataset.id);
+    if (!item) return;
+
+    const usedInRecipe = db.recipes.some(recipe =>
+      (recipe.ingredients || []).some(ing => ing.itemId === item.id)
+    );
+
+    const usedInMeal = db.meals.some(meal =>
+      (meal.ration || []).some(line => line.itemId === item.id)
+    );
+
+    if (usedInRecipe || usedInMeal) {
+      alert(
+        "Ye item recipe ya meal history mein istemal hua hai. " +
+        "History bachane ke liye ise delete nahi kiya ja sakta."
+      );
+      return;
+    }
+
+    if (!confirm('Kya "' + item.name + '" aur uski purchase history delete karein?')) {
+      return;
+    }
+
+    db.items = db.items.filter(i => i.id !== item.id);
+
+    if (saveData()) {
+      renderAll();
+      showToast("Item deleted.");
+    }
+  });
+})();
