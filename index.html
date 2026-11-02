@@ -383,6 +383,21 @@ td{
       </div>
 
       <div class="panel">
+        <h3>🟡 Low Stock – Purchase Items</h3>
+        <div id="lowStockItems" class="empty">No low-stock items</div>
+        <p style="margin-top:12px"><a href="purchases.html" style="display:inline-block;background:#087b45;color:#fff;text-decoration:none;padding:10px 14px;border-radius:7px;font-weight:bold">🛒 Open Purchase Items</a></p>
+      </div>
+
+      <div class="panel">
+        <h3>🛒 Recent Purchases</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+          <tbody id="recentPurchases"><tr><td colspan="4" class="no-data">No purchases available</td></tr></tbody></table>
+        </div>
+        <p style="margin-top:12px"><a href="purchases.html" style="color:#55e5a0;font-weight:bold">View all purchases →</a></p>
+      </div>
+
+      <div class="panel">
         <h3>🔄 Recent Transactions</h3>
         <div class="table-wrap">
           <table>
@@ -524,6 +539,17 @@ function loadDashboard() {
   set("normalStock",ration.length-low.length);
   set("lowStock",low.length);
   set("totalStock",ration.length);
+  const lowBox=document.getElementById("lowStockItems");
+  if(lowBox){
+    lowBox.innerHTML=low.length?low.map(item=>`
+      <div class="stock-row"><span>${safe(item.name)} · ${safe(item.quantity)} ${safe(item.unit)}</span>
+      <a href="purchases.html" style="color:#55e5a0;font-weight:bold;text-decoration:none">Purchase</a></div>`).join(""):"<div class='empty'>All ration items are above minimum stock.</div>";
+  }
+  const purchaseRows=document.getElementById("recentPurchases");
+  if(purchaseRows){
+    purchaseRows.innerHTML=purchases.length?purchases.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).slice(0,5).map(p=>`
+      <tr><td>${safe(p.date||"")}</td><td>${safe(p.itemName||"")}</td><td>${safe(p.quantity)} ${safe(p.unit||"")}</td><td>${money(p.total||p.amount||0)}</td></tr>`).join(""):"<tr><td colspan='4' class='no-data'>No purchases available</td></tr>";
+  }
   set("collection",money(collection));
   set("balanceExpenses",money(totalExpenses));
   set("dues",money(dues));
