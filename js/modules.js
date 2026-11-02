@@ -50,7 +50,7 @@ function render(){
     let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
-      const action=(cfg.key==="ration"&&isLowStock(x)?'<a class="btn" style="background:#e83e49;color:#fff" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a> ':'')+
+      const action=(cfg.key==="ration"&&isLowStock(x)?'<a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a> ':'')+
         '<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>';
       return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
