@@ -511,7 +511,7 @@ function loadDashboard() {
   );
 
   const low = ration.filter(r =>
-    Number(r.quantity || 0) <= Number(r.minimum || r.minStock || 0)
+    Number(r.quantity || 0) <= Number(r.minimum ?? r.minStock ?? 0)
   );
 
   const totalPurchases = purchases.reduce((sum,p) =>
@@ -543,7 +543,7 @@ function loadDashboard() {
   if(lowBox){
     lowBox.innerHTML=low.length?low.map(item=>`
       <div class="stock-row"><span>${safe(item.name)} · ${safe(item.quantity)} ${safe(item.unit)}</span>
-      <a href="purchases.html" style="color:#55e5a0;font-weight:bold;text-decoration:none">Purchase</a></div>`).join(""):"<div class='empty'>All ration items are above minimum stock.</div>";
+      <a href="purchases.html?item=${encodeURIComponent(item.id || item.name)}" style="color:#55e5a0;font-weight:bold;text-decoration:none">Purchase</a></div>`).join(""):"<div class='empty'>All ration items are above minimum stock.</div>";
   }
   const purchaseRows=document.getElementById("recentPurchases");
   if(purchaseRows){
