@@ -100,6 +100,38 @@ function renderReports(){let members=data.members||[],stock=data.ration||[],purc
 function exportBackup(){let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="crpf-mess-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)}
 function importBackup(file){let r=new FileReader();r.onload=()=>{try{let v=JSON.parse(r.result);if(!v||typeof v!=="object")throw Error();if(!confirm("Restore backup and replace current data on this device?"))return;data=v;save();alert("Backup restored.");location.reload()}catch(e){alert("Invalid backup file.")}};r.readAsText(file)}
 
+
+function renderLowPurchase(){
+ const low=(data.ration||[]).filter(isLowStock);
+ let box=document.getElementById("lowPurchasePanel");
+ if(!box){box=document.createElement("section");box.id="lowPurchasePanel";box.className="panel low-purchase";document.getElementById("tablePanel").before(box);}
+ box.innerHTML="<h3>🟢 Low Stock — Purchase Now</h3>"+(low.length?'<div class="low-purchase-grid">'+low.map(x=>'<div class="low-purchase-item"><div><b>'+esc(x.name)+'</b><small>Available: '+esc(x.quantity)+' '+esc(x.unit)+'</small></div><a class="btn purchase-now" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a></div>').join("")+'</div>':'<p class="muted">Abhi koi ration item low stock mein nahi hai.</p>');
+}
+function viewRecipe(id){
+ const r=(data.recipes||[]).find(x=>String(x.id)===String(id));if(!r)return;
+ let old=document.getElementById("recipeViewModal");if(old)old.remove();
+ const rows=(r.ingredients||[]).map(i=>'<tr><td>'+esc(i.itemName)+'</td><td>'+esc(i.quantity)+' '+esc(i.unit)+'</td><td>'+money(i.rate)+' / '+esc(i.unit)+'</td><td>'+money(i.lineCost)+'</td></tr>').join("");
+ const modal=document.createElement("div");modal.id="recipeViewModal";modal.className="view-overlay";
+ modal.innerHTML='<section class="view-card"><div class="view-head"><div><small>RECIPE DETAILS · 1 SERVING</small><h2>'+esc(r.name)+'</h2></div><button type="button" class="alt" onclick="document.getElementById(\'recipeViewModal\').remove()">✕</button></div><div class="view-cost"><small>Cost per serving</small><strong>'+money(r.costPerServing||r.totalCost)+'</strong></div><h3>Ingredients</h3><div class="tablewrap"><table><thead><tr><th>Ration Item</th><th>Quantity</th><th>Rate</th><th>Cost</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="muted">'+esc(r.notes||"No extra notes")+'</p><button type="button" onclick="document.getElementById(\'recipeViewModal\').remove()">Close</button></section>';
+ document.body.appendChild(modal);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove()});
+}
+function renderAccountOverview(list){
+ const meals=data.mealRecords||[],members=data.members||[];
+ const mealTotal=meals.reduce((s,m)=>s+Number(m.totalCost||0),0);
+ const collected=list.filter(x=>x.type==="collection"||x.type==="advance").reduce((s,x)=>s+Number(x.amount||0),0);
+ const expenses=list.filter(x=>x.type==="expense").reduce((s,x)=>s+Number(x.amount||0),0);
+ let box=document.getElementById("accountOverview");
+ if(!box){box=document.createElement("section");box.id="accountOverview";box.className="cards";document.getElementById("pageSub").after(box);}
+ box.innerHTML=stat("Meal Charges",money(mealTotal))+stat("Advance / Collection",money(collected))+stat("Expenses",money(expenses))+stat("Members",members.length);
+}
+function renderHandoverOverview(){
+ const staff=(data.staff||[]).filter(x=>(x.status||"Active")==="Active"),ration=data.ration||[],tx=data.transactions||[];
+ const cash=tx.reduce((s,x)=>s+(x.type==="expense"?-1:1)*Number(x.amount||0),0);
+ let box=document.getElementById("handoverAuto");
+ if(!box){box=document.createElement("section");box.id="handoverAuto";box.className="panel handover-auto";document.getElementById("tablePanel").before(box);}
+ box.innerHTML='<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div><h4>Current Staff</h4><p>'+(staff.length?staff.map(x=>esc(x.name)+" — "+esc(x.duty||"Staff")).join(" · "):"Mess Staff page par staff add karein.")+'</p><h4>Ration Stock Snapshot</h4><div class="tablewrap"><table><thead><tr><th>Item</th><th>Available</th><th>Minimum</th></tr></thead><tbody>'+ration.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.quantity)+' '+esc(x.unit)+'</td><td>'+esc(x.minimum||0)+' '+esc(x.unit)+'</td></tr>').join("")+'</tbody></table></div><p class="muted">Yeh summary saved staff, ration aur account transactions se automatic read hoti hai.</p>';
+}
+
 render();
 if(cfg.key==="purchases"){
   const wanted=new URLSearchParams(location.search).get("item");
