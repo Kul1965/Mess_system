@@ -92,7 +92,7 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
  .footer{color:black}
 }
 .print-heading{display:none;text-align:center;color:black!important;margin-bottom:20px}
-</style>
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}.account-grid>div,.meal-entry{background:#041f17;border:1px solid #287b52;border-radius:8px;padding:12px}.account-grid small{display:block;color:#a9c9bb;font-size:11px}.account-grid strong{display:block;font-size:18px;margin-top:6px}.meal-entry{margin:8px 0;line-height:1.6}.meal-head{display:flex;justify-content:space-between}.meal-entry small{color:#a9c9bb}.view-heading{margin:18px 0 10px;color:var(--yellow)}@media(max-width:480px){.account-grid strong{font-size:15px}}</style>
 </head>
 <body>
 <div class="app">
@@ -399,17 +399,18 @@ function viewMember(id){
  viewingId=id;
  const m=members.find(x=>x.id===id);
  if(!m)return;
- document.getElementById("memberDetails").innerHTML=`
-  ${m.photo?`<img src="${m.photo}" alt="Member photo"><br>`:""}
-  <b>Force Number:</b> ${esc(m.forceNo)}<br>
-  <b>Name:</b> ${esc(m.name)}<br>
-  <b>Rank:</b> ${esc(m.rank)}<br>
-  <b>Contact:</b> ${esc(m.contact)}<br>
-  <b>Joining Date:</b> ${esc(m.joiningDate)}<br>
-  <b>Mess Advance:</b> ${money(m.advance)}<br>
-  <b>Status:</b> ${esc(m.status)}<br>
-  <b>Remarks:</b> ${esc(m.remarks)}
- `;
+ const data=getData();
+ const records=(data.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(id)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+ const tx=(data.transactions||[]).filter(t=>t.memberId===id);
+ const mealTotal=records.reduce((s,r)=>s+Number(r.chargePerMember||0),0);
+ const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((s,t)=>s+Number(t.amount||0),0);
+ const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
+ const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.mealType)+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.items||[]).map(esc).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
+ document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
+ '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Remarks:</b> '+esc(m.remarks)+
+ '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Paid / Advance</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
+ '<h3 class="view-heading">Meal History – Kya Kya Khaya</h3>'+history+
+ '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
 }
 function closeView(){document.getElementById("viewModal").style.display="none"}
