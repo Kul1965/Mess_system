@@ -251,6 +251,7 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
   <div id="memberDetails" class="details"></div>
   <div class="form-actions">
    <button class="secondary" onclick="printMember()">📄 Member PDF</button>
+   <button class="primary" onclick="whatsAppMember()">WhatsApp</button>
    <button class="primary" onclick="closeView()">Close</button>
   </div>
  </div>
@@ -405,7 +406,7 @@ function viewMember(id){
  const mealTotal=records.reduce((s,r)=>s+Number(r.chargePerMember||0),0);
  const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((s,t)=>s+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
- const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.mealType)+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.items||[]).map(esc).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
+ const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.ingredientUsage||[]).map(i=>esc(i.itemName)+': '+esc(i.quantity)+' '+esc(i.unit)).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
  document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
  '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Remarks:</b> '+esc(m.remarks)+
  '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Paid / Advance</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
@@ -413,7 +414,7 @@ function viewMember(id){
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
 }
-function closeView(){document.getElementById("viewModal").style.display="none"}
+function whatsAppMember(){const m=members.find(x=>x.id===viewingId);if(!m)return;const phone=String(m.contact||"").replace(/\\D/g,"");if(!phone){alert("Member ka WhatsApp mobile number pehle Contact Number mein add karein.");return}const msg="Namaste "+m.name+", CRPF Mess se aapka mess account update.";window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank")}\nfunction closeView(){document.getElementById("viewModal").style.display="none"}
 function printList(){
  document.getElementById("printMess").textContent=
   (getData().settings?.messName||"CRPF Mess")+" – Members Register";
@@ -428,9 +429,9 @@ function printMember(){
  const total=records.reduce((n,r)=>n+Number(r.chargePerMember||0),0);
  const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((n,t)=>n+Number(t.amount||0),0);
  const w=window.open("","_blank");if(!w){alert("Please allow pop-ups to print the member statement.");return}
- const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.mealType)+'</td><td>'+esc((r.items||[]).join(", "))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
+ const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</td><td>'+esc((r.ingredientUsage||[]).map(i=>i.itemName+': '+i.quantity+' '+i.unit).join(', '))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
  const payRows=tx.map(t=>'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td></tr>').join("");
- w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3><p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Meal</th><th>Menu items</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p><script>window.onload=()=>window.print();<\/script></body></html>');
+ w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3><p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Recipe</th><th>Ration consumed</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p><script>window.onload=()=>window.print();<\/script></body></html>');
  w.document.close();
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
