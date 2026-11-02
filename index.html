@@ -2,619 +2,577 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CRPF Smart Mess Manager</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRPF Mess Management System</title>
+
+<style>
+:root {
+  --bg:#031e17;
+  --sidebar:#003a2b;
+  --header:#00442f;
+  --card:#073b2c;
+  --card2:#092f24;
+  --border:#176b4b;
+  --yellow:#ffdf00;
+  --green:#00a65a;
+  --white:#ffffff;
+  --muted:#a9c9bb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--white);
+}
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:173px;
+  min-width:173px;
+  background:linear-gradient(180deg,#003d2c,#00291f);
+  border-right:1px solid #17634a;
+  min-height:100vh;
+}
+.brand{
+  text-align:center;
+  padding:20px 8px;
+  border-bottom:1px solid #1b684e;
+}
+.brand-icon{font-size:38px}
+.brand h2{
+  color:var(--yellow);
+  font-size:19px;
+  margin-top:7px;
+}
+.brand p{font-size:12px;margin-top:7px;color:#d2e5db}
+.nav{padding:14px 0}
+.nav a{
+  display:block;
+  padding:16px 12px;
+  color:white;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:bold;
+  border-radius:0 9px 9px 0;
+  margin:0 10px 7px 0;
+  white-space:nowrap;
+}
+.nav a:hover,.nav a.active{
+  background:#07884b;
+  color:white;
+}
+.nav a span{margin-right:7px}
+
+/* MAIN */
+.main{flex:1;min-width:0}
+.topbar{
+  min-height:60px;
+  background:#00432f;
+  border-bottom:1px solid #1b704f;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 20px;
+  gap:15px;
+}
+.heading h1{
+  color:var(--yellow);
+  font-size:23px;
+  margin-bottom:3px;
+}
+.heading p{font-size:13px;color:#d0e5d9}
+.top-info{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.info-pill{
+  border:1px solid #438568;
+  background:#075039;
+  border-radius:30px;
+  padding:10px 13px;
+  font-size:13px;
+  white-space:nowrap;
+}
+.content{padding:20px}
+
+/* PAGE TITLE */
+.page-title{margin-bottom:17px}
+.page-title h2{font-size:24px;margin-bottom:5px}
+.page-title p{color:var(--muted);font-size:14px}
+
+/* DASHBOARD CARDS */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:13px;
+  margin-bottom:16px;
+}
+.stat{
+  min-height:91px;
+  border:1px solid var(--border);
+  border-radius:15px;
+  background:linear-gradient(140deg,#095039,#073326);
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 4px 12px #00000020;
+}
+.stat-label{font-size:13px;color:#d9e9e1}
+.stat-number{
+  font-size:25px;
+  font-weight:bold;
+  margin-top:8px;
+}
+.stat-icon{font-size:24px}
+
+/* PANELS */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+.panel{
+  background:linear-gradient(145deg,#092f24,#06251c);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:17px;
+  min-width:0;
+  min-height:190px;
+}
+.panel h3{font-size:18px;margin-bottom:18px}
+.empty{
+  text-align:center;
+  color:var(--muted);
+  padding:22px 5px;
+  font-size:14px;
+}
+.stock-row,.balance-row{
+  display:flex;
+  justify-content:space-between;
+  padding:12px 8px;
+  border-bottom:1px solid #244d3d;
+  font-size:14px;
+}
+.stock-row:last-child,.balance-row:last-child{border:0}
+.stock-number{font-weight:bold}
+.green-dot{color:#54e6a0}
+.yellow-dot{color:#ffcf55}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  color:#a9cabb;
+  text-align:left;
+  padding:11px 8px;
+  border-bottom:1px solid #285541;
+}
+td{
+  padding:12px 8px;
+  border-bottom:1px solid #193e30;
+}
+.no-data{text-align:center;color:var(--muted);padding:25px}
+
+/* QUICK ACTIONS */
+.quick-actions{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.quick-actions a{
+  display:block;
+  text-align:center;
+  background:#0b4935;
+  border:1px solid #216d4d;
+  border-radius:9px;
+  padding:14px 6px;
+  text-decoration:none;
+  color:white;
+  font-size:12px;
+}
+.quick-actions a:hover{background:#087b49}
+.quick-actions b{display:block;font-size:23px;margin-bottom:7px}
+.footer{
+  text-align:center;
+  color:#789d8a;
+  font-size:11px;
+  padding:22px;
+}
+
+/* RESPONSIVE */
+@media(max-width:950px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .topbar{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:650px){
+  .app{display:block}
+  .sidebar{width:100%;min-width:0;min-height:auto}
+  .brand{padding:10px}
+  .brand-icon{font-size:25px}
+  .brand h2{font-size:16px}
+  .nav{
+    display:flex;
+    overflow-x:auto;
+    padding:8px;
+    gap:5px;
+  }
+  .nav a{
+    padding:11px;
+    margin:0;
+    border-radius:7px;
+    font-size:12px;
+  }
+  .content{padding:12px}
+  .grid{grid-template-columns:1fr}
+  .stats{gap:9px}
+  .stat{padding:11px;min-height:85px}
+  .stat-label{font-size:11px}
+  .stat-number{font-size:21px}
+  .heading h1{font-size:19px}
+  .topbar{padding:12px}
+}
+</style>
 </head>
+
 <body>
+<div class="app">
 
-<header class="topbar">
-  <div>
-    <div class="eyebrow">MESS MANAGEMENT SYSTEM</div>
-    <h1>🛡️ CRPF SMART MESS MANAGER</h1>
-    <p>Connected store, meals, recipes and accounts</p>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">🛡️</div>
+    <h2>CRPF MESS</h2>
+    <p>Cooking House System</p>
   </div>
-  <button class="btn" id="quickAdd">+ Add Member</button>
-</header>
 
-<nav class="nav" id="navigation">
-  <button class="navbtn active" data-page="dashboard">Dashboard</button>
-  <button class="navbtn" data-page="members">Members</button>
-  <button class="navbtn" data-page="store">Ration Store</button>
-  <button class="navbtn" data-page="recipes">Recipes</button>
-  <button class="navbtn" data-page="meals">Meals</button>
-  <button class="navbtn" data-page="accounts">Accounts</button>
-  <button class="navbtn" data-page="reports">Reports</button>
-  <button class="navbtn" data-page="backup">Backup</button>
-</nav>
+  <nav class="nav">
+    <a class="active" href="index.html"><span>▦</span>Dashboard</a>
+    <a href="members.html"><span>👥</span>Members</a>
+    <a href="ration-store.html"><span>📦</span>Ration Store</a>
+    <a href="purchases.html"><span>🛒</span>Purchases</a>
+    <a href="recipes.html"><span>🍲</span>Recipes</a>
+    <a href="making-menu.html"><span>📅</span>Making Menu</a>
+    <a href="mess-staff.html"><span>👨‍🍳</span>Mess Staff</a>
+    <a href="accounts.html"><span>💰</span>Accounts</a>
+    <a href="reports.html"><span>📊</span>Reports</a>
+    <a href="mess-handover.html"><span>🔄</span>Mess Handover</a>
+    <a href="settings.html"><span>⚙️</span>Settings</a>
+    <a href="backup.html"><span>💾</span>Backup & Restore</a>
+  </nav>
+</aside>
 
-<main>
+<!-- MAIN CONTENT -->
+<main class="main">
 
-  <!-- DASHBOARD -->
-  <section class="page active" id="dashboard">
-    <div class="pagehead">
-      <div>
-        <h2>Dashboard</h2>
-        <p>Mess ka poora hisaab ek jagah.</p>
-      </div>
-      <span class="badge">Live totals</span>
+  <header class="topbar">
+    <div class="heading">
+      <h1>CRPF Mess Management System</h1>
+      <p>Cooking House | Ration | Menu | Accounts | Reports</p>
     </div>
 
-    <div class="stats">
-      <article class="stat">
-        <span>Active Members</span>
-        <strong id="dMembers">0</strong>
-      </article>
-      <article class="stat">
-        <span>Payments Collected</span>
-        <strong id="dCollected">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Mess Advance</span>
-        <strong id="dAdvance">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Meal Charges</span>
-        <strong id="dCharges">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Ration Consumed Cost</span>
-        <strong id="dConsumed">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Current Stock Value</span>
-        <strong id="dStock">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Unpaid Due</span>
-        <strong id="dDue">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Meals Recorded</span>
-        <strong id="dMeals">0</strong>
-      </article>
+    <div class="top-info">
+      <div class="info-pill">🏛️ Mess: <span id="messName">A Coy (CRPF)</span></div>
+      <div class="info-pill" id="dateDisplay"></div>
+      <div class="info-pill">👤 Mess NCO</div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <div class="page-title">
+      <h2>▦ Dashboard</h2>
+      <p>Overview of Mess Operations</p>
     </div>
 
-    <div class="panel">
-      <h3>Member balance summary</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Charges</th>
-              <th>Advance</th>
-              <th>Payments</th>
-              <th>Due</th>
-            </tr>
-          </thead>
-          <tbody id="dashboardRows"></tbody>
-        </table>
-      </div>
-    </div>
+    <!-- SUMMARY CARDS -->
+    <section class="stats">
 
-    <div class="panel">
-      <h3>Recent meals</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Meal</th>
-              <th>Recipe</th>
-              <th>Members</th>
-              <th>Total cost</th>
-            </tr>
-          </thead>
-          <tbody id="dashboardMeals"></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- MEMBERS -->
-  <section class="page" id="members">
-    <div class="pagehead">
-      <div>
-        <h2>Members</h2>
-        <p>Profile, photo, mess advance and account details.</p>
-      </div>
-      <button class="btn" id="addMember">+ Add Member</button>
-    </div>
-
-    <input class="search" id="memberSearch"
-      placeholder="Search member name, ID, rank or phone">
-
-    <div class="cards" id="memberCards"></div>
-    <div class="empty" id="membersEmpty">No members added yet.</div>
-  </section>
-
-  <!-- RATION STORE -->
-  <section class="page" id="store">
-    <h2>Ration Store & Purchase</h2>
-
-    <div class="panel">
-      <h3>Add purchase</h3>
-      <form id="itemForm" class="formgrid">
-        <input type="hidden" id="itemId">
-
-        <label>Item name
-          <input id="itemName" required placeholder="Rice, dal, oil">
-        </label>
-
-        <label>Purchase unit
-          <select id="itemUnit">
-            <option value="kg">Kilogram (kg)</option>
-            <option value="g">Gram (g)</option>
-            <option value="ltr">Litre (ltr)</option>
-            <option value="ml">Millilitre (ml)</option>
-            <option value="pcs">Piece (pcs)</option>
-          </select>
-        </label>
-
-        <label>Purchase quantity
-          <input id="itemQty" type="number" min="0.001"
-            step="0.001" required placeholder="Example: 10">
-        </label>
-
-        <label>Rate per selected unit (Rs)
-          <input id="itemCost" type="number" min="0"
-            step="0.01" required placeholder="Example: 80">
-        </label>
-
-        <div class="wide totalbox">
-          Total purchase cost:
-          <strong id="purchaseTotal">Rs 0.00</strong>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Active Members</div>
+          <div class="stat-number" id="members">0</div>
         </div>
-
-        <button class="btn" type="submit">Save Purchase</button>
-        <button class="btn secondary" id="clearItem" type="button">Clear</button>
-      </form>
-
-      <p class="hint">
-        Example: 10 kg × Rs 80/kg = Rs 800.
-        Stock is stored internally in grams, millilitres or pieces.
-      </p>
-    </div>
-
-    <div class="panel">
-      <h3>Available stock</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Available stock</th>
-              <th>Average rate</th>
-              <th>Stock value</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="storeRows"></tbody>
-        </table>
+        <div class="stat-icon">👥</div>
       </div>
-    </div>
-  </section>
 
-  <!-- RECIPES -->
-  <section class="page" id="recipes">
-    <h2>Recipe Builder</h2>
-
-    <div class="panel">
-      <h3>Create or edit recipe</h3>
-
-      <form id="recipeForm" class="formgrid">
-        <input type="hidden" id="recipeId">
-
-        <label>Recipe name
-          <input id="recipeName" required placeholder="Dal Bhat">
-        </label>
-
-        <label>Notes
-          <input id="recipeNotes" placeholder="Optional">
-        </label>
-
-        <div class="wide">
-          <div class="pagehead">
-            <h3>Ingredients per person</h3>
-            <button class="btn secondary" id="addIngredient" type="button">
-              + Add Ingredient
-            </button>
-          </div>
-
-          <div id="ingredientRows"></div>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Mess Advance</div>
+          <div class="stat-number" id="advance">Rs 0</div>
         </div>
+        <div class="stat-icon">🪙</div>
+      </div>
 
-        <div class="wide totalbox">
-          Total recipe cost per person:
-          <strong id="recipeTotal">Rs 0.00</strong>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Ration Stock Items</div>
+          <div class="stat-number" id="items">0</div>
         </div>
-
-        <button class="btn" type="submit">Save Recipe</button>
-        <button class="btn secondary" id="clearRecipe" type="button">Clear</button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h3>Saved recipes and ingredient costs</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Recipe</th>
-              <th>Ingredient</th>
-              <th>Quantity/person</th>
-              <th>Rate/unit</th>
-              <th>Cost</th>
-              <th>Recipe total/person</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="recipeRows"></tbody>
-        </table>
+        <div class="stat-icon">📦</div>
       </div>
-    </div>
-  </section>
 
-  <!-- MEALS -->
-  <section class="page" id="meals">
-    <h2>Meals & Ration Orders</h2>
-
-    <div class="panel">
-      <h3>Plan and confirm meal</h3>
-
-      <form id="mealForm" class="formgrid">
-        <label>Date
-          <input type="date" id="mealDate" required>
-        </label>
-
-        <label>Meal type
-          <select id="mealType">
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
-            <option>Morning Tea</option>
-            <option>Afternoon Tea</option>
-            <option>Evening Tea</option>
-            <option>Snacks</option>
-          </select>
-        </label>
-
-        <label>Recipe
-          <select id="mealRecipe" required></select>
-        </label>
-
-        <label>Servings per member
-          <input type="number" id="servings" min="1"
-            step="1" value="1" required>
-        </label>
-
-        <div class="wide">
-          <div class="pagehead">
-            <h3>Members eating this meal</h3>
-            <div>
-              <button class="textbtn" id="selectAll" type="button">Select all</button>
-              <button class="textbtn" id="clearSelection" type="button">Clear</button>
-            </div>
-          </div>
-          <div class="checkgrid" id="mealMembers"></div>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Stock Value</div>
+          <div class="stat-number" id="stockValue">Rs 0</div>
         </div>
+        <div class="stat-icon">💎</div>
+      </div>
 
-        <div class="wide totalbox" id="mealPreview">
-          Select a recipe and members to calculate cost.
+      <div class="stat">
+        <div>
+          <div class="stat-label">Today's Meals</div>
+          <div class="stat-number" id="meals">0</div>
         </div>
-
-        <label class="wide">Order note
-          <input id="mealNote" placeholder="Optional">
-        </label>
-
-        <button class="btn wide" type="submit">
-          Confirm Meal & Deduct Stock
-        </button>
-      </form>
-    </div>
-
-    <div class="panel">
-      <h3>Confirmed meal orders</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Meal</th>
-              <th>Recipe</th>
-              <th>Members</th>
-              <th>Cost/person</th>
-              <th>Ration cost</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="mealRows"></tbody>
-        </table>
+        <div class="stat-icon">🍽️</div>
       </div>
-    </div>
-  </section>
 
-  <!-- ACCOUNTS -->
-  <section class="page" id="accounts">
-    <h2>Member Accounts</h2>
-
-    <input class="search" id="accountSearch"
-      placeholder="Search member account">
-
-    <div class="panel">
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Meal charges</th>
-              <th>Mess advance</th>
-              <th>Payments</th>
-              <th>Due</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="accountRows"></tbody>
-        </table>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Total Purchases</div>
+          <div class="stat-number" id="purchases">Rs 0</div>
+        </div>
+        <div class="stat-icon">🛒</div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h3>Transaction ledger</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Member</th>
-              <th>Type</th>
-              <th>Description</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody id="ledgerRows"></tbody>
-        </table>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Total Expenses</div>
+          <div class="stat-number" id="expenses">Rs 0</div>
+        </div>
+        <div class="stat-icon">📄</div>
       </div>
-    </div>
-  </section>
 
-  <!-- REPORTS -->
-  <section class="page" id="reports">
-    <h2>Reports</h2>
-
-    <div class="panel">
-      <h3>Choose report period</h3>
-
-      <div class="formgrid">
-        <label>From date
-          <input type="date" id="reportFrom">
-        </label>
-
-        <label>To date
-          <input type="date" id="reportTo">
-        </label>
-
-        <button class="btn" id="runReport" type="button">Generate Report</button>
-        <button class="btn secondary" id="exportReport" type="button">Export Report CSV</button>
+      <div class="stat">
+        <div>
+          <div class="stat-label">Unpaid Members</div>
+          <div class="stat-number" id="unpaid">0</div>
+        </div>
+        <div class="stat-icon">⚠️</div>
       </div>
-    </div>
 
-    <div class="stats">
-      <article class="stat">
-        <span>Meals in period</span>
-        <strong id="rMeals">0</strong>
-      </article>
-      <article class="stat">
-        <span>Member meals served</span>
-        <strong id="rServings">0</strong>
-      </article>
-      <article class="stat">
-        <span>Ration consumed cost</span>
-        <strong id="rCost">Rs 0.00</strong>
-      </article>
-      <article class="stat">
-        <span>Payments collected</span>
-        <strong id="rPaid">Rs 0.00</strong>
-      </article>
-    </div>
+    </section>
 
-    <div class="panel">
-      <h3>Date-wise meal report</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Meal type</th>
-              <th>Recipe</th>
-              <th>Members</th>
-              <th>Serving count</th>
-              <th>Ration cost</th>
-            </tr>
-          </thead>
-          <tbody id="reportMealRows"></tbody>
-        </table>
+    <!-- DASHBOARD PANELS -->
+    <section class="grid">
+
+      <div class="panel">
+        <h3>🍽️ Today's Menu</h3>
+        <div class="empty" id="todayMenu">No menu added for today</div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h3>Ration consumption report</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Meal</th>
-              <th>Item</th>
-              <th>Quantity consumed</th>
-              <th>Rate/base unit</th>
-              <th>Cost</th>
-            </tr>
-          </thead>
-          <tbody id="reportRationRows"></tbody>
-        </table>
+      <div class="panel">
+        <h3>📊 Ration Stock Status</h3>
+        <div class="stock-row">
+          <span><span class="green-dot">🟢</span> Normal Stock</span>
+          <b class="stock-number" id="normalStock">0</b>
+        </div>
+        <div class="stock-row">
+          <span><span class="yellow-dot">🟡</span> Low Stock</span>
+          <b class="stock-number" id="lowStock">0</b>
+        </div>
+        <div class="stock-row">
+          <span>Total Items</span>
+          <b class="stock-number" id="totalStock">0</b>
+        </div>
       </div>
-    </div>
 
-    <div class="panel">
-      <h3>Member-wise meal attendance</h3>
-      <div class="tablewrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Member</th>
-              <th>Service ID</th>
-              <th>Meals attended</th>
-              <th>Meal charges</th>
-            </tr>
-          </thead>
-          <tbody id="reportMemberRows"></tbody>
-        </table>
+      <div class="panel">
+        <h3>🔄 Recent Transactions</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Details</th>
+                <th>Amount</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="transactionList">
+              <tr><td colspan="4" class="no-data">No transactions available</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
-  </section>
 
-  <!-- BACKUP -->
-  <section class="page" id="backup">
-    <h2>Backup & Restore</h2>
-
-    <div class="panel">
-      <h3>Protect your data</h3>
-      <p class="hint">
-        Download a JSON backup regularly. Restore replaces the data currently
-        saved in this browser, so keep a copy before restoring.
-      </p>
-
-      <div class="buttonrow">
-        <button class="btn" id="backupBtn">Download JSON Backup</button>
-
-        <label class="btn secondary filebtn">
-          Restore JSON Backup
-          <input id="restoreFile" type="file" accept=".json,application/json" hidden>
-        </label>
-
-        <button class="btn secondary" id="exportAccounts">Export Accounts CSV</button>
+      <div class="panel">
+        <h3>💳 Mess Balance Summary</h3>
+        <div class="balance-row">
+          <span>Total Collection</span>
+          <b id="collection">Rs 0</b>
+        </div>
+        <div class="balance-row">
+          <span>Total Expenses</span>
+          <b id="balanceExpenses">Rs 0</b>
+        </div>
+        <div class="balance-row">
+          <span>Pending Dues</span>
+          <b id="dues">Rs 0</b>
+        </div>
+        <div class="balance-row">
+          <span>Available Balance</span>
+          <b id="balance">Rs 0</b>
+        </div>
       </div>
-    </div>
-  </section>
 
+      <div class="panel">
+        <h3>⚡ Quick Actions</h3>
+        <div class="quick-actions">
+          <a href="members.html"><b>👥</b>Add Member</a>
+          <a href="purchases.html"><b>🛒</b>Purchase</a>
+          <a href="ration-store.html"><b>📦</b>Stock Entry</a>
+          <a href="recipes.html"><b>🍲</b>Add Recipe</a>
+          <a href="making-menu.html"><b>📅</b>Make Menu</a>
+          <a href="accounts.html"><b>💰</b>Accounts</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>🏛️ Mess Information</h3>
+        <div class="balance-row">
+          <span>Mess Name</span>
+          <b id="messInfo">A Coy (CRPF)</b>
+        </div>
+        <div class="balance-row">
+          <span>Monthly Ration Limit</span>
+          <b id="rationLimit">Not Set</b>
+        </div>
+        <div class="balance-row">
+          <span>System</span>
+          <b style="color:#55e5a0">Ready</b>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <footer class="footer">
+    CRPF Mess Management System | Cooking House Management
+  </footer>
 </main>
+</div>
 
-<!-- MEMBER FORM -->
-<dialog id="memberDialog">
-  <form id="memberForm">
-    <div class="pagehead">
-      <h2 id="memberDialogTitle">Add Member</h2>
-      <button type="button" class="iconbtn" id="closeMember">✕</button>
-    </div>
+<script>
+const money = n =>
+  "Rs " + Number(n || 0).toLocaleString("en-IN");
 
-    <input type="hidden" id="memberId">
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#39;"
+  })[c]);
+}
 
-    <div class="photoarea">
-      <div id="photoPreview" class="photo bigphoto">PHOTO</div>
-      <label class="btn secondary filebtn">
-        Choose Photo
-        <input type="file" id="photoInput" accept="image/*" hidden>
-      </label>
-      <button type="button" class="textbtn" id="removePhoto">Remove photo</button>
-    </div>
+document.getElementById("dateDisplay").textContent =
+  new Date().toLocaleDateString("en-GB");
 
-    <div class="formgrid">
-      <label>Service / Member ID *
-        <input id="serviceId" required>
-      </label>
+function loadDashboard() {
+  const data = JSON.parse(
+    localStorage.getItem("crpfMessData") || "{}"
+  );
 
-      <label>Full name *
-        <input id="fullName" required>
-      </label>
+  const members = data.members || [];
+  const ration = data.ration || [];
+  const transactions = data.transactions || [];
+  const purchases = data.purchases || [];
 
-      <label>Rank
-        <select id="rank">
-          <option>Constable</option>
-          <option>Head Constable</option>
-          <option>ASI</option>
-          <option>SI</option>
-          <option>Inspector</option>
-          <option>Other</option>
-        </select>
-      </label>
+  const activeMembers = members.filter(m =>
+    !m.status || m.status === "Active"
+  );
 
-      <label>Phone with country code
-        <input id="phone" type="tel" placeholder="+977...">
-      </label>
+  const totalAdvance = members.reduce((sum,m) =>
+    sum + Number(m.advance || m.messAdvance || 0),0
+  );
 
-      <label>Opening mess advance (Rs)
-        <input id="advance" type="number" min="0" step="0.01" value="0">
-      </label>
+  const stockValue = ration.reduce((sum,r) =>
+    sum + Number(r.quantity || 0) * Number(r.price || r.unitPrice || 0),0
+  );
 
-      <label>Status
-        <select id="status">
-          <option>Active</option>
-          <option>Transferred</option>
-          <option>Inactive</option>
-        </select>
-      </label>
+  const low = ration.filter(r =>
+    Number(r.quantity || 0) <= Number(r.minimum || r.minStock || 0)
+  );
 
-      <label>Joining date
-        <input id="joining" type="date">
-      </label>
+  const totalPurchases = purchases.reduce((sum,p) =>
+    sum + Number(p.total || p.amount || 0),0
+  );
 
-      <label class="wide">Notes
-        <textarea id="notes" rows="2"></textarea>
-      </label>
-    </div>
+  const totalExpenses = transactions
+    .filter(t => String(t.type || "").toLowerCase() === "expense")
+    .reduce((sum,t) => sum + Number(t.amount || 0),0);
 
-    <p id="advanceHelp" class="hint"></p>
+  const collection = Number(data.totalCollection || 0);
+  const dues = Number(data.totalDues || 0);
 
-    <div class="buttonrow right">
-      <button type="button" class="btn secondary" id="cancelMember">Cancel</button>
-      <button type="submit" class="btn">Save Member</button>
-    </div>
-  </form>
-</dialog>
+  const set = (id,value) => {
+    document.getElementById(id).textContent = value;
+  };
 
-<!-- MEMBER PROFILE -->
-<dialog id="profileDialog">
-  <div id="profileContent"></div>
-  <div class="buttonrow right">
-    <button class="btn secondary" id="profileWhats" type="button">WhatsApp</button>
-    <button class="btn secondary" id="profileEdit" type="button">Edit</button>
-    <button class="btn" id="profileClose" type="button">Close</button>
-  </div>
-</dialog>
+  set("members",activeMembers.length);
+  set("advance",money(totalAdvance));
+  set("items",ration.length);
+  set("stockValue",money(stockValue));
+  set("purchases",money(totalPurchases));
+  set("expenses",money(totalExpenses));
+  set("unpaid",(data.unpaidMembers || []).length);
+  set("normalStock",ration.length-low.length);
+  set("lowStock",low.length);
+  set("totalStock",ration.length);
+  set("collection",money(collection));
+  set("balanceExpenses",money(totalExpenses));
+  set("dues",money(dues));
+  set("balance",money(collection-totalExpenses));
+  
+  if(data.settings){
+    const name=data.settings.messName || "A Coy (CRPF)";
+    set("messName",name);
+    set("messInfo",name);
+    set("rationLimit",data.settings.rationLimit
+      ? money(data.settings.rationLimit):"Not Set");
+  }
 
-<!-- PAYMENT / ADVANCE -->
-<dialog id="moneyDialog">
-  <form id="moneyForm">
-    <div class="pagehead">
-      <h2 id="moneyTitle">Record Payment</h2>
-      <button type="button" class="iconbtn" id="closeMoney">✕</button>
-    </div>
+  const tbody=document.getElementById("transactionList");
 
-    <input type="hidden" id="moneyMemberId">
+  if(transactions.length){
+    tbody.innerHTML=transactions.slice(-5).reverse().map(t=>`
+      <tr>
+        <td>${safe(t.date || "")}</td>
+        <td>${safe(t.description || t.details || "")}</td>
+        <td>${money(t.amount)}</td>
+        <td>${safe(t.type || "Entry")}</td>
+      </tr>
+    `).join("");
+  }
 
-    <p id="moneyInfo" class="hint"></p>
+  const today=new Date().toLocaleDateString("en-CA");
+  const menu=(data.menu || []).find(m=>m.date===today);
 
-    <label>Amount (Rs)
-      <input type="number" id="moneyAmount" min="0.01" step="0.01" required>
-    </label>
+  if(menu){
+    const meals=[
+      ["Morning Tea","morningTea"],
+      ["Breakfast","breakfast"],
+      ["Lunch","lunch"],
+      ["Midday Tea","middayTea"],
+      ["Dinner","dinner"]
+    ];
+    document.getElementById("todayMenu").innerHTML =
+      meals.map(([name,key])=>`
+        <div class="stock-row">
+          <span>${name}</span>
+          <b>${safe(menu[key] || "Not added")}</b>
+        </div>
+      `).join("");
+    set("meals",meals.filter(([name,key])=>menu[key]).length);
+  }
+}
 
-    <label>Note
-      <input id="moneyNote" placeholder="Cash / receipt reference">
-    </label>
-
-    <div class="buttonrow right">
-      <button class="btn secondary" id="cancelMoney" type="button">Cancel</button>
-      <button class="btn" type="submit">Save Transaction</button>
-    </div>
-  </form>
-</dialog>
-
-<div class="toast" id="toast"></div>
-
-<script src="app.js"></script>
+loadDashboard();
+</script>
 </body>
 </html>
-
