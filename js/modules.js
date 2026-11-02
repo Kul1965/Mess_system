@@ -51,7 +51,7 @@ function render(){
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
       const action=(cfg.key==="store"&&isLowStock(x)?'<a class="btn" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a> ':'')+
-        '<button class="alt" type="button" onclick="editRow(\\''+id+'\\')">Edit</button><button class="danger" type="button" onclick="deleteRow(\\''+id+'\\')">Delete</button>';
+        '<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>';
       return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
