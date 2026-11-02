@@ -9,8 +9,8 @@
 <div class="pagehead"><h2>🍽️ Making Menu</h2><div class="muted">Meal choose karein, recipe lagayein aur khane wale members select karein.</div></div>
 <section class="panel menu-panel"><h3>1. Meal Details</h3><div class="menu-grid">
 <label>Date<input type="date" id="mealDate"></label>
-<label>Meal Type<select id="mealType"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Snacks</option></select></label>
-<label class="wide">Choose Recipe<select id="mealRecipe"><option value="">Choose recipe</option></select><small id="recipeHelp" class="help">Recipe select karein.</small></label>
+<label>Meal Type<select id="mealType"><option>Morning Tea</option><option>Breakfast</option><option>Midday Tea</option><option>Lunch</option><option>Evening Tea</option><option>Dinner</option><option>Snacks</option></select></label>
+<div class="wide"><label>Choose Dishes / Recipes (ek se zyada select kar sakte hain)</label><div id="mealRecipeList" class="member-list" style="margin-top:8px"></div><small id="recipeHelp" class="help">Jaise Dal, Chawal, Sabji — sab select kar sakte hain.</small></div>
 </div></section>
 <section class="panel menu-panel"><h3>2. Ration & Meal Cost</h3><div class="summary-grid">
 <div class="summary-box"><small>Cost per member</small><strong id="mealChargeView">Rs 0.00</strong></div>
@@ -19,6 +19,6 @@
 </div><div class="tablewrap"><table class="ration-list"><thead><tr><th>Ration Item</th><th>Per Member</th><th>Total Required</th></tr></thead><tbody id="rationPreview"><tr><td colspan="3">Recipe select karein.</td></tr></tbody></table></div><p class="help" id="stockNote">Members select karne par total ration quantity calculate hogi.</p></section>
 <section class="panel menu-panel"><h3>3. Select Members Who Ate</h3><input id="mealMemberSearch" placeholder="Search member..." style="margin:10px 0;width:100%"><div id="mealMemberList" class="member-list"></div>
 <div style="margin-top:18px"><button type="button" class="save-meal" onclick="saveMealAttendance()">✓ Save Meal & Deduct Ration</button></div></section>
-<section class="panel menu-panel"><h3>Saved Meal Records</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Meal</th><th>Recipe</th><th>Members</th><th>Cost / Person</th><th>Total Cost</th></tr></thead><tbody id="mealRecordRows"></tbody></table></div></section>
+<section class="panel menu-panel"><h3>Saved Meal Records</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Meal</th><th>Dishes</th><th>Members</th><th>Cost / Person</th><th>Total Cost</th></tr></thead><tbody id="mealRecordRows"></tbody></table></div></section>
 </div><footer class="footer">CRPF Mess Management System • Saved locally in this browser</footer></main></div>
-<script src="js/meal-attendance.js?v=20261103-simple-menu"></script></body></html>
+<script src="js/meal-attendance.js?v=20261103-multi-dish"></script></body></html>
