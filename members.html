@@ -7,8 +7,8 @@
 <title>CRPF Mess - Members Management</title>
 <style>
 :root {
-  --bg:#031e17;--sidebar:#003a2b;--card:#073b2c;
-  --border:#176b4b;--yellow:#ffdf00;--green:#07884b;
+  --bg:#071b14;--sidebar:#063c2a;--card:#0b3022;
+  --border:#287b52;--yellow:#e5bb19;--green:#00b94f;
   --white:#fff;--muted:#a9c9bb;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -23,7 +23,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:white}
 .nav a{display:block;padding:14px 11px;color:white;text-decoration:none;font-size:13px;font-weight:bold;margin:3px 8px;border-radius:7px}
 .nav a:hover,.nav a.active{background:#07884b}
 .main{flex:1;min-width:0}
-.topbar{background:#00432f;border-bottom:1px solid #1b704f;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.topbar{background:#063c2a;border-bottom:1px solid #1b704f;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .topbar h1{font-size:21px;color:var(--yellow)}
 .topbar p{font-size:12px;color:#d0e5d9;margin-top:5px}
 .content{padding:22px}
@@ -31,7 +31,7 @@ body{font-family:Arial,sans-serif;background:var(--bg);color:white}
 .page-title h2{font-size:24px;margin-bottom:5px}
 .page-title p{color:var(--muted);font-size:13px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:18px}
-.stat,.panel{background:linear-gradient(140deg,#095039,#073326);border:1px solid var(--border);border-radius:12px;padding:17px}
+.stat,.panel{background:linear-gradient(140deg,#0b3022,#063c2a);border:1px solid var(--border);border-radius:12px;padding:17px}
 .stat span{font-size:13px;color:#d9e9e1}
 .stat strong{display:block;font-size:25px;margin-top:9px}
 .panel{margin-bottom:18px}
@@ -42,7 +42,7 @@ input::placeholder,textarea::placeholder{color:#93aa9d}
 input[type=file]{padding:8px}
 .search{max-width:330px}
 button{border:0;border-radius:6px;padding:11px 15px;font-size:13px;font-weight:bold;cursor:pointer}
-.primary{background:#07884b;color:white}
+.primary{background:#087b45;color:white}
 .secondary{background:#14563e;color:white;border:1px solid #38835e}
 .danger{background:#a83232;color:white}
 button:hover{filter:brightness(1.15)}
@@ -330,13 +330,27 @@ function editMember(id){openForm(id)}
 function readPhoto(file){
  return new Promise((resolve,reject)=>{
   if(!file){resolve(null);return}
-  if(file.size>2*1024*1024){
-   reject(new Error("Please choose a photo smaller than 2 MB."));
+  if(!file.type.startsWith("image/")){
+   reject(new Error("Please select a valid image file."));
    return;
   }
   const reader=new FileReader();
-  reader.onload=()=>resolve(reader.result);
   reader.onerror=()=>reject(new Error("Unable to read photo."));
+  reader.onload=()=>{
+   const img=new Image();
+   img.onerror=()=>reject(new Error("Unable to process this photo."));
+   img.onload=()=>{
+    const max=720;
+    const scale=Math.min(1,max/Math.max(img.width,img.height));
+    const canvas=document.createElement("canvas");
+    canvas.width=Math.round(img.width*scale);
+    canvas.height=Math.round(img.height*scale);
+    const ctx=canvas.getContext("2d");
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    resolve(canvas.toDataURL("image/jpeg",0.78));
+   };
+   img.src=reader.result;
+  };
   reader.readAsDataURL(file);
  });
 }
