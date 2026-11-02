@@ -64,7 +64,10 @@ function render(){
       return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
-    document.getElementById("stats").innerHTML=statsHtml(list);\n    if(cfg.key==="purchases")renderLowPurchase();\n    if(cfg.key==="accounts")renderAccountOverview(list);\n    if(cfg.key==="handover")renderHandoverOverview(list);
+    document.getElementById("stats").innerHTML=statsHtml(list);
+    if(cfg.key==="purchases")renderLowPurchase();
+    if(cfg.key==="accounts")renderAccountOverview(list);
+    if(cfg.key==="handover")renderHandoverOverview(list);
   }catch(e){
     console.error("Page render error",e);
     const empty=document.getElementById("empty");
