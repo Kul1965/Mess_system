@@ -50,12 +50,12 @@ function render(){
     let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
-      const action='<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
+      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
       return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
-    document.getElementById("stats").innerHTML=statsHtml(list);
+    document.getElementById("stats").innerHTML=statsHtml(list);\n    if(cfg.key==="purchases")renderLowPurchase();\n    if(cfg.key==="accounts")renderAccountOverview(list);\n    if(cfg.key==="handover")renderHandoverOverview(list);
   }catch(e){
     console.error("Page render error",e);
     const empty=document.getElementById("empty");
