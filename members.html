@@ -414,7 +414,8 @@ function viewMember(id){
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
 }
-function whatsAppMember(){const m=members.find(x=>x.id===viewingId);if(!m)return;const phone=String(m.contact||"").replace(/\\D/g,"");if(!phone){alert("Member ka WhatsApp mobile number pehle Contact Number mein add karein.");return}const msg="Namaste "+m.name+", CRPF Mess se aapka mess account update.";window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank")}\nfunction closeView(){document.getElementById("viewModal").style.display="none"}
+function whatsAppMember(){const m=members.find(x=>x.id===viewingId);if(!m)return;const phone=String(m.contact||"").replace(/\\D/g,"");if(!phone){alert("Member ka WhatsApp mobile number pehle Contact Number mein add karein.");return}const msg="Namaste "+m.name+", CRPF Mess se aapka mess account update.";window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank")}
+function closeView(){document.getElementById("viewModal").style.display="none"}
 function printList(){
  document.getElementById("printMess").textContent=
   (getData().settings?.messName||"CRPF Mess")+" – Members Register";
