@@ -8,14 +8,14 @@
 
 <style>
 :root {
-  --bg:#031e17;
-  --sidebar:#003a2b;
-  --header:#00442f;
-  --card:#073b2c;
-  --card2:#092f24;
-  --border:#176b4b;
-  --yellow:#ffdf00;
-  --green:#00a65a;
+  --bg:#071b14;
+  --sidebar:#063c2a;
+  --header:#063c2a;
+  --card:#0b3022;
+  --card2:#0b3022;
+  --border:#287b52;
+  --yellow:#e5bb19;
+  --green:#00b94f;
   --white:#ffffff;
   --muted:#a9c9bb;
 }
@@ -31,7 +31,7 @@ body{
 .sidebar{
   width:173px;
   min-width:173px;
-  background:linear-gradient(180deg,#003d2c,#00291f);
+  background:linear-gradient(180deg,#063c2a,#022b1e);
   border-right:1px solid #17634a;
   min-height:100vh;
 }
@@ -60,7 +60,7 @@ body{
   white-space:nowrap;
 }
 .nav a:hover,.nav a.active{
-  background:#07884b;
+  background:#087b45;
   color:white;
 }
 .nav a span{margin-right:7px}
@@ -69,7 +69,7 @@ body{
 .main{flex:1;min-width:0}
 .topbar{
   min-height:60px;
-  background:#00432f;
+  background:#063c2a;
   border-bottom:1px solid #1b704f;
   display:flex;
   align-items:center;
@@ -115,7 +115,7 @@ body{
   min-height:91px;
   border:1px solid var(--border);
   border-radius:15px;
-  background:linear-gradient(140deg,#095039,#073326);
+  background:linear-gradient(140deg,#0b3022,#063c2a);
   padding:16px;
   display:flex;
   justify-content:space-between;
@@ -137,7 +137,7 @@ body{
   gap:15px;
 }
 .panel{
-  background:linear-gradient(145deg,#092f24,#06251c);
+  background:linear-gradient(145deg,#0b3022,#071b14);
   border:1px solid var(--border);
   border-radius:15px;
   padding:17px;
@@ -187,7 +187,7 @@ td{
 .quick-actions a{
   display:block;
   text-align:center;
-  background:#0b4935;
+  background:#0b3022;
   border:1px solid #216d4d;
   border-radius:9px;
   padding:14px 6px;
@@ -474,9 +474,9 @@ document.getElementById("dateDisplay").textContent =
   new Date().toLocaleDateString("en-GB");
 
 function loadDashboard() {
-  const data = JSON.parse(
-    localStorage.getItem("crpfMessData") || "{}"
-  );
+  let data = {};
+  try { data = JSON.parse(localStorage.getItem("crpfMessData") || "{}"); }
+  catch (error) { console.error("Mess data could not be read:", error); }
 
   const members = data.members || [];
   const ration = data.ration || [];
@@ -550,7 +550,8 @@ function loadDashboard() {
     `).join("");
   }
 
-  const today=new Date().toLocaleDateString("en-CA");
+  const now = new Date();
+  const today = [now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");
   const menu=(data.menu || []).find(m=>m.date===today);
 
   if(menu){
