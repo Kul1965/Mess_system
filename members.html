@@ -422,28 +422,15 @@ function printList(){
  window.print();
 }
 function printMember(){
- const m=members.find(x=>x.id===viewingId);
- if(!m)return;
- const w=window.open("","_blank");
- if(!w){alert("Please allow pop-ups to print the member PDF.");return}
- w.document.write(`
- <!DOCTYPE html><html><head><title>Member Details</title>
- <style>body{font-family:Arial;padding:35px;color:#222}
- h2{text-align:center;color:#123d2b}
- h3{text-align:center;margin:10px}
- .line{border-bottom:1px solid #ddd;padding:12px}
- img{width:100px;height:100px;object-fit:cover;border-radius:50%}
- </style></head><body>
- <h2>CRPF MESS – COOKING HOUSE</h2>
- <h3>Individual Member Details</h3>
- <p style="text-align:center">Generated: ${esc(new Date().toLocaleDateString())}</p>
- ${m.photo?`<p style="text-align:center"><img src="${m.photo}"></p>`:""}
- ${[["Force Number",m.forceNo],["Name",m.name],["Rank",m.rank],
- ["Contact",m.contact],["Joining Date",m.joiningDate],
- ["Mess Advance",money(m.advance)],["Status",m.status],["Remarks",m.remarks]]
- .map(([k,v])=>`<div class="line"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}
- <script>window.onload=()=>window.print();<\/script>
- </body></html>`);
+ const m=members.find(x=>x.id===viewingId);if(!m)return;
+ const d=getData(),records=(d.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(m.id)).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
+ const tx=(d.transactions||[]).filter(t=>t.memberId===m.id);
+ const total=records.reduce((n,r)=>n+Number(r.chargePerMember||0),0);
+ const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((n,t)=>n+Number(t.amount||0),0);
+ const w=window.open("","_blank");if(!w){alert("Please allow pop-ups to print the member statement.");return}
+ const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.mealType)+'</td><td>'+esc((r.items||[]).join(", "))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
+ const payRows=tx.map(t=>'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td></tr>').join("");
+ w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3><p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Meal</th><th>Menu items</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p><script>window.onload=()=>window.print();<\/script></body></html>');
  w.document.close();
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
