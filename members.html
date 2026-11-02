@@ -1,0 +1,438 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRPF Mess - Members Management</title>
+<style>
+:root {
+  --bg:#031e17;--sidebar:#003a2b;--card:#073b2c;
+  --border:#176b4b;--yellow:#ffdf00;--green:#07884b;
+  --white:#fff;--muted:#a9c9bb;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:white}
+.app{display:flex;min-height:100vh}
+.sidebar{width:190px;min-width:190px;background:linear-gradient(180deg,#003d2c,#00291f)}
+.brand{text-align:center;padding:20px 8px;border-bottom:1px solid #1b684e}
+.brand .emblem{font-size:35px}
+.brand h2{color:var(--yellow);font-size:19px;margin-top:7px}
+.brand p{font-size:11px;margin-top:6px;color:#d2e5db}
+.nav{padding:14px 0}
+.nav a{display:block;padding:14px 11px;color:white;text-decoration:none;font-size:13px;font-weight:bold;margin:3px 8px;border-radius:7px}
+.nav a:hover,.nav a.active{background:#07884b}
+.main{flex:1;min-width:0}
+.topbar{background:#00432f;border-bottom:1px solid #1b704f;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.topbar h1{font-size:21px;color:var(--yellow)}
+.topbar p{font-size:12px;color:#d0e5d9;margin-top:5px}
+.content{padding:22px}
+.page-title{margin-bottom:20px}
+.page-title h2{font-size:24px;margin-bottom:5px}
+.page-title p{color:var(--muted);font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:18px}
+.stat,.panel{background:linear-gradient(140deg,#095039,#073326);border:1px solid var(--border);border-radius:12px;padding:17px}
+.stat span{font-size:13px;color:#d9e9e1}
+.stat strong{display:block;font-size:25px;margin-top:9px}
+.panel{margin-bottom:18px}
+.panel h3{font-size:17px;margin-bottom:16px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+input,select,textarea{background:#041f17;color:white;border:1px solid #26724f;border-radius:6px;padding:11px;width:100%;font-size:13px}
+input::placeholder,textarea::placeholder{color:#93aa9d}
+input[type=file]{padding:8px}
+.search{max-width:330px}
+button{border:0;border-radius:6px;padding:11px 15px;font-size:13px;font-weight:bold;cursor:pointer}
+.primary{background:#07884b;color:white}
+.secondary{background:#14563e;color:white;border:1px solid #38835e}
+.danger{background:#a83232;color:white}
+button:hover{filter:brightness(1.15)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:750px}
+th{text-align:left;color:#b4d3c4;padding:12px 9px;border-bottom:1px solid #285541}
+td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
+.table-wrap{overflow-x:auto}
+.photo{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#164d38}
+.status{padding:5px 8px;border-radius:20px;font-size:10px;background:#145d3b;color:#9ff0bb}
+.inactive{background:#613535;color:#ffc1c1}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.actions button{padding:7px 9px;font-size:11px}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.modal{display:none;position:fixed;inset:0;background:#000b;z-index:10;overflow:auto;padding:20px}
+.modal-box{background:#073326;border:1px solid #26724f;border-radius:12px;max-width:750px;margin:25px auto;padding:22px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-head h3{color:var(--yellow)}
+.close{background:#663333;color:white}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field label{display:block;font-size:12px;color:#c5dfd2;margin-bottom:7px}
+.field.full{grid-column:1/-1}
+.form-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.details{line-height:2.1;font-size:14px}
+.details img{width:100px;height:100px;object-fit:cover;border-radius:50%;margin-bottom:15px}
+.footer{text-align:center;padding:20px;color:#789d8a;font-size:11px}
+@media(max-width:700px){
+ .app{display:block}.sidebar{width:100%;min-width:0}
+ .brand{padding:10px}.brand .emblem{font-size:25px}
+ .brand h2{font-size:16px}
+ .nav{display:flex;overflow-x:auto;padding:8px;gap:4px}
+ .nav a{white-space:nowrap;padding:11px;margin:0;font-size:11px}
+ .topbar{align-items:flex-start;flex-direction:column}
+ .content{padding:12px}.stats{gap:8px}
+ .stat{padding:12px}.stat strong{font-size:20px}
+ .form-grid{grid-template-columns:1fr}
+ .field.full{grid-column:auto}
+}
+@media print{
+ body{background:white!important;color:black!important}
+ .sidebar,.topbar,.toolbar,.no-print,.modal{display:none!important}
+ .main,.content,.panel{background:white!important;color:black!important;border:0!important}
+ .panel{padding:0}
+ table{min-width:0;color:black}
+ th,td{color:black!important;border-bottom:1px solid #ccc}
+ .status{color:black!important;background:#eee!important}
+ .print-heading{display:block!important}
+ .footer{color:black}
+}
+.print-heading{display:none;text-align:center;color:black!important;margin-bottom:20px}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+ <div class="brand">
+  <div class="emblem">🛡️</div>
+  <h2>CRPF MESS</h2>
+  <p>Cooking House System</p>
+ </div>
+ <nav class="nav">
+  <a href="index.html">▦ Dashboard</a>
+  <a class="active" href="members.html">👥 Members</a>
+  <a href="ration-store.html">📦 Ration Store</a>
+  <a href="purchases.html">🛒 Purchases</a>
+  <a href="recipes.html">🍲 Recipes</a>
+  <a href="making-menu.html">📅 Making Menu</a>
+  <a href="mess-staff.html">👨‍🍳 Mess Staff</a>
+  <a href="accounts.html">💰 Accounts</a>
+  <a href="reports.html">📊 Reports</a>
+  <a href="mess-handover.html">🔄 Mess Handover</a>
+  <a href="settings.html">⚙️ Settings</a>
+  <a href="backup.html">💾 Backup & Restore</a>
+ </nav>
+</aside>
+
+<main class="main">
+<header class="topbar">
+ <div>
+  <h1>CRPF Mess Management System</h1>
+  <p>Cooking House | Members Management</p>
+ </div>
+ <div id="date"></div>
+</header>
+
+<div class="content">
+ <div class="page-title">
+  <h2>👥 Members Management</h2>
+  <p>Register, manage and view all mess members</p>
+ </div>
+
+ <div class="stats">
+  <div class="stat"><span>Total Members</span><strong id="total">0</strong></div>
+  <div class="stat"><span>Active Members</span><strong id="active">0</strong></div>
+  <div class="stat"><span>Inactive Members</span><strong id="inactive">0</strong></div>
+ </div>
+
+ <section class="panel no-print">
+  <div class="toolbar">
+   <h3>Member Records</h3>
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="secondary" onclick="printList()">📄 Download PDF</button>
+    <button class="primary" onclick="openForm()">＋ Add New Member</button>
+   </div>
+  </div>
+  <div class="toolbar">
+   <input class="search" id="search" placeholder="Search name, force number or rank..." oninput="render()">
+   <select id="filter" style="max-width:180px" onchange="render()">
+    <option value="All">All Members</option>
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+   </select>
+  </div>
+ </section>
+
+ <section class="panel">
+  <div class="print-heading">
+   <h2>CRPF MESS – COOKING HOUSE</h2>
+   <h3 id="printMess">Members Register</h3>
+   <p id="printDate"></p>
+  </div>
+  <div class="table-wrap">
+   <table>
+    <thead><tr>
+     <th>Photo</th><th>Force No.</th><th>Member Name</th>
+     <th>Rank</th><th>Contact</th><th>Joining Date</th>
+     <th>Mess Advance</th><th>Status</th><th class="no-print">Actions</th>
+    </tr></thead>
+    <tbody id="memberRows"></tbody>
+   </table>
+  </div>
+  <div class="empty" id="empty" style="display:none">No members found. Click Add New Member to register.</div>
+ </section>
+</div>
+<div class="footer">CRPF Mess Management System | Members Register</div>
+</main>
+</div>
+
+<!-- ADD / EDIT FORM -->
+<div class="modal" id="formModal">
+ <div class="modal-box">
+  <div class="modal-head">
+   <h3 id="formTitle">Add New Member</h3>
+   <button class="close" onclick="closeForm()">✕</button>
+  </div>
+  <form id="memberForm">
+   <div class="form-grid">
+    <div class="field">
+     <label>Force Number *</label>
+     <input id="forceNo" required placeholder="Enter force number">
+    </div>
+    <div class="field">
+     <label>Member Name *</label>
+     <input id="name" required placeholder="Full name">
+    </div>
+    <div class="field">
+     <label>Rank *</label>
+     <select id="rank" required>
+      <option value="">Select Rank</option>
+      <option>Commandant</option><option>Second-in-Command</option>
+      <option>Deputy Commandant</option><option>Assistant Commandant</option>
+      <option>Inspector</option><option>Sub Inspector</option>
+      <option>Assistant Sub Inspector</option><option>Head Constable</option>
+      <option>Constable</option><option>Other</option>
+     </select>
+    </div>
+    <div class="field">
+     <label>Contact Number</label>
+     <input id="contact" type="tel" placeholder="Mobile number">
+    </div>
+    <div class="field">
+     <label>Joining Date *</label>
+     <input id="joiningDate" type="date" required>
+    </div>
+    <div class="field">
+     <label>Mess Advance (₹)</label>
+     <input id="advance" type="number" min="0" step="0.01" value="0">
+    </div>
+    <div class="field">
+     <label>Status</label>
+     <select id="status"><option>Active</option><option>Inactive</option></select>
+    </div>
+    <div class="field">
+     <label>Member Photo</label>
+     <input id="photo" type="file" accept="image/*">
+    </div>
+    <div class="field full">
+     <label>Address / Remarks</label>
+     <textarea id="remarks" rows="2" placeholder="Optional details"></textarea>
+    </div>
+   </div>
+   <div class="form-actions">
+    <button type="button" class="secondary" onclick="closeForm()">Cancel</button>
+    <button type="submit" class="primary">Save Member</button>
+   </div>
+  </form>
+ </div>
+</div>
+
+<!-- VIEW DETAILS -->
+<div class="modal" id="viewModal">
+ <div class="modal-box">
+  <div class="modal-head">
+   <h3>Member Details</h3>
+   <button class="close" onclick="closeView()">✕</button>
+  </div>
+  <div id="memberDetails" class="details"></div>
+  <div class="form-actions">
+   <button class="secondary" onclick="printMember()">📄 Member PDF</button>
+   <button class="primary" onclick="closeView()">Close</button>
+  </div>
+ </div>
+</div>
+
+<script>
+const KEY="crpfMessData";
+let members=[];
+let editingId=null;
+let viewingId=null;
+
+function getData(){
+ try{return JSON.parse(localStorage.getItem(KEY)||"{}")}
+ catch(e){return {}}
+}
+function saveData(data){
+ localStorage.setItem(KEY,JSON.stringify(data));
+}
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
+}
+function money(v){
+ return "₹"+Number(v||0).toLocaleString("en-IN");
+}
+function refresh(){
+ const data=getData();
+ members=data.members||[];
+ render();
+}
+function render(){
+ const query=document.getElementById("search").value.toLowerCase();
+ const filter=document.getElementById("filter").value;
+ const active=members.filter(m=>(m.status||"Active")==="Active");
+ document.getElementById("total").textContent=members.length;
+ document.getElementById("active").textContent=active.length;
+ document.getElementById("inactive").textContent=members.length-active.length;
+
+ const list=members.filter(m=>{
+  const text=[m.forceNo,m.name,m.rank,m.contact].join(" ").toLowerCase();
+  return text.includes(query)&&(filter==="All"||(m.status||"Active")===filter);
+ });
+ document.getElementById("empty").style.display=list.length?"none":"block";
+ document.getElementById("memberRows").innerHTML=list.map(m=>`
+ <tr>
+  <td>${m.photo?`<img class="photo" src="${m.photo}" alt="Member">`:"👤"}</td>
+  <td>${esc(m.forceNo)}</td>
+  <td>${esc(m.name)}</td>
+  <td>${esc(m.rank)}</td>
+  <td>${esc(m.contact)}</td>
+  <td>${esc(m.joiningDate)}</td>
+  <td>${money(m.advance)}</td>
+  <td><span class="status ${(m.status||"Active")==="Inactive"?"inactive":""}">${esc(m.status||"Active")}</span></td>
+  <td class="no-print"><div class="actions">
+   <button class="secondary" onclick="viewMember('${m.id}')">View</button>
+   <button class="primary" onclick="editMember('${m.id}')">Edit</button>
+   <button class="danger" onclick="deleteMember('${m.id}')">Delete</button>
+  </div></td>
+ </tr>`).join("");
+}
+function openForm(id=null){
+ editingId=id;
+ document.getElementById("memberForm").reset();
+ document.getElementById("advance").value=0;
+ document.getElementById("formTitle").textContent=id?"Edit Member":"Add New Member";
+ if(id){
+  const m=members.find(x=>x.id===id);
+  if(!m)return;
+  ["forceNo","name","rank","contact","joiningDate","advance","status","remarks"]
+   .forEach(k=>document.getElementById(k).value=m[k]??"");
+ }
+ document.getElementById("formModal").style.display="block";
+}
+function closeForm(){document.getElementById("formModal").style.display="none"}
+function editMember(id){openForm(id)}
+function readPhoto(file){
+ return new Promise((resolve,reject)=>{
+  if(!file){resolve(null);return}
+  if(file.size>2*1024*1024){
+   reject(new Error("Please choose a photo smaller than 2 MB."));
+   return;
+  }
+  const reader=new FileReader();
+  reader.onload=()=>resolve(reader.result);
+  reader.onerror=()=>reject(new Error("Unable to read photo."));
+  reader.readAsDataURL(file);
+ });
+}
+document.getElementById("memberForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const data=getData();
+ data.members=data.members||[];
+ const file=document.getElementById("photo").files[0];
+ try{
+  const old=editingId?data.members.find(m=>m.id===editingId):null;
+  const photo=await readPhoto(file);
+  const member={
+   id:editingId||("M"+Date.now()),
+   forceNo:document.getElementById("forceNo").value.trim(),
+   name:document.getElementById("name").value.trim(),
+   rank:document.getElementById("rank").value,
+   contact:document.getElementById("contact").value.trim(),
+   joiningDate:document.getElementById("joiningDate").value,
+   advance:Number(document.getElementById("advance").value||0),
+   status:document.getElementById("status").value,
+   remarks:document.getElementById("remarks").value.trim(),
+   photo:photo||(old?old.photo:"")
+  };
+  if(!member.forceNo||!member.name){alert("Enter force number and member name.");return}
+  const duplicate=data.members.find(m=>m.forceNo.toLowerCase()===member.forceNo.toLowerCase()&&m.id!==member.id);
+  if(duplicate){alert("This force number is already registered.");return}
+  if(editingId){
+   const i=data.members.findIndex(m=>m.id===editingId);
+   data.members[i]=member;
+  }else data.members.push(member);
+  saveData(data);
+  closeForm();
+  refresh();
+  alert("Member saved successfully.");
+ }catch(err){alert(err.message)}
+});
+function deleteMember(id){
+ const m=members.find(x=>x.id===id);
+ if(!m||!confirm("Delete member "+m.name+"?"))return;
+ const data=getData();
+ data.members=(data.members||[]).filter(x=>x.id!==id);
+ saveData(data);
+ refresh();
+}
+function viewMember(id){
+ viewingId=id;
+ const m=members.find(x=>x.id===id);
+ if(!m)return;
+ document.getElementById("memberDetails").innerHTML=`
+  ${m.photo?`<img src="${m.photo}" alt="Member photo"><br>`:""}
+  <b>Force Number:</b> ${esc(m.forceNo)}<br>
+  <b>Name:</b> ${esc(m.name)}<br>
+  <b>Rank:</b> ${esc(m.rank)}<br>
+  <b>Contact:</b> ${esc(m.contact)}<br>
+  <b>Joining Date:</b> ${esc(m.joiningDate)}<br>
+  <b>Mess Advance:</b> ${money(m.advance)}<br>
+  <b>Status:</b> ${esc(m.status)}<br>
+  <b>Remarks:</b> ${esc(m.remarks)}
+ `;
+ document.getElementById("viewModal").style.display="block";
+}
+function closeView(){document.getElementById("viewModal").style.display="none"}
+function printList(){
+ document.getElementById("printMess").textContent=
+  (getData().settings?.messName||"CRPF Mess")+" – Members Register";
+ document.getElementById("printDate").textContent=
+  "Generated: "+new Date().toLocaleString();
+ window.print();
+}
+function printMember(){
+ const m=members.find(x=>x.id===viewingId);
+ if(!m)return;
+ const w=window.open("","_blank");
+ if(!w){alert("Please allow pop-ups to print the member PDF.");return}
+ w.document.write(`
+ <!DOCTYPE html><html><head><title>Member Details</title>
+ <style>body{font-family:Arial;padding:35px;color:#222}
+ h2{text-align:center;color:#123d2b}
+ h3{text-align:center;margin:10px}
+ .line{border-bottom:1px solid #ddd;padding:12px}
+ img{width:100px;height:100px;object-fit:cover;border-radius:50%}
+ </style></head><body>
+ <h2>CRPF MESS – COOKING HOUSE</h2>
+ <h3>Individual Member Details</h3>
+ <p style="text-align:center">Generated: ${esc(new Date().toLocaleDateString())}</p>
+ ${m.photo?`<p style="text-align:center"><img src="${m.photo}"></p>`:""}
+ ${[["Force Number",m.forceNo],["Name",m.name],["Rank",m.rank],
+ ["Contact",m.contact],["Joining Date",m.joiningDate],
+ ["Mess Advance",money(m.advance)],["Status",m.status],["Remarks",m.remarks]]
+ .map(([k,v])=>`<div class="line"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}
+ <script>window.onload=()=>window.print();<\/script>
+ </body></html>`);
+ w.document.close();
+}
+document.getElementById("date").textContent=new Date().toLocaleDateString();
+refresh();
+</script>
+</body>
+</html>
