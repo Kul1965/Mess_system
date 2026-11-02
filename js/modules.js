@@ -49,7 +49,8 @@ function options(f){if(f[2]==="staff")return '<option value="">Select staff</opt
 function input(f,v=""){let [id,label,type,required]=f;let html=type==="select"||type==="item"||type==="member"||type==="recipe"||type==="staff"?'<select id="f_'+id+'" '+(required?"required":"")+'>'+options(f)+'</select>':'<input id="f_'+id+'" type="'+type+'" value="'+esc(v)+'" '+(required?"required":"")+' '+(type==="number"?'min="0" step="any"':"")+'>';return '<div class="field"><label>'+label+(required?" *":"")+'</label>'+html+'</div>'}
 function render(){
   try{
-    document.getElementById("pageTitle").textContent=cfg.title;
+    const pageIcons={store:"📦",purchases:"🛒",recipes:"🍲",menu:"📅",accounts:"💰",staff:"👨‍🍳",reports:"📊",handover:"🔄",settings:"⚙️"};
+    document.getElementById("pageTitle").textContent=(pageIcons[document.body.dataset.module]||"🛡️")+" "+cfg.title;
     document.getElementById("pageSub").textContent=cfg.sub;
     document.getElementById("dateNow").textContent=new Date().toLocaleDateString();
     if(cfg.key==="settings"){renderSettings();return}
