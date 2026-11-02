@@ -144,7 +144,7 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
    <h3>Member Records</h3>
    <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="secondary" onclick="printList()">📄 Download PDF</button>
-    <button class="primary" onclick="openForm()">＋ Add New Member</button>
+    <button type="button" id="addMemberBtn" class="primary">＋ Add New Member</button>
    </div>
   </div>
   <div class="toolbar">
@@ -280,7 +280,7 @@ function money(v){
 }
 function refresh(){
  const data=getData();
- members=data.members||[];
+ members=Array.isArray(data.members)?data.members:[];
  render();
 }
 function render(){
@@ -358,7 +358,7 @@ function readPhoto(file){
 document.getElementById("memberForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const data=getData();
- data.members=data.members||[];
+ data.members=Array.isArray(data.members)?data.members:[];
  const file=document.getElementById("photo").files[0];
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
@@ -382,7 +382,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
    const i=data.members.findIndex(m=>m.id===editingId);
    data.members[i]=member;
   }else data.members.push(member);
-  saveData(data);
+  try{saveData(data);}catch(saveErr){alert("Save nahi hua. Browser storage full ho sakta hai. Photo hata kar dobara try karein.");return}
   closeForm();
   refresh();
   alert("Member saved successfully.");
@@ -436,6 +436,7 @@ function printMember(){
  w.document.close();
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
+document.getElementById("addMemberBtn").addEventListener("click",()=>openForm());
 refresh();
 </script>
 </body>
