@@ -31,9 +31,9 @@ function arr(){
   return list;
 }
 function isLowStock(x){
-  const qty=Number(x.quantity ?? x.stock ?? 0);
-  const min=Number(x.minimum ?? x.minStock ?? x.minimumStock ?? 0);
-  return min>0 && qty<=min || qty<=0;
+  const qty=Number.parseFloat(x.quantity ?? x.stock ?? 0) || 0;
+  const min=Number.parseFloat(x.minimum ?? x.minStock ?? x.minimumStock ?? x.min ?? x.reorderLevel ?? 0) || 0;
+  return qty<=0 || (min>0 && qty<=min);
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function money(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2})}
