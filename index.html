@@ -510,9 +510,11 @@ function loadDashboard() {
     sum + Number(r.quantity || 0) * Number(r.price || r.unitPrice || 0),0
   );
 
-  const low = ration.filter(r =>
-    Number(r.quantity || 0) <= Number(r.minimum ?? r.minStock ?? 0)
-  );
+  const low = ration.filter(r => {
+    const qty = Number.parseFloat(r.quantity ?? r.stock ?? 0) || 0;
+    const min = Number.parseFloat(r.minimum ?? r.minStock ?? r.minimumStock ?? r.min ?? r.reorderLevel ?? 0) || 0;
+    return qty <= 0 || (min > 0 && qty <= min);
+  });
 
   const totalPurchases = purchases.reduce((sum,p) =>
     sum + Number(p.total || p.amount || 0),0
