@@ -567,8 +567,8 @@ function safe(value) {
   })[c]);
 }
 
-document.getElementById("dateDisplay").textContent =
-  new Date().toLocaleDateString("en-GB");
+function updateDashboardClock(){const now=new Date();document.getElementById("dateDisplay").textContent="🕒 "+now.toLocaleTimeString("en-GB",{hour12:false})+" | "+now.toLocaleDateString("en-GB");}
+updateDashboardClock();setInterval(updateDashboardClock,1000);
 
 function loadDashboard() {
   let data = {};
