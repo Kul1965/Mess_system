@@ -92,7 +92,24 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
  .footer{color:black}
 }
 .print-heading{display:none;text-align:center;color:black!important;margin-bottom:20px}
-.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}.account-grid>div,.meal-entry{background:#041f17;border:1px solid #287b52;border-radius:8px;padding:12px}.account-grid small{display:block;color:#a9c9bb;font-size:11px}.account-grid strong{display:block;font-size:18px;margin-top:6px}.meal-entry{margin:8px 0;line-height:1.6}.meal-head{display:flex;justify-content:space-between}.meal-entry small{color:#a9c9bb}.view-heading{margin:18px 0 10px;color:var(--yellow)}@media(max-width:480px){.account-grid strong{font-size:15px}}</style>
+.account-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0}.account-grid>div,.meal-entry{background:#041f17;border:1px solid #287b52;border-radius:8px;padding:12px}.account-grid small{display:block;color:#a9c9bb;font-size:11px}.account-grid strong{display:block;font-size:18px;margin-top:6px}.meal-entry{margin:8px 0;line-height:1.6}.meal-head{display:flex;justify-content:space-between}.meal-entry small{color:#a9c9bb}.view-heading{margin:18px 0 10px;color:var(--yellow)}@media(max-width:480px){.account-grid strong{font-size:15px}}
+.app-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20000;width:min(92vw,520px);display:flex;align-items:center;gap:11px;padding:13px 15px 16px;border-radius:12px;border:1px solid #55bd83;background:#e3f8eb;color:#104d2e;box-shadow:0 12px 35px #0007;font-size:14px;font-weight:700;animation:toastDrop .22s ease-out;overflow:hidden}
+.app-toast.success{background:#e3f8eb;border-color:#55bd83;color:#104d2e}
+.app-toast.error{background:#ffe8e8;border-color:#d96a70;color:#76252b}
+.app-toast.warning{background:#fff4d8;border-color:#d8ad45;color:#65470b}
+.app-toast.info{background:#e5f1ff;border-color:#75a8df;color:#173e69}
+.app-toast-icon{width:25px;height:25px;flex:0 0 25px;border-radius:50%;display:grid;place-items:center;background:#b5e9c7;color:#075b37;font-size:16px}
+.app-toast.error .app-toast-icon{background:#f7c5c8;color:#8e2029}
+.app-toast.warning .app-toast-icon{background:#f8e2a5;color:#78540b}
+.app-toast.info .app-toast-icon{background:#c6ddf8;color:#1d568d}
+.app-toast-message{flex:1;line-height:1.4}
+.app-toast-close{padding:0 3px;border:0;background:transparent;color:inherit;font-size:23px;line-height:1}
+.app-toast-progress{position:absolute;bottom:0;left:0;height:3px;background:currentColor;opacity:.45;animation:toastProgress 4.2s linear forwards}
+@keyframes toastDrop{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastProgress{from{width:100%}to{width:0}}
+@media(max-width:480px){.app-toast{top:8px;padding:11px 12px 14px;font-size:13px}}
+
+</style>
 </head>
 <body>
 <div class="app">
@@ -258,6 +275,37 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
 </div>
 
 <script>
+function showToast(message,type="info"){
+ const old=document.getElementById("appToast");
+ if(old)old.remove();
+ const text=String(message??"");
+ const kind=type==="success"||/success|saved|restored|updated|deleted/i.test(text)?"success":
+   type==="error"||/error|failed|not saved|save nahi|unable|invalid|already registered/i.test(text)?"error":
+   type==="warning"||/warning|khali|low stock|please allow/i.test(text)?"warning":"info";
+ const toast=document.createElement("div");
+ toast.id="appToast";
+ toast.className="app-toast "+kind;
+ toast.setAttribute("role",kind==="error"?"alert":"status");
+ toast.setAttribute("aria-live",kind==="error"?"assertive":"polite");
+ const icon=document.createElement("span");
+ icon.className="app-toast-icon";
+ icon.textContent=kind==="success"?"✓":kind==="error"?"!":kind==="warning"?"⚠":"ℹ";
+ const label=document.createElement("span");
+ label.className="app-toast-message";
+ label.textContent=text;
+ const close=document.createElement("button");
+ close.type="button";
+ close.className="app-toast-close";
+ close.setAttribute("aria-label","Close message");
+ close.textContent="×";
+ close.addEventListener("click",()=>toast.remove());
+ const bar=document.createElement("span");
+ bar.className="app-toast-progress";
+ toast.append(icon,label,close,bar);
+ document.body.appendChild(toast);
+ window.setTimeout(()=>{if(toast.isConnected)toast.remove()},4200);
+}
+
 const KEY="crpfMessData";
 let members=[];
 let editingId=null;
@@ -375,18 +423,18 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
    remarks:document.getElementById("remarks").value.trim(),
    photo:photo||(old?old.photo:"")
   };
-  if(!member.forceNo||!member.name){alert("Enter force number and member name.");return}
+  if(!member.forceNo||!member.name){showToast("Enter force number and member name.");return}
   const duplicate=data.members.find(m=>m.forceNo.toLowerCase()===member.forceNo.toLowerCase()&&m.id!==member.id);
-  if(duplicate){alert("This force number is already registered.");return}
+  if(duplicate){showToast("This force number is already registered.");return}
   if(editingId){
    const i=data.members.findIndex(m=>m.id===editingId);
    data.members[i]=member;
   }else data.members.push(member);
-  try{saveData(data);}catch(saveErr){alert("Save nahi hua. Browser storage full ho sakta hai. Photo hata kar dobara try karein.");return}
+  try{saveData(data);}catch(saveErr){showToast("Save nahi hua. Browser storage full ho sakta hai. Photo hata kar dobara try karein.");return}
   closeForm();
   refresh();
-  alert("Member saved successfully.");
- }catch(err){alert(err.message)}
+  showToast("Member saved successfully.","success");
+ }catch(err){showToast(err.message)}
 });
 function deleteMember(id){
  const m=members.find(x=>x.id===id);
@@ -417,7 +465,7 @@ function viewMember(id){
 function whatsAppMember(){
  const m=members.find(x=>x.id===viewingId);if(!m)return;
  const phone=String(m.contact||"").replace(/\D/g,"");
- if(!phone){alert("Member ka WhatsApp mobile number pehle Contact Number mein add karein.");return}
+ if(!phone){showToast("Member ka WhatsApp mobile number pehle Contact Number mein add karein.");return}
  const data=getData();
  const records=(data.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(m.id));
  const tx=(data.transactions||[]).filter(t=>t.memberId===m.id);
@@ -442,7 +490,7 @@ function printMember(){
  const tx=(d.transactions||[]).filter(t=>t.memberId===m.id);
  const total=records.reduce((n,r)=>n+Number(r.chargePerMember||0),0);
  const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((n,t)=>n+Number(t.amount||0),0);
- const w=window.open("","_blank");if(!w){alert("Please allow pop-ups to print the member statement.");return}
+ const w=window.open("","_blank");if(!w){showToast("Please allow pop-ups to print the member statement.");return}
  const photoHtml=m.photo?'<div class="member-photo"><img src="'+m.photo+'" alt="Member photo"></div>':'';
  const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</td><td>'+esc((r.ingredientUsage||[]).map(i=>i.itemName+': '+i.quantity+' '+i.unit).join(', '))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
  const payRows=tx.map(t=>'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td></tr>').join("");
