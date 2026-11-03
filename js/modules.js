@@ -226,6 +226,27 @@ function renderHandoverOverview(){
  box.innerHTML='<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div><h4>Current Staff</h4><p>'+(staff.length?staff.map(x=>esc(x.name)+" — "+esc(x.duty||"Staff")).join(" · "):"Mess Staff page par staff add karein.")+'</p><h4>Ration Stock Snapshot</h4><div class="tablewrap"><table><thead><tr><th>Item</th><th>Available</th><th>Minimum</th></tr></thead><tbody>'+ration.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.quantity)+' '+esc(x.unit)+'</td><td>'+esc(x.minimum||0)+' '+esc(x.unit)+'</td></tr>').join("")+'</tbody></table></div><p class="muted">Yeh summary saved staff, ration aur account transactions se automatic read hoti hai.</p>';
 }
 
+
+/* Mobile app-style sidebar toggle */
+(function initMobileNavigation(){
+ const sidebar=document.querySelector(".sidebar"),topbar=document.querySelector(".topbar");
+ if(!sidebar||!topbar||document.querySelector(".mobile-menu-toggle"))return;
+ const toggle=document.createElement("button");
+ toggle.type="button";toggle.className="mobile-menu-toggle";
+ toggle.setAttribute("aria-label","Open navigation menu");toggle.setAttribute("aria-expanded","false");
+ toggle.textContent="☰";
+ const backdrop=document.createElement("div");backdrop.className="mobile-menu-backdrop";
+ backdrop.setAttribute("aria-hidden","true");document.body.appendChild(backdrop);
+ topbar.insertBefore(toggle,topbar.firstChild);
+ function closeMenu(){document.body.classList.remove("mobile-nav-open");toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-label","Open navigation menu");toggle.textContent="☰";}
+ function openMenu(){document.body.classList.add("mobile-nav-open");toggle.setAttribute("aria-expanded","true");toggle.setAttribute("aria-label","Close navigation menu");toggle.textContent="×";}
+ toggle.addEventListener("click",()=>document.body.classList.contains("mobile-nav-open")?closeMenu():openMenu());
+ backdrop.addEventListener("click",closeMenu);
+ sidebar.querySelectorAll("a").forEach(a=>a.addEventListener("click",closeMenu));
+ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu();});
+ window.addEventListener("resize",()=>{if(window.innerWidth>700)closeMenu();});
+})();
+
 render();
 if(cfg.key==="purchases"){
   const wanted=new URLSearchParams(location.search).get("item");
