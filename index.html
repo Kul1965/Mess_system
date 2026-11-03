@@ -97,7 +97,7 @@ body{
   font-size:13px;
   white-space:nowrap;
 }
-.nco-pill{border-color:#d8b63d;background:#4b3b08;color:#ffe48a}.nco-pill strong{color:#fff1a8}.so-pill{border-color:#4b9cc4;background:#073b56;color:#9edcff}.so-pill strong{color:#e1f5ff}
+.nco-pill{border-color:#d8b63d;background:#4b3b08;color:#ffe48a;white-space:normal;max-width:360px;line-height:1.45}.nco-pill strong{color:#fff1a8}.so-pill{border-color:#4b9cc4;background:#073b56;color:#9edcff;white-space:normal;max-width:360px;line-height:1.45}.so-pill strong{color:#e1f5ff}
 .content{padding:20px}
 
 /* PAGE TITLE */
@@ -646,8 +646,9 @@ function loadDashboard() {
   const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
   const name=settings.messName||"A Coy (CRPF)";
   const activeStaff=(data.staff||[]).filter(x=>String(x.status||"Active").toLowerCase()==="active");
-  const nco=activeStaff.find(x=>String(x.duty||"").toLowerCase()==="mess nco")?.name||"Not Set";
-  const so=activeStaff.find(x=>String(x.duty||"").toLowerCase()==="mess so")?.name||"Not Set";
+  // Show every active staff member assigned to each role, not only the first match.
+  const nco=activeStaff.filter(x=>String(x.duty||"").trim().toLowerCase()==="mess nco").map(x=>x.name).filter(Boolean).join(", ")||"Not Set";
+  const so=activeStaff.filter(x=>String(x.duty||"").trim().toLowerCase()==="mess so").map(x=>x.name).filter(Boolean).join(", ")||"Not Set";
   set("messName",name);set("messInfo",name);
   set("messNco",nco);set("messSo",so);
   set("messNcoInfo",nco);set("messSoInfo",so);
