@@ -587,21 +587,13 @@ function loadDashboard() {
     sum + Number(m.advance || m.messAdvance || 0),0
   );
 
-  // Calculate each item's value from its recorded purchase average per base unit.
-  // Use the saved Store rate only when there is no usable purchase history.
+  // Store item.price is the current weighted-average rate per Store base unit.
+  // Purchases update this rate and the remaining stock quantity together.
+  // Therefore do not recalculate an average from purchase history here.
   const stockValue = ration.reduce((sum,item) => {
-    const itemPurchases = purchases.filter(p => String(p.itemId) === String(item.id));
-    let boughtQty = 0, boughtValue = 0;
-    itemPurchases.forEach(p => {
-      const qty = Number(p.baseQuantity);
-      const value = Number(p.total ?? p.amount ?? (Number(p.quantity || 0) * Number(p.rate || 0)));
-      if (Number.isFinite(qty) && qty > 0 && Number.isFinite(value) && value >= 0) {
-        boughtQty += qty;
-        boughtValue += value;
-      }
-    });
-    const averageRate = boughtQty > 0 ? boughtValue / boughtQty : Number(item.price ?? item.unitPrice ?? 0);
-    return sum + Number(item.quantity || 0) * averageRate;
+    const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
+    const rate = Number(item.price ?? item.unitPrice ?? 0) || 0;
+    return sum + quantity * rate;
   },0);
 
   const low = ration.filter(r => {
