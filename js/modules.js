@@ -173,7 +173,9 @@ function saveCurrentRecord(event){
   const total=values.quantity*values.rate;
   const old=arr().find(x=>String(x.id)===String(editId));
   const currentStock=Number(item.quantity||0),currentValue=currentStock*Number(item.price||0);
-  const oldBase=old?Number(old.baseQuantity??purchaseInBase(old.quantity,old.unit,item.unit)):0;
+  const oldBaseRaw=old?(old.baseQuantity??purchaseInBase(old.quantity,old.unit,item.unit)):0;
+  if(old&&(oldBaseRaw===null||!Number.isFinite(Number(oldBaseRaw)))){showAppAlert("Purane purchase unit ka conversion available nahi hai. Is record ko safely edit nahi kar sakte.");return}
+  const oldBase=Number(oldBaseRaw||0);
   const oldTotal=old?Number(old.total??(Number(old.quantity||0)*Number(old.rate||0))):0;
   const deltaQty=baseQty-oldBase,deltaValue=total-oldTotal;
   const newStock=currentStock+deltaQty,newValue=currentValue+deltaValue;
@@ -226,11 +228,25 @@ function showDeleteConfirm(onConfirm){
  wrap.querySelector("#deleteConfirm").addEventListener("click",()=>{close();onConfirm()});
  wrap.addEventListener("click",e=>{if(e.target===wrap)close()});
 }
+function reversePurchase(purchase){
+ const item=(data.ration||[]).find(x=>String(x.id)===String(purchase.itemId));
+ if(!item){showAppAlert("Purchase ka ration item Store mein nahi mila; stock change nahi kiya.");return false}
+ const baseRaw=purchase.baseQuantity??purchaseInBase(purchase.quantity,purchase.unit,item.unit);
+ if(baseRaw===null||!Number.isFinite(Number(baseRaw))){showAppAlert("Purchase unit conversion available nahi hai; stock change nahi kiya.");return false}
+ const qty=Number(baseRaw),total=Number(purchase.total??(Number(purchase.quantity||0)*Number(purchase.rate||0)));
+ const stock=Number(item.quantity||0),value=stock*Number(item.price||0);
+ if(stock+1e-9<qty){showAppAlert("Is purchase ka kuch stock use ho chuka hai. Safe stock adjustment possible nahi; delete cancel kiya.");return false}
+ const next=stock-qty,nextValue=value-total;
+ item.quantity=Math.max(0,next);
+ item.price=item.quantity>0?Math.max(0,nextValue)/item.quantity:0;
+ refreshAllRecipeCosts();
+ return true;
+}
 function deleteRow(id){
  let x=arr().find(a=>a.id===id);
  if(!x)return;
  showDeleteConfirm(()=>{
-  if(cfg.key==="purchases")reversePurchase(x);
+  if(cfg.key==="purchases"&&!reversePurchase(x))return;
   arr().splice(arr().findIndex(a=>a.id===id),1);
   if(!save())return;
   render();
