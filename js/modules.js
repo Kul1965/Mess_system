@@ -32,7 +32,7 @@ const configs={
  recipes:{title:"Recipes",sub:"Add ration ingredients; cost is calculated from current store rates",key:"recipes",fields:[["name","Recipe name","text",1],["notes","Notes","text"]],cols:["name","ingredientSummary","totalCost","costPerServing"]},
  menu:{title:"Making Menu",sub:"Select a meal and recipe; recipe cost is calculated automatically",key:"menu",fields:[["date","Menu date","date",1],["recipeId","Select recipe","recipe",1],["servings","Number of members / servings","number",1]],cols:["date","recipeName","servings","totalCost"]},
  accounts:{title:"Accounts",sub:"Record mess collections, advances and expenses",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"collection|expense|advance"],["memberId","Member","member"],["description","Details","text",1],["amount","Amount (Rs)","number",1]],cols:["date","type","memberName","description","amount"]},
- staff:{title:"Mess Staff",sub:"Manage cooks and mess duty assignments",key:"staff",fields:[["name","Staff name","text",1],["rank","Rank","text"],["duty","Duty","select",1,"Mess Commander|Mess NCO|Mess SO|Cook|Member"],["phone","Mobile","tel"],["status","Status","select",1,"Active|Inactive"]],cols:["name","rank","duty","phone","status"]},
+ staff:{title:"Mess Staff",sub:"Select an existing member and assign mess duty",key:"staff",fields:[["memberId","Choose Member","member",1],["duty","Assign Duty","select",1,"Mess Commander|Mess NCO|Mess SO|Cook|Member"]],cols:["name","rank","duty","phone","status"]},
  reports:{title:"Reports & Records",sub:"View summaries from saved mess records",key:"reports",fields:[],cols:[]},
  handover:{title:"Mess Handover",sub:"Record monthly mess commander handover",key:"handovers",fields:[["date","Handover date","date",1],["from","Outgoing commander","staff",1],["to","Incoming commander","staff",1],["cash","Cash balance (Rs)","number"],["notes","Stock / account notes","text"]],cols:["date","from","to","cash","notes"]},
  settings:{title:"Settings",sub:"Mess identity and local preferences",key:"settings",fields:[["messName","Mess name","text",1],["currency","Currency label","text",1]],cols:[]}
@@ -175,6 +175,18 @@ function saveCurrentRecord(event){
   if(el)values[id]=el.type==="number"?Number(el.value||0):el.value.trim();
  });
  if(cfg.key==="settings"){saveSettings();return}
+ if(cfg.key==="staff"){
+  const member=(data.members||[]).find(x=>String(x.id)===String(values.memberId));
+  if(!member){showAppAlert("Members list se member select karein.");return}
+  const old=arr().find(x=>String(x.id)===String(editId))||{};
+  const duplicate=arr().find(x=>String(x.memberId)===String(member.id)&&String(x.id)!==String(editId));
+  if(duplicate){showAppAlert("Yeh member Mess Staff mein pehle se hai. Usi record ko Edit karke duty badlein.");return}
+  const record={...old,memberId:member.id,name:member.name||"",rank:member.rank||"",phone:member.contact||member.mobile||member.phone||"",status:member.status||"Active",duty:values.duty,id:editId||("ST"+Date.now())};
+  const list=arr(),index=list.findIndex(x=>String(x.id)===String(record.id));
+  if(index>=0)list[index]=record;else list.push(record);
+  if(!save())return;
+  closeForm();render();showAppAlert("Member duty assigned successfully.");return;
+ }
  if(cfg.key==="recipes"){
   const ingredients=collectRecipeIngredients();
   if(!ingredients)return;
