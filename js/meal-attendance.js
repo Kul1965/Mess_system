@@ -35,10 +35,11 @@
   $("mealChargeView").textContent=money(perMember);$("memberCountView").textContent=count;$("mealTotalView").textContent=money(perMember*count);
   if(!recipes.length){$("rationPreview").innerHTML='<tr><td colspan="3">Ek ya zyada dishes select karein.</td></tr>';$("stockNote").textContent="Dal, Chawal, Sabji jaise dishes select karein.";return}
   const ingredients=aggregate(recipes);
+  const prettyQty=(value,unit)=>{const n=Number(value||0),u=String(unit||"");if(u==="g"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" kg";if(u==="ml"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" L";return n.toLocaleString("en-IN",{maximumFractionDigits:2})+" "+u;};
   $("rationPreview").innerHTML=ingredients.map(i=>{
    const total=i.perServing*count,item=(d.ration||[]).find(x=>x.id===i.itemId),available=Number(item?.quantity||0),short=count>0&&available<total;
-   return '<tr><td>'+esc(i.itemName||item?.name||"Ration")+'</td><td>'+i.perServing+' '+esc(i.unit||item?.unit||"")+'</td><td style="font-weight:700;'+(short?'color:#e83e49':'')+'">'+total+' '+esc(i.unit||item?.unit||"")+(short?' (Stock kam)':'')+'</td></tr>';
-  }).join("")||'<tr><td colspan="3">Selected recipes mein ration ingredients nahi hain.</td></tr>';
+   return '<tr><td><div class="ration-item-name"><span class="ration-item-icon">🥣</span><span>'+esc(i.itemName||item?.name||"Ration")+'</span></div></td><td><span class="qty-pill">'+esc(prettyQty(i.perServing,i.unit||item?.unit))+'</span></td><td><span class="qty-total '+(short?'short-stock':'')+'">'+esc(prettyQty(total,i.unit||item?.unit))+'</span>'+(short?'<small style="display:block;color:#ff9da3;margin-top:5px;font-weight:700">⚠ Stock kam</small>':'')+'</td></tr>';
+  }).join("")||'<tr><td class="ration-empty" colspan="3">Selected recipes mein ration ingredients nahi hain.</td></tr>';
   $("stockNote").textContent=count?"Selected "+count+" members ke liye sabhi dishes ka combined ration dikhaya gaya hai.":"Members select karein; total ration quantity calculate hogi.";
   $("recipeHelp").textContent=recipes.map(r=>r.name).join(" + ")+" | Total per member: "+money(perMember);
  }
