@@ -330,6 +330,42 @@ function renderReports(){
   else showRecordCategory(key,groups.find(g=>g[2]===key)?.[0]||key,groups.find(g=>g[2]===key)?.[1]||"📄");
  }));
 }
+function reportFieldLabel(k){return String(k).replace(/([A-Z])/g," $1").replace(/[_-]/g," ").replace(/^./,c=>c.toUpperCase())}
+function reportValue(v){
+ if(v===null||v===undefined||v==="")return "—";
+ if(typeof v==="boolean")return v?"Yes":"No";
+ if(typeof v!=="object")return String(v);
+ return "";
+}
+function reportNested(value){
+ if(Array.isArray(value)){
+  if(!value.length)return '<span class="muted">None</span>';
+  if(value.every(v=>v===null||typeof v!=="object")){
+   return '<div style="display:flex;flex-wrap:wrap;gap:6px">'+value.map(v=>'<span style="background:#eaf3ee;border:1px solid #d5e5db;border-radius:7px;padding:5px 8px;font-size:12px">'+esc(reportValue(v))+'</span>').join("")+'</div>';
+  }
+  if(value.every(v=>v&&typeof v==="object"&&!Array.isArray(v))){
+   const keys=[...new Set(value.flatMap(v=>Object.keys(v)))].filter(k=>!["id","createdAt","updatedAt"].includes(k));
+   return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'+keys.map(k=>'<th style="text-align:left;padding:8px;background:#eaf3ee;border-bottom:1px solid #d5e5db">'+esc(reportFieldLabel(k))+'</th>').join("")+'</tr></thead><tbody>'+value.map(row=>'<tr>'+keys.map(k=>'<td style="padding:8px;border-bottom:1px solid #e4ebe6;vertical-align:top">'+(row[k]&&typeof row[k]==="object"?reportNested(row[k]):esc(reportValue(row[k])))+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>';
+  }
+  return '<div style="display:grid;gap:6px">'+value.map(v=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</div>').join("")+'</div>';
+ }
+ if(value&&typeof value==="object"){
+  return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px">'+Object.entries(value).filter(([k])=>!["id","createdAt","updatedAt"].includes(k)).map(([k,v])=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px"><small style="display:block;color:#66786d">'+esc(reportFieldLabel(k))+'</small><b style="font-size:12px;overflow-wrap:anywhere">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</b></div>').join("")+'</div>';
+ }
+ return esc(reportValue(value));
+}
+function reportRecordCard(x,index,label,icon){
+ const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
+ const photo=x.photo||x.photoData||x.image||"";
+ const skip=["id","photo","photoData","image","createdAt","updatedAt"];
+ const fields=Object.entries(x).filter(([k,v])=>!skip.includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>{
+  const isIngredients=(k==="ingredients"||k==="ingredientList");
+  const content=isIngredients&&Array.isArray(v)?reportNested(v):reportNested(v);
+  return '<section style="padding:10px 0;border-bottom:1px solid #e4ebe6;min-width:0"><small style="display:block;color:#63766b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+esc(reportFieldLabel(k))+'</small><div style="overflow-wrap:anywhere">'+content+'</div></section>';
+ }).join("");
+ const image=photo?'<img src="'+esc(photo)+'" alt="Saved photo" style="width:88px;height:88px;object-fit:cover;border-radius:12px;border:1px solid #d5e5db;margin:8px 12px 8px 0">':"";
+ return '<article style="border:1px solid #d5e5db;border-radius:12px;padding:13px;margin:10px 0;background:#fff;color:#214d3b;box-shadow:0 2px 8px #173e2510"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:11px;color:#63766b">'+icon+' '+esc(label)+' · Record '+(index+1)+'</span><b style="font-size:16px;display:block;width:100%">'+esc(name)+'</b></div><div style="display:flex;align-items:flex-start;flex-wrap:wrap">'+image+'<div style="flex:1;min-width:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));column-gap:14px">'+(fields||'<p class="muted">No extra details saved.</p>')+'</div></div></article>';
+}
 function showAllRecordCategories(){
  const groups=[["Members","👥","members"],["Ration Store","📦","ration"],["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],["Making Menu","📅","menu"],["Meal Records","🍽️","mealRecords"],["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]];
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
@@ -337,34 +373,22 @@ function showAllRecordCategories(){
  const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
  wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px";
- const rows=all.map((entry,i)=>{
-  const x=entry.record;
-  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||entry.label;
-  const detail=Object.entries(x).filter(([k,v])=>!["id","photo","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>esc(k.replace(/([A-Z])/g," $1"))+": "+esc(typeof v==="object"?JSON.stringify(v):v)).join(" · ");
-  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Record photo" style="width:54px;height:54px;object-fit:cover;border-radius:8px">':"";
-  return '<article style="border:1px solid var(--border,#dce5df);border-radius:10px;padding:11px;margin:8px 0;display:flex;gap:10px;align-items:flex-start">'+photo+'<div style="min-width:0"><small>'+entry.icon+' '+esc(entry.label)+' · '+(i+1)+'</small><b style="display:block;overflow-wrap:anywhere">'+esc(name)+'</b><small style="display:block;overflow-wrap:anywhere;color:var(--muted)">'+(detail||"No extra details saved")+'</small></div></article>';
- }).join("");
- wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,900px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;justify-content:space-between;align-items:center;padding:5px 0 12px;z-index:1"><h2 style="margin:0">📚 All Mess Records — '+all.length+'</h2><button type="button" id="closeAllRecords" class="alt">✕ Close</button></div>'+(rows||'<p class="empty">Abhi koi saved record nahi hai.</p>')+'</section>';
+ const rows=all.map((entry,i)=>reportRecordCard(entry.record,i,entry.label,entry.icon)).join("");
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,950px);max-height:90vh;overflow:auto;background:#f4f8f5;color:#214d3b;border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:#f4f8f5;display:flex;justify-content:space-between;align-items:center;padding:5px 0 12px;z-index:1"><h2 style="margin:0">📚 All Mess Records — '+all.length+'</h2><button type="button" id="closeAllRecords" class="alt">✕ Close</button></div>'+(rows||'<p class="empty">Abhi koi saved record nahi hai.</p>')+'</section>';
  document.body.appendChild(wrap);const close=()=>wrap.remove();wrap.querySelector("#closeAllRecords").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
 }
 function showRecordCategory(key,label,icon){
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
  const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
  const list=Array.isArray(sources[key])?sources[key]:[];
- const title=k=>String(k).replace(/([A-Z])/g," $1").replace(/[_-]/g," ").replace(/^./,c=>c.toUpperCase());
- const value=v=>v===null||v===undefined||v===""?"—":Array.isArray(v)?v.map(a=>typeof a==="object"?JSON.stringify(a):String(a)).join(" | "):typeof v==="object"?JSON.stringify(v):typeof v==="boolean"?(v?"Yes":"No"):String(v);
  const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
  wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px";
- const cards=list.map((x,index)=>{
-  const fields=Object.entries(x).filter(([k,v])=>!["id","photo","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>'<div style="padding:7px 9px;border-bottom:1px solid var(--border,#dce5df);min-width:0"><small style="display:block;color:var(--muted,#78857e);font-size:11px">'+esc(title(k))+'</small><b style="display:block;overflow-wrap:anywhere;font-size:13px">'+esc(value(v))+'</b></div>').join("");
-  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Saved photo" style="width:76px;height:76px;object-fit:cover;border-radius:12px;margin:0 12px 8px 0">':"";
-  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
-  return '<article style="border:1px solid var(--border,#dce5df);border-radius:12px;padding:12px;margin:10px 0;background:var(--card,#fff)"><b style="font-size:15px">'+(index+1)+'. '+esc(name)+'</b><div style="display:flex;align-items:flex-start;flex-wrap:wrap;margin-top:8px">'+photo+'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;flex:1;min-width:220px">'+(fields||'<div>No extra details saved.</div>')+'</div></div></article>';
- }).join("");
- wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 12px;z-index:1"><h2 style="margin:0;font-size:19px">'+icon+' '+esc(label)+' — '+list.length+' Records</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?cards:'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'</section>';
+ const cards=list.map((x,index)=>reportRecordCard(x,index,label,icon)).join("");
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,950px);max-height:90vh;overflow:auto;background:#f4f8f5;color:#214d3b;border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:#f4f8f5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 12px;z-index:1"><h2 style="margin:0;font-size:19px">'+icon+' '+esc(label)+' — '+list.length+' Records</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?cards:'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'</section>';
  document.body.appendChild(wrap);const close=()=>wrap.remove();wrap.querySelector("#closeRecordCategory").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
 }
+
 
 function renderAccountOverview(list){
  const meals=data.mealRecords||[],members=data.members||[];
