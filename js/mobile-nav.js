@@ -4,16 +4,11 @@
   const sidebar=document.querySelector(".sidebar");
   const topbar=document.querySelector(".topbar");
   if(!sidebar||!topbar)return;
-  let button=document.querySelector(".mobile-menu-toggle");
-  if(!button){
-   button=document.createElement("button");
-   button.type="button";
-   button.className="mobile-menu-toggle";
-   button.textContent="☰";
-   button.setAttribute("aria-label","Open navigation menu");
-   button.setAttribute("aria-expanded","false");
-   topbar.insertBefore(button,topbar.firstChild);
-  }
+  // Keep the lower mobile tab-bar menu control; do not add a second
+  // hamburger button to the top header.
+  const button=document.querySelector(".mobile-tabbar .tab-menu");
+  if(!button)return;
+  button.setAttribute("aria-expanded","false");
   let backdrop=document.querySelector(".mobile-menu-backdrop");
   if(!backdrop){
    backdrop=document.createElement("div");
