@@ -356,13 +356,19 @@ function renderReports(){
  let content=panel.querySelector("#reportsContent");
  if(!content){content=document.createElement("div");content.id="reportsContent";panel.appendChild(content);}
  content.innerHTML='<div class="cards" style="margin:14px 0">'+counts.map(x=>'<button type="button" class="card record-link" data-record-key="'+x.key+'" data-record-label="'+esc(x.label)+'" data-record-icon="'+esc(x.icon)+'" style="display:block;text-align:left;color:inherit;cursor:pointer;width:100%"><small>'+x.icon+' '+esc(x.label)+'</small><strong>'+x.count+'</strong><small style="display:block;margin-top:6px;color:#176747;font-weight:700">View records →</small></button>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody>'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Saved records automatically isi device ke browser storage se read hote hain. Total saved entries: '+records.length+'.</p>';
- content.querySelectorAll(".record-link").forEach(card=>card.addEventListener("click",()=>showRecordCategory(card.dataset.recordKey,card.dataset.recordLabel,card.dataset.recordIcon)));
+ content.querySelectorAll(".record-link").forEach(card=>card.addEventListener("click",()=>{
+  const key=card.dataset.recordKey;
+  const current=read();
+  const source=current&&typeof current==="object"?current:data;
+  const records=Array.isArray(source[key])?source[key]:[];
+  showRecordCategory(key,card.dataset.recordLabel,card.dataset.recordIcon,records);
+ }));
 }
 
-function showRecordCategory(key,label,icon){
+function showRecordCategory(key,label,icon,recordsFromCard){
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
  const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
- const list=sources[key]||[];
+ const list=Array.isArray(recordsFromCard)?recordsFromCard:(Array.isArray(sources[key])?sources[key]:[]);
  const memberName=id=>(data.members||[]).find(m=>String(m.id)===String(id))?.name||"";
  const title=k=>String(k).replace(/([A-Z])/g," $1").replace(/[_-]/g," ").replace(/^./,c=>c.toUpperCase());
  const value=(v)=>{
