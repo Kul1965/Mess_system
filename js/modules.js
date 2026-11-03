@@ -361,35 +361,29 @@ function renderReports(){
 
 function showRecordCategory(key,label,icon){
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
- const sources={
-  members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],
-  recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],
-  transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],
-  stockMovements:data.stockMovements||[]
- };
+ const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
  const list=sources[key]||[];
  const memberName=id=>(data.members||[]).find(m=>String(m.id)===String(id))?.name||"";
- const dateOf=x=>x.date||x.joiningDate||x.createdAt?.slice?.(0,10)||"—";
- const nameOf=x=>x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
- const detailOf=x=>{
-  if(key==="members")return [x.forceNo,x.rank,x.status,x.contact,x.remarks,x.transferLocation,x.transferDate].filter(Boolean).join(" · ");
-  if(key==="ration")return [x.category,"Stock: "+(x.quantity??0)+" "+(x.unit||""),"Minimum: "+(x.minimum??x.minStock??0),"Rate: "+money(x.price||x.unitPrice||0)].join(" · ");
-  if(key==="purchases")return [x.itemName,x.quantity+" "+(x.unit||""),"Rate: "+money(x.rate||0),x.vendor,x.bill].filter(Boolean).join(" · ");
-  if(key==="recipes")return (x.ingredients||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")||x.notes||"Recipe details";
-  if(key==="menu")return [x.recipeName,x.servings?x.servings+" servings":"",x.notes].filter(Boolean).join(" · ");
-  if(key==="mealRecords")return [x.mealType,(x.recipeNames||[x.recipeName||""]).filter(Boolean).join(" + "),(x.memberIds||[]).map(memberName).filter(Boolean).join(", "),(x.ingredientUsage||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")].filter(Boolean).join(" · ");
-  if(key==="transactions")return [x.type,x.memberName||memberName(x.memberId),x.description||x.details].filter(Boolean).join(" · ");
-  if(key==="staff")return [x.rank,x.duty,x.phone,x.status].filter(Boolean).join(" · ");
-  if(key==="handovers")return ["From: "+(x.from||""),"To: "+(x.to||""),x.notes].filter(Boolean).join(" · ");
-  if(key==="stockMovements")return [x.type,x.itemName,x.quantity+" "+(x.unit||""),x.reference].filter(Boolean).join(" · ");
-  return "";
+ const title=k=>String(k).replace(/([A-Z])/g," $1").replace(/[_-]/g," ").replace(/^./,c=>c.toUpperCase());
+ const value=(v)=>{
+  if(v===null||v===undefined||v==="")return "—";
+  if(Array.isArray(v))return v.map(a=>typeof a==="object"?Object.entries(a).map(([k,z])=>title(k)+": "+value(z)).join(", "):String(a)).join(" | ");
+  if(typeof v==="object")return Object.entries(v).map(([k,z])=>title(k)+": "+value(z)).join(" · ");
+  if(typeof v==="boolean")return v?"Yes":"No";
+  return String(v);
  };
- const amountOf=x=>key==="purchases"?money(x.total??x.amount??0):key==="transactions"?money(x.amount||0):key==="recipes"?money(x.costPerServing??x.totalCost??0)+" / serving":(key==="mealRecords"||key==="menu")?money(x.totalCost??0):"";
+ const skip=new Set(["id","photo","createdAt","updatedAt"]);
  const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
- wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px";
- const rows=list.map(x=>'<tr><td>'+esc(dateOf(x))+'</td><td><b>'+esc(nameOf(x))+'</b></td><td>'+esc(detailOf(x)||"—")+'</td><td>'+esc(amountOf(x))+'</td></tr>').join("");
- wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:88vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:17px;box-shadow:0 18px 55px #0009"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><h2 style="margin:0;font-size:20px">'+icon+' '+esc(label)+' Records ('+list.length+')</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?'<div class="tablewrap"><table><thead><tr><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'<p class="muted" style="margin:12px 0 0">Yahan sirf '+esc(label)+' ke records dikhaye gaye hain.</p></section>';
+ wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px";
+ const cards=list.map((x,index)=>{
+  const fields=Object.entries(x).filter(([k,v])=>!skip.has(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>'<div style="padding:7px 9px;border-bottom:1px solid var(--border,#dce5df);min-width:0"><small style="display:block;color:var(--muted,#78857e);font-size:11px">'+esc(title(k))+'</small><b style="display:block;overflow-wrap:anywhere;font-size:13px">'+esc(value(v))+'</b></div>').join("");
+  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Member photo" style="width:76px;height:76px;object-fit:cover;border-radius:12px;border:2px solid var(--border);margin:0 12px 8px 0">':"";
+  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
+  const amount=key==="purchases"?money(x.total??x.amount??0):key==="transactions"?money(x.amount||0):key==="recipes"?money(x.costPerServing??x.totalCost??0)+" / serving":(key==="mealRecords"||key==="menu")?money(x.totalCost??0):"";
+  return '<article style="border:1px solid var(--border,#dce5df);border-radius:12px;padding:12px;margin:10px 0;background:var(--card,#fff)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15px">'+(index+1)+'. '+esc(name)+'</b>'+(amount?'<span style="margin-left:auto;font-weight:800;color:var(--primary,#176747)">'+esc(amount)+'</span>':"")+'</div><div style="display:flex;align-items:flex-start;flex-wrap:wrap;margin-top:8px">'+photo+'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;flex:1;min-width:220px">'+(fields||'<div>No extra details saved.</div>')+'</div></div></article>';
+ }).join("");
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px;box-shadow:0 18px 55px #0009"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 12px;z-index:1"><h2 style="margin:0;font-size:19px">'+icon+' '+esc(label)+' — '+list.length+' Records</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?cards:'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'<p class="muted" style="margin:12px 0 0">Har record ki saved details yahan dikhayi gayi hain. Jo field blank hai, woh record mein save nahi hai.</p></section>';
  document.body.appendChild(wrap);
  const close=()=>wrap.remove();
  wrap.querySelector("#closeRecordCategory").addEventListener("click",close);
