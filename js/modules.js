@@ -1,11 +1,29 @@
 /* CRPF Mess shared local-first module engine */
 function showAppAlert(message){
- const old=document.getElementById("appAlertBackdrop");if(old)old.remove();
- const wrap=document.createElement("div");wrap.id="appAlertBackdrop";wrap.className="app-alert-backdrop";
- wrap.innerHTML='<section class="app-alert" role="alertdialog" aria-modal="true"><p></p><button type="button">OK</button></section>';
- wrap.querySelector("p").textContent=String(message??"");
- const close=()=>wrap.remove();wrap.querySelector("button").addEventListener("click",close);
- wrap.addEventListener("click",e=>{if(e.target===wrap)close()});document.body.appendChild(wrap);wrap.querySelector("button").focus();
+ const old=document.getElementById("appToast");
+ if(old)old.remove();
+ const text=String(message??"");
+ const kind=/success|saved|restored|updated|deleted/i.test(text)?"success":
+   /error|failed|not saved|save nahi|unable|invalid|already registered/i.test(text)?"error":
+   /warning|khali|low stock|please allow/i.test(text)?"warning":"info";
+ const toast=document.createElement("div");
+ toast.id="appToast";
+ toast.className="app-toast "+kind;
+ toast.setAttribute("role",kind==="error"?"alert":"status");
+ toast.setAttribute("aria-live",kind==="error"?"assertive":"polite");
+ const icon=document.createElement("span");
+ icon.className="app-toast-icon";
+ icon.textContent=kind==="success"?"✓":kind==="error"?"!":kind==="warning"?"⚠":"ℹ";
+ const label=document.createElement("span");
+ label.className="app-toast-message";
+ label.textContent=text;
+ const close=document.createElement("button");
+ close.type="button";close.className="app-toast-close";
+ close.setAttribute("aria-label","Close message");close.textContent="×";
+ close.addEventListener("click",()=>toast.remove());
+ const bar=document.createElement("span");bar.className="app-toast-progress";
+ toast.append(icon,label,close,bar);document.body.appendChild(toast);
+ window.setTimeout(()=>{if(toast.isConnected)toast.remove()},4200);
 }
 const KEY="crpfMessData";
 const configs={
