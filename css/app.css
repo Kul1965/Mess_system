@@ -25,3 +25,20 @@ button,.btn{border:0;border-radius:7px;padding:11px 14px;background:#00a94b;colo
 .app-alert-backdrop{position:fixed;inset:0;background:#000a;z-index:10050;display:flex;align-items:center;justify-content:center;padding:16px}.app-alert{width:min(100%,380px);background:#0b3022;border:1px solid #79c88f;border-radius:15px;padding:18px;color:#fff;box-shadow:0 16px 45px #0009}.app-alert p{white-space:pre-wrap;line-height:1.5;margin:0 0 16px}.app-alert button{background:#bce9c7;color:#123d27;min-width:90px}
 @media(max-width:700px){.app{display:block}.sidebar{width:100%}.brand{padding:9px}.nav{display:flex;overflow-x:auto;gap:4px;padding:7px}.nav a{white-space:nowrap;padding:10px;font-size:11px}.topbar{padding:12px;align-items:flex-start;flex-direction:column}.content{padding:12px}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:12px}.card strong{font-size:20px}.formgrid{grid-template-columns:1fr}.formgrid .wide{grid-column:auto}}
 @media(max-width:600px){.view-card{padding:13px}.low-purchase-item{padding:9px}}
+
+
+.app-toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:20000;width:min(92vw,520px);display:flex;align-items:center;gap:11px;padding:13px 15px 16px;border-radius:12px;border:1px solid #55bd83;background:#e3f8eb;color:#104d2e;box-shadow:0 12px 35px #0007;font-size:14px;font-weight:700;animation:toastDrop .22s ease-out;overflow:hidden}
+.app-toast.success{background:#e3f8eb;border-color:#55bd83;color:#104d2e}
+.app-toast.error{background:#ffe8e8;border-color:#d96a70;color:#76252b}
+.app-toast.warning{background:#fff4d8;border-color:#d8ad45;color:#65470b}
+.app-toast.info{background:#e5f1ff;border-color:#75a8df;color:#173e69}
+.app-toast-icon{width:25px;height:25px;flex:0 0 25px;border-radius:50%;display:grid;place-items:center;background:#b5e9c7;color:#075b37;font-size:16px}
+.app-toast.error .app-toast-icon{background:#f7c5c8;color:#8e2029}
+.app-toast.warning .app-toast-icon{background:#f8e2a5;color:#78540b}
+.app-toast.info .app-toast-icon{background:#c6ddf8;color:#1d568d}
+.app-toast-message{flex:1;line-height:1.4}
+.app-toast-close{padding:0 3px;border:0;background:transparent;color:inherit;font-size:23px;line-height:1}
+.app-toast-progress{position:absolute;bottom:0;left:0;height:3px;background:currentColor;opacity:.45;animation:toastProgress 4.2s linear forwards}
+@keyframes toastDrop{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes toastProgress{from{width:100%}to{width:0}}
+@media(max-width:480px){.app-toast{top:8px;padding:11px 12px 14px;font-size:13px}}
