@@ -78,7 +78,7 @@
      min-width:0!important;width:100%!important;
      align-self:center!important;margin:0!important;
     }
-    .topbar>:not(.mobile-menu-toggle):nth-child(3){
+    .topbar>:not(.mobile-menu-toggle):nth-child(3):not(.top-info){
      grid-column:2!important;grid-row:2!important;
      min-width:0!important;width:100%!important;
     }
