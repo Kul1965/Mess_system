@@ -158,27 +158,22 @@ function renderReports(){
  const fresh=read();
  data=fresh&&typeof fresh==="object"?fresh:{};
  const groups=[
-  ["Members","👥","members","members.html"],
-  ["Ration Store","📦","ration","ration-store.html"],
-  ["Purchases","🛒","purchases","purchases.html"],
-  ["Recipes","🍲","recipes","recipes.html"],
-  ["Making Menu","📅","menu","making-menu.html"],
-  ["Meal Records","🍽️","mealRecords","making-menu.html"],
-  ["Accounts & Payments","💰","transactions","accounts.html"],
-  ["Mess Staff","👨‍🍳","staff","mess-staff.html"],
-  ["Mess Handover","🔄","handovers","mess-handover.html"],
-  ["Stock Movements","📦","stockMovements","ration-store.html"]
+  ["Members","👥","members","members.html"],["Ration Store","📦","ration","ration-store.html"],
+  ["Purchases","🛒","purchases","purchases.html"],["Recipes","🍲","recipes","recipes.html"],
+  ["Making Menu","📅","menu","making-menu.html"],["Meal Records","🍽️","mealRecords","making-menu.html"],
+  ["Accounts & Payments","💰","transactions","accounts.html"],["Mess Staff","👨‍🍳","staff","mess-staff.html"],
+  ["Mess Handover","🔄","handovers","mess-handover.html"],["Stock Movements","📦","stockMovements","ration-store.html"]
  ];
  const members=data.members||[];
- const memberName=id=>{const m=members.find(x=>String(x.id)===String(id));return m?.name||""};
+ const memberName=id=>members.find(x=>String(x.id)===String(id))?.name||"";
  const fmtDate=x=>x.date||x.joiningDate||x.createdAt?.slice?.(0,10)||"—";
  const details=(key,x)=>{
   if(key==="members")return [x.forceNo,x.rank,x.status,x.contact,x.remarks].filter(Boolean).join(" · ");
-  if(key==="ration")return [x.category,"Stock: "+(x.quantity??0)+" "+(x.unit||""),"Minimum: "+(x.minimum??x.minStock??0), "Rate: "+money(x.price||x.unitPrice||0)].filter(Boolean).join(" · ");
+  if(key==="ration")return [x.category,"Stock: "+(x.quantity??0)+" "+(x.unit||""),"Minimum: "+(x.minimum??x.minStock??0),"Rate: "+money(x.price||x.unitPrice||0)].join(" · ");
   if(key==="purchases")return [x.itemName,x.quantity+" "+(x.unit||""),"Rate: "+money(x.rate||0),x.vendor,x.bill].filter(Boolean).join(" · ");
   if(key==="recipes")return (x.ingredients||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")||x.notes||"Recipe details";
   if(key==="menu")return [x.recipeName,x.servings?x.servings+" servings":"",x.notes].filter(Boolean).join(" · ");
-  if(key==="mealRecords")return [(x.mealType||"Meal"),(x.recipeNames||[x.recipeName||""]).filter(Boolean).join(" + "),(x.memberIds||[]).map(memberName).filter(Boolean).join(", "),((x.ingredientUsage||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit)).join(", ")].filter(Boolean).join(" · ");
+  if(key==="mealRecords")return [x.mealType,(x.recipeNames||[x.recipeName||""]).filter(Boolean).join(" + "),(x.memberIds||[]).map(memberName).filter(Boolean).join(", "),(x.ingredientUsage||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")].filter(Boolean).join(" · ");
   if(key==="transactions")return [x.type,x.memberName||memberName(x.memberId),x.description||x.details].filter(Boolean).join(" · ");
   if(key==="staff")return [x.rank,x.duty,x.phone,x.status].filter(Boolean).join(" · ");
   if(key==="handovers")return ["From: "+(x.from||""),"To: "+(x.to||""),x.notes].filter(Boolean).join(" · ");
@@ -186,31 +181,33 @@ function renderReports(){
   return Object.entries(x).filter(([k,v])=>!["id","photo","createdAt"].includes(k)&&["string","number","boolean"].includes(typeof v)).map(([k,v])=>k+": "+v).join(" · ");
  };
  let records=[];
- groups.forEach(([label,icon,key,link])=>{
-  const list=Array.isArray(data[key])?data[key]:[];
-  list.forEach(x=>{
-   const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label.slice(0,-1);
-   let amount="";
-   if(key==="purchases")amount=money(x.total??x.amount??0);
-   else if(key==="transactions")amount=money(x.amount||0);
-   else if(key==="recipes")amount=money(x.costPerServing??x.totalCost??0)+" / serving";
-   else if(key==="mealRecords")amount=money(x.totalCost??0);
-   else if(key==="menu")amount=money(x.totalCost??0);
-   const searchable=[label,name,fmtDate(x),details(key,x),amount].join(" ").toLowerCase();
-   records.push({label,icon,key,link,date:fmtDate(x),name,details:details(key,x),amount,searchable});
-  });
- });
+ groups.forEach(([label,icon,key,link])=>(Array.isArray(data[key])?data[key]:[]).forEach(x=>{
+  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
+  let amount="";
+  if(key==="purchases")amount=money(x.total??x.amount??0);
+  else if(key==="transactions")amount=money(x.amount||0);
+  else if(key==="recipes")amount=money(x.costPerServing??x.totalCost??0)+" / serving";
+  else if(key==="mealRecords"||key==="menu")amount=money(x.totalCost??0);
+  const date=fmtDate(x),detail=details(key,x);
+  records.push({label,icon,key,link,date,name,details:detail,amount,searchable:[label,name,date,detail,amount].join(" ").toLowerCase()});
+ }));
  const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
- if(Object.keys(settings).length){
-  const sname=settings.messName||"Mess Settings";
-  records.push({label:"Settings",icon:"⚙️",key:"settings",link:"settings.html",date:"—",name:sname,details:Object.entries(settings).map(([k,v])=>k+": "+v).join(" · "),amount:"",searchable:JSON.stringify(settings).toLowerCase()+" settings"});
- }
+ if(Object.keys(settings).length)records.push({label:"Settings",icon:"⚙️",key:"settings",link:"settings.html",date:"—",name:settings.messName||"Mess Settings",details:Object.entries(settings).map(([k,v])=>k+": "+v).join(" · "),amount:"",searchable:JSON.stringify(settings).toLowerCase()+" settings"});
  const q=(document.getElementById("search")?.value||"").trim().toLowerCase();
  const filtered=records.filter(x=>!q||x.searchable.includes(q));
  const counts=groups.map(([label,icon,key])=>({label,icon,count:(data[key]||[]).length}));
  document.getElementById("stats").innerHTML=stat("Total Records",records.length)+stat("Showing",filtered.length)+stat("Members",members.length)+stat("Meal Records",(data.mealRecords||[]).length);
- const panel=document.getElementById("tablePanel");
- panel.innerHTML='<div class="toolbar" style="flex-wrap:wrap"><div><h3 style="margin:0 0 5px">🔍 All Mess Records</h3><small class="muted">Har section ke saved records ek jagah — search naam, date, item, member ya details se karein.</small></div><input id="search" placeholder="🔍 Search all records..." value="'+esc(q)+'" oninput="render()" style="min-width:190px;flex:1"></div><div class="cards" style="margin:14px 0">'+counts.map(c=>'<div class="card"><small>'+c.icon+' '+esc(c.label)+'</small><strong>'+c.count+'</strong></div>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody id="allRecordRows">'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Data isi device ke CRPF Mess browser storage se automatically read hota hai. Total saved entries: '+records.length+'.</p>';
+ const panel=document.getElementById("tablePanel"),toolbar=panel.querySelector(".toolbar");
+ if(toolbar){
+  toolbar.style.flexWrap="wrap";
+  let heading=toolbar.querySelector(".reports-heading");
+  if(!heading){heading=document.createElement("div");heading.className="reports-heading";heading.innerHTML='<h3 style="margin:0 0 5px">🔍 All Mess Records</h3><small class="muted">Search by member, item, recipe, date, transaction or any detail.</small>';toolbar.insertBefore(heading,toolbar.firstChild);}
+  const search=toolbar.querySelector("#search");if(search){search.placeholder="🔍 Search all records...";search.style.flex="1";search.style.minWidth="190px";}
+  const add=toolbar.querySelector("button");if(add)add.style.display="none";
+ }
+ let content=panel.querySelector("#reportsContent");
+ if(!content){content=document.createElement("div");content.id="reportsContent";panel.appendChild(content);}
+ content.innerHTML='<div class="cards" style="margin:14px 0">'+counts.map(x=>'<div class="card"><small>'+x.icon+' '+esc(x.label)+'</small><strong>'+x.count+'</strong></div>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody>'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Saved records automatically isi device ke browser storage se read hote hain. Total saved entries: '+records.length+'.</p>';
 }
 function renderAccountOverview(list){
  const meals=data.mealRecords||[],members=data.members||[];
