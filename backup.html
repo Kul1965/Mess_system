@@ -3,19 +3,15 @@ const KEY="crpfMessData";
 const $=id=>document.getElementById(id);
 function readAppData(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
 function collectFullBackup(){
- const storage={};
- for(let i=0;i<localStorage.length;i++){
-  const key=localStorage.key(i);
-  if(key!==null)storage[key]=localStorage.getItem(key);
- }
+ const saved=localStorage.getItem(KEY);
  let appData={};
- try{appData=JSON.parse(storage[KEY]||"{}")}catch(e){}
+ try{appData=JSON.parse(saved||"{}")}catch(e){}
  return {
   backupFormat:"CRPF-MESS-FULL-BACKUP",
   backupVersion:2,
   appName:"CRPF Mess Management System",
   createdAt:new Date().toISOString(),
-  storage,
+  storage:{[KEY]:saved||JSON.stringify(appData)},
   appData
  };
 }
