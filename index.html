@@ -557,7 +557,7 @@ td{
 
 <script>
 const money = n =>
-  "Rs " + Number(n || 0).toLocaleString("en-");
+  "Rs " + Number(n || 0).toLocaleString("en-IN",{maximumFractionDigits:2});
 
 function safe(value) {
   return String(value ?? "").replace(/[&<>"']/g, c => ({
