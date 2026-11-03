@@ -446,8 +446,20 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
   const photo=await readPhoto(file);
+  const transferHistory=Array.isArray(old?.transferHistory)?[...old.transferHistory]:[];
+  const transferChanged=!old||old.status!==document.getElementById("status").value||
+   (old.transferLocation||"")!==document.getElementById("transferLocation").value.trim()||
+   (old.transferDate||"")!==document.getElementById("transferDate").value;
+  if(document.getElementById("status").value==="Transferred"&&transferChanged){
+   transferHistory.push({
+    date:document.getElementById("transferDate").value||new Date().toISOString().slice(0,10),
+    location:document.getElementById("transferLocation").value.trim(),
+    recordedAt:new Date().toISOString()
+   });
+  }
   const member={
    id:editingId||("M"+Date.now()),
+   transferHistory,
    forceNo:document.getElementById("forceNo").value.trim(),
    name:document.getElementById("name").value.trim(),
    rank:document.getElementById("rank").value,
@@ -513,7 +525,8 @@ function viewMember(id){
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
  const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.ingredientUsage||[]).map(i=>esc(i.itemName)+': '+esc(i.quantity)+' '+esc(i.unit)).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
  document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
- '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Remarks:</b> '+esc(m.remarks)+
+ '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Transfer Location:</b> '+esc(m.transferLocation||"—")+'<br><b>Transfer Date:</b> '+esc(m.transferDate||"—")+'<br><b>Final Mess Bill:</b> '+money(m.finalBillAmount)+'<br><b>Final Bill Status:</b> '+esc(m.finalBillPaid||"Not Paid")+'<br><b>Remarks:</b> '+esc(m.remarks)+
+ '<h3 class="view-heading">Transfer History</h3>'+(Array.isArray(m.transferHistory)&&m.transferHistory.length?m.transferHistory.map(h=>'<div class="meal-entry">'+esc(h.date)+' · '+esc(h.location||"Location not entered")+'</div>').join(""):'<p>No transfer history recorded.</p>')+
  '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Paid / Advance</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
  '<h3 class="view-heading">Meal History – Kya Kya Khaya</h3>'+history+
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
@@ -530,7 +543,10 @@ function whatsAppMember(){
  const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((sum,t)=>sum+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
  const status=due>0?"UNPAID / DUE":credit>0?"ADVANCE / CREDIT":"PAID";
- const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Paid / Advance: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\nTransfer: "+(m.status==="Transferred"?(m.transferLocation||"Location not entered")+" on "+(m.transferDate||"date not entered"):"Not transferred")+"\\nFinal Mess Bill: "+money(finalBill)+"\\nFinal Bill Status: "+finalBillStatus+"\\n\\nDhanyavaad.";
+ const finalBill=Number(m.finalBillAmount||0);
+ const finalBillStatus=m.finalBillPaid||"Not Paid";
+ const transferText=m.status==="Transferred"?(m.transferLocation||"Location not entered")+" on "+(m.transferDate||"date not entered"):"Not transferred";
+ const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Paid / Advance: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\nTransfer: "+transferText+"\\nFinal Mess Bill: "+money(finalBill)+"\\nFinal Bill Status: "+finalBillStatus+"\\n\\nDhanyavaad.";
  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
 }
 function closeView(){document.getElementById("viewModal").style.display="none"}
