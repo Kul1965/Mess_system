@@ -32,7 +32,7 @@ const configs={
  recipes:{title:"Recipes",sub:"Add ration ingredients; cost is calculated from current store rates",key:"recipes",fields:[["name","Recipe name","text",1],["notes","Notes","text"]],cols:["name","ingredientSummary","totalCost","costPerServing"]},
  menu:{title:"Making Menu",sub:"Select a meal and recipe; recipe cost is calculated automatically",key:"menu",fields:[["date","Menu date","date",1],["recipeId","Select recipe","recipe",1],["servings","Number of members / servings","number",1]],cols:["date","recipeName","servings","totalCost"]},
  accounts:{title:"Accounts",sub:"Record mess collections, advances and expenses",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"collection|expense|advance"],["memberId","Member","member"],["description","Details","text",1],["amount","Amount (Rs)","number",1]],cols:["date","type","memberName","description","amount"]},
- staff:{title:"Mess Staff",sub:"Manage cooks and mess duty assignments",key:"staff",fields:[["name","Staff name","text",1],["rank","Rank","text"],["duty","Duty","select",1,"Mess Commander|Mess NCO|Cook|Assistant Cook|Storekeeper|Mess Staff"],["phone","Mobile","tel"],["status","Status","select",1,"Active|Inactive"]],cols:["name","rank","duty","phone","status"]},
+ staff:{title:"Mess Staff",sub:"Manage cooks and mess duty assignments",key:"staff",fields:[["name","Staff name","text",1],["rank","Rank","text"],["duty","Duty","select",1,"Mess Commander|Mess NCO|Mess SO|Cook|Member"],["phone","Mobile","tel"],["status","Status","select",1,"Active|Inactive"]],cols:["name","rank","duty","phone","status"]},
  reports:{title:"Reports & Records",sub:"View summaries from saved mess records",key:"reports",fields:[],cols:[]},
  handover:{title:"Mess Handover",sub:"Record monthly mess commander handover",key:"handovers",fields:[["date","Handover date","date",1],["from","Outgoing commander","staff",1],["to","Incoming commander","staff",1],["cash","Cash balance (Rs)","number"],["notes","Stock / account notes","text"]],cols:["date","from","to","cash","notes"]},
  settings:{title:"Settings",sub:"Mess identity and local preferences",key:"settings",fields:[["messName","Mess name","text",1],["currency","Currency label","text",1]],cols:[]}
@@ -70,18 +70,17 @@ function renderSettings(){
  const panel=document.getElementById("tablePanel"),stats=document.getElementById("stats");
  if(stats)stats.style.display="none";
  if(!panel)return;
- panel.innerHTML='<div class="pagehead"><h3 style="margin:0 0 8px">Mess Details</h3><p class="muted">Yahan ki changes Dashboard ke header mein automatic dikhengi.</p></div>'+
+ panel.innerHTML='<div class="pagehead"><h3 style="margin:0 0 8px">Mess Details</h3><p class="muted">Mess ka naam aur currency yahan edit karein. Mess NCO aur Mess SO ka naam Mess Staff page se aayega.</p></div>'+
  '<div class="formgrid" style="max-width:760px">'+
  '<div class="field"><label for="settingMessName">Mess Name</label><input id="settingMessName" value="'+esc(s.messName||"A Coy (CRPF)")+'" placeholder="A Coy (CRPF)"></div>'+
  '<div class="field"><label for="settingCurrency">Currency</label><input id="settingCurrency" value="'+esc(s.currency||"Rs")+'" placeholder="Rs"></div>'+
- '<div class="field"><label for="settingMessNco">Mess NCO Name</label><input id="settingMessNco" value="'+esc(s.messNco||s.messNCO||"")+'" placeholder="Enter Mess NCO name"></div>'+
- '<div class="field"><label for="settingMessSo">Mess SO Name</label><input id="settingMessSo" value="'+esc(s.messSo||s.messSO||"")+'" placeholder="Enter Mess SO name"></div>'+
  '</div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button type="button" onclick="saveSettings()">Save Settings</button></div>'+
- '<div class="notice" style="margin-top:16px">Mess Name, Mess NCO aur Mess SO yahan edit karein. Dashboard par naam apne-aap update honge.</div>';
+ '<div class="notice" style="margin-top:16px">Mess NCO / Mess SO badalne ke liye Mess Staff page par unka naam aur duty update karein. Dashboard par naam automatic update hoga.</div>';
 }
 function saveSettings(){
  const previous=data.settings&&typeof data.settings==="object"?data.settings:{};
- data.settings={...previous,messName:document.getElementById("settingMessName").value.trim(),currency:document.getElementById("settingCurrency").value.trim()||"Rs",messNco:document.getElementById("settingMessNco").value.trim(),messSo:document.getElementById("settingMessSo").value.trim()};
+ data.settings={...previous,messName:document.getElementById("settingMessName").value.trim(),currency:document.getElementById("settingCurrency").value.trim()||"Rs"};
+ delete data.settings.messNco;delete data.settings.messNCO;delete data.settings.messSo;delete data.settings.messSO;
  if(!save())return;
  showAppAlert("Settings saved successfully.");
 }
