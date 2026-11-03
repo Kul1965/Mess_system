@@ -303,97 +303,67 @@ function viewRecipe(id){
  document.body.appendChild(modal);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove()});
 }
 function renderReports(){
- const fresh=read();
- data=fresh&&typeof fresh==="object"?fresh:{};
+ const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
  const groups=[
-  ["Members","👥","members","members.html"],["Ration Store","📦","ration","ration-store.html"],
-  ["Purchases","🛒","purchases","purchases.html"],["Recipes","🍲","recipes","recipes.html"],
-  ["Making Menu","📅","menu","making-menu.html"],["Meal Records","🍽️","mealRecords","making-menu.html"],
-  ["Accounts & Payments","💰","transactions","accounts.html"],["Mess Staff","👨‍🍳","staff","mess-staff.html"],
-  ["Mess Handover","🔄","handovers","mess-handover.html"],["Stock Movements","📦","stockMovements","ration-store.html"]
+  ["All Mess Records","📚","__all__"],
+  ["Members","👥","members"],["Ration Store","📦","ration"],
+  ["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],
+  ["Making Menu","📅","menu"],["Meal Records","🍽️","mealRecords"],
+  ["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],
+  ["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]
  ];
- const members=data.members||[];
- const memberName=id=>members.find(x=>String(x.id)===String(id))?.name||"";
- const fmtDate=x=>x.date||x.joiningDate||x.createdAt?.slice?.(0,10)||"—";
- const details=(key,x)=>{
-  if(key==="members")return [x.forceNo,x.rank,x.status,x.contact,x.remarks].filter(Boolean).join(" · ");
-  if(key==="ration")return [x.category,"Stock: "+(x.quantity??0)+" "+(x.unit||""),"Minimum: "+(x.minimum??x.minStock??0),"Rate: "+money(x.price||x.unitPrice||0)].join(" · ");
-  if(key==="purchases")return [x.itemName,x.quantity+" "+(x.unit||""),"Rate: "+money(x.rate||0),x.vendor,x.bill].filter(Boolean).join(" · ");
-  if(key==="recipes")return (x.ingredients||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")||x.notes||"Recipe details";
-  if(key==="menu")return [x.recipeName,x.servings?x.servings+" servings":"",x.notes].filter(Boolean).join(" · ");
-  if(key==="mealRecords")return [x.mealType,(x.recipeNames||[x.recipeName||""]).filter(Boolean).join(" + "),(x.memberIds||[]).map(memberName).filter(Boolean).join(", "),(x.ingredientUsage||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")].filter(Boolean).join(" · ");
-  if(key==="transactions")return [x.type,x.memberName||memberName(x.memberId),x.description||x.details].filter(Boolean).join(" · ");
-  if(key==="staff")return [x.rank,x.duty,x.phone,x.status].filter(Boolean).join(" · ");
-  if(key==="handovers")return ["From: "+(x.from||""),"To: "+(x.to||""),x.notes].filter(Boolean).join(" · ");
-  if(key==="stockMovements")return [x.type,x.itemName,x.quantity+" "+(x.unit||""),x.reference].filter(Boolean).join(" · ");
-  return Object.entries(x).filter(([k,v])=>!["id","photo","createdAt"].includes(k)&&["string","number","boolean"].includes(typeof v)).map(([k,v])=>k+": "+v).join(" · ");
- };
- let records=[];
- groups.forEach(([label,icon,key,link])=>(Array.isArray(data[key])?data[key]:[]).forEach(x=>{
-  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
-  let amount="";
-  if(key==="purchases")amount=money(x.total??x.amount??0);
-  else if(key==="transactions")amount=money(x.amount||0);
-  else if(key==="recipes")amount=money(x.costPerServing??x.totalCost??0)+" / serving";
-  else if(key==="mealRecords"||key==="menu")amount=money(x.totalCost??0);
-  const date=fmtDate(x),detail=details(key,x);
-  records.push({label,icon,key,link,date,name,details:detail,amount,searchable:[label,name,date,detail,amount].join(" ").toLowerCase()});
- }));
- const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
- if(Object.keys(settings).length)records.push({label:"Settings",icon:"⚙️",key:"settings",link:"settings.html",date:"—",name:settings.messName||"Mess Settings",details:Object.entries(settings).map(([k,v])=>k+": "+v).join(" · "),amount:"",searchable:JSON.stringify(settings).toLowerCase()+" settings"});
- const q=(document.getElementById("search")?.value||"").trim().toLowerCase();
- const filtered=records.filter(x=>!q||x.searchable.includes(q));
- const counts=groups.map(([label,icon,key])=>({label,icon,count:(data[key]||[]).length}));
- document.getElementById("stats").innerHTML=stat("Total Records",records.length)+stat("Showing",filtered.length)+stat("Members",members.length)+stat("Meal Records",(data.mealRecords||[]).length);
- const panel=document.getElementById("tablePanel"),toolbar=panel.querySelector(".toolbar");
- if(toolbar){
-  toolbar.style.flexWrap="wrap";
-  let heading=toolbar.querySelector(".reports-heading");
-  if(!heading){heading=document.createElement("div");heading.className="reports-heading";heading.innerHTML='<h3 style="margin:0 0 5px">🔍 All Mess Records</h3><small class="muted">Search by member, item, recipe, date, transaction or any detail.</small>';toolbar.insertBefore(heading,toolbar.firstChild);}
-  const search=toolbar.querySelector("#search");if(search){search.placeholder="🔍 Search all records...";search.style.flex="1";search.style.minWidth="190px";}
-  const add=toolbar.querySelector("button");if(add)add.style.display="none";
- }
- let content=panel.querySelector("#reportsContent");
- if(!content){content=document.createElement("div");content.id="reportsContent";panel.appendChild(content);}
- content.innerHTML='<div class="cards" style="margin:14px 0">'+counts.map(x=>'<button type="button" class="card record-link" data-record-key="'+x.key+'" data-record-label="'+esc(x.label)+'" data-record-icon="'+esc(x.icon)+'" style="display:block;text-align:left;color:inherit;cursor:pointer;width:100%"><small>'+x.icon+' '+esc(x.label)+'</small><strong>'+x.count+'</strong><small style="display:block;margin-top:6px;color:#176747;font-weight:700">View records →</small></button>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody>'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Saved records automatically isi device ke browser storage se read hote hain. Total saved entries: '+records.length+'.</p>';
- content.querySelectorAll(".record-link").forEach(card=>card.addEventListener("click",()=>{
+ const keys=groups.slice(1).map(g=>g[2]);
+ const total=keys.reduce((n,k)=>n+(Array.isArray(data[k])?data[k].length:0),0);
+ const panel=document.getElementById("tablePanel");
+ const stats=document.getElementById("stats");
+ if(stats)stats.style.display="grid";
+ if(stats)stats.innerHTML=stat("Total Saved Records",total)+stat("Members",(data.members||[]).length)+stat("Mess Staff",(data.staff||[]).length)+stat("Meal Records",(data.mealRecords||[]).length);
+ if(!panel)return;
+ panel.innerHTML='<div style="padding:4px 0 14px"><h3 style="margin:0 0 5px">📊 Reports & Records</h3><p class="muted" style="margin:0">Kisi bhi card par click karein. Record ki poori details tabhi khulengi.</p></div><div class="cards reports-cards">'+groups.map(([label,icon,key])=>{
+  const count=key==="__all__"?total:(Array.isArray(data[key])?data[key].length:0);
+  return '<button type="button" class="card record-link" data-record-key="'+key+'" style="text-align:left;cursor:pointer;min-height:112px"><small>'+icon+' '+esc(label)+'</small><strong style="display:block;font-size:27px;margin:8px 0">'+count+'</strong><small style="color:#176747;font-weight:700">Click to view details →</small></button>';
+ }).join("")+'</div><div class="empty" style="display:block;margin-top:14px">Abhi koi record open nahi hai. Details dekhne ke liye upar kisi card par click karein.</div>';
+ panel.querySelectorAll(".record-link").forEach(card=>card.addEventListener("click",()=>{
   const key=card.dataset.recordKey;
-  const current=read();
-  const source=current&&typeof current==="object"?current:data;
-  const records=Array.isArray(source[key])?source[key]:[];
-  showRecordCategory(key,card.dataset.recordLabel,card.dataset.recordIcon,records);
+  const current=read();data=current&&typeof current==="object"?current:{};
+  if(key==="__all__")showAllRecordCategories();
+  else showRecordCategory(key,groups.find(g=>g[2]===key)?.[0]||key,groups.find(g=>g[2]===key)?.[1]||"📄");
  }));
 }
-
-function showRecordCategory(key,label,icon,recordsFromCard){
+function showAllRecordCategories(){
+ const groups=[["Members","👥","members"],["Ration Store","📦","ration"],["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],["Making Menu","📅","menu"],["Meal Records","🍽️","mealRecords"],["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]];
+ const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
+ const all=groups.flatMap(([label,icon,key])=>(Array.isArray(data[key])?data[key]:[]).map(record=>({label,icon,key,record})));
+ const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px";
+ const rows=all.map((entry,i)=>{
+  const x=entry.record;
+  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||entry.label;
+  const detail=Object.entries(x).filter(([k,v])=>!["id","photo","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>esc(k.replace(/([A-Z])/g," $1"))+": "+esc(typeof v==="object"?JSON.stringify(v):v)).join(" · ");
+  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Record photo" style="width:54px;height:54px;object-fit:cover;border-radius:8px">':"";
+  return '<article style="border:1px solid var(--border,#dce5df);border-radius:10px;padding:11px;margin:8px 0;display:flex;gap:10px;align-items:flex-start">'+photo+'<div style="min-width:0"><small>'+entry.icon+' '+esc(entry.label)+' · '+(i+1)+'</small><b style="display:block;overflow-wrap:anywhere">'+esc(name)+'</b><small style="display:block;overflow-wrap:anywhere;color:var(--muted)">'+(detail||"No extra details saved")+'</small></div></article>';
+ }).join("");
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,900px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;justify-content:space-between;align-items:center;padding:5px 0 12px;z-index:1"><h2 style="margin:0">📚 All Mess Records — '+all.length+'</h2><button type="button" id="closeAllRecords" class="alt">✕ Close</button></div>'+(rows||'<p class="empty">Abhi koi saved record nahi hai.</p>')+'</section>';
+ document.body.appendChild(wrap);const close=()=>wrap.remove();wrap.querySelector("#closeAllRecords").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
+}
+function showRecordCategory(key,label,icon){
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
  const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
- const list=Array.isArray(recordsFromCard)?recordsFromCard:(Array.isArray(sources[key])?sources[key]:[]);
- const memberName=id=>(data.members||[]).find(m=>String(m.id)===String(id))?.name||"";
+ const list=Array.isArray(sources[key])?sources[key]:[];
  const title=k=>String(k).replace(/([A-Z])/g," $1").replace(/[_-]/g," ").replace(/^./,c=>c.toUpperCase());
- const value=(v)=>{
-  if(v===null||v===undefined||v==="")return "—";
-  if(Array.isArray(v))return v.map(a=>typeof a==="object"?Object.entries(a).map(([k,z])=>title(k)+": "+value(z)).join(", "):String(a)).join(" | ");
-  if(typeof v==="object")return Object.entries(v).map(([k,z])=>title(k)+": "+value(z)).join(" · ");
-  if(typeof v==="boolean")return v?"Yes":"No";
-  return String(v);
- };
- const skip=new Set(["id","photo","createdAt","updatedAt"]);
+ const value=v=>v===null||v===undefined||v===""?"—":Array.isArray(v)?v.map(a=>typeof a==="object"?JSON.stringify(a):String(a)).join(" | "):typeof v==="object"?JSON.stringify(v):typeof v==="boolean"?(v?"Yes":"No"):String(v);
  const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
  wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px";
  const cards=list.map((x,index)=>{
-  const fields=Object.entries(x).filter(([k,v])=>!skip.has(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>'<div style="padding:7px 9px;border-bottom:1px solid var(--border,#dce5df);min-width:0"><small style="display:block;color:var(--muted,#78857e);font-size:11px">'+esc(title(k))+'</small><b style="display:block;overflow-wrap:anywhere;font-size:13px">'+esc(value(v))+'</b></div>').join("");
-  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Member photo" style="width:76px;height:76px;object-fit:cover;border-radius:12px;border:2px solid var(--border);margin:0 12px 8px 0">':"";
+  const fields=Object.entries(x).filter(([k,v])=>!["id","photo","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>'<div style="padding:7px 9px;border-bottom:1px solid var(--border,#dce5df);min-width:0"><small style="display:block;color:var(--muted,#78857e);font-size:11px">'+esc(title(k))+'</small><b style="display:block;overflow-wrap:anywhere;font-size:13px">'+esc(value(v))+'</b></div>').join("");
+  const photo=x.photo?'<img src="'+esc(x.photo)+'" alt="Saved photo" style="width:76px;height:76px;object-fit:cover;border-radius:12px;margin:0 12px 8px 0">':"";
   const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
-  const amount=key==="purchases"?money(x.total??x.amount??0):key==="transactions"?money(x.amount||0):key==="recipes"?money(x.costPerServing??x.totalCost??0)+" / serving":(key==="mealRecords"||key==="menu")?money(x.totalCost??0):"";
-  return '<article style="border:1px solid var(--border,#dce5df);border-radius:12px;padding:12px;margin:10px 0;background:var(--card,#fff)"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><b style="font-size:15px">'+(index+1)+'. '+esc(name)+'</b>'+(amount?'<span style="margin-left:auto;font-weight:800;color:var(--primary,#176747)">'+esc(amount)+'</span>':"")+'</div><div style="display:flex;align-items:flex-start;flex-wrap:wrap;margin-top:8px">'+photo+'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;flex:1;min-width:220px">'+(fields||'<div>No extra details saved.</div>')+'</div></div></article>';
+  return '<article style="border:1px solid var(--border,#dce5df);border-radius:12px;padding:12px;margin:10px 0;background:var(--card,#fff)"><b style="font-size:15px">'+(index+1)+'. '+esc(name)+'</b><div style="display:flex;align-items:flex-start;flex-wrap:wrap;margin-top:8px">'+photo+'<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0;flex:1;min-width:220px">'+(fields||'<div>No extra details saved.</div>')+'</div></div></article>';
  }).join("");
- wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px;box-shadow:0 18px 55px #0009"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 12px;z-index:1"><h2 style="margin:0;font-size:19px">'+icon+' '+esc(label)+' — '+list.length+' Records</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?cards:'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'<p class="muted" style="margin:12px 0 0">Har record ki saved details yahan dikhayi gayi hain. Jo field blank hai, woh record mein save nahi hai.</p></section>';
- document.body.appendChild(wrap);
- const close=()=>wrap.remove();
- wrap.querySelector("#closeRecordCategory").addEventListener("click",close);
- wrap.addEventListener("click",e=>{if(e.target===wrap)close()});
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:90vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:15px"><div style="position:sticky;top:-15px;background:var(--panel,#fff);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0 12px;z-index:1"><h2 style="margin:0;font-size:19px">'+icon+' '+esc(label)+' — '+list.length+' Records</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?cards:'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'</section>';
+ document.body.appendChild(wrap);const close=()=>wrap.remove();wrap.querySelector("#closeRecordCategory").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
 }
 
 function renderAccountOverview(list){
