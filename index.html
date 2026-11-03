@@ -640,8 +640,9 @@ function loadDashboard() {
   
   const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
   const name=settings.messName||"A Coy (CRPF)";
-  const nco=settings.messNco||settings.messNCO||"Not Set";
-  const so=settings.messSo||settings.messSO||"Not Set";
+  const activeStaff=(data.staff||[]).filter(x=>String(x.status||"Active").toLowerCase()==="active");
+  const nco=activeStaff.find(x=>String(x.duty||"").toLowerCase()==="mess nco")?.name||"Not Set";
+  const so=activeStaff.find(x=>String(x.duty||"").toLowerCase()==="mess so")?.name||"Not Set";
   set("messName",name);set("messInfo",name);
   set("messNco",nco);set("messSo",so);
   set("messNcoInfo",nco);set("messSoInfo",so);
