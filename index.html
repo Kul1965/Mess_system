@@ -240,7 +240,7 @@ td{
 /* Mobile app-style collapsible navigation */
 .mobile-menu-toggle{display:none;border:1px solid #438568;background:#075039;color:#fff;border-radius:9px;width:42px;height:40px;font-size:23px;line-height:1;cursor:pointer;flex:0 0 42px}
 .mobile-menu-backdrop{display:none}
-@media(max-width:650px){
+@media(max-width:850px){
  .topbar{flex-direction:row!important;align-items:center!important}
  .mobile-menu-toggle{display:inline-flex;align-items:center;justify-content:center}
  .topbar>.heading{min-width:0;flex:1}
@@ -623,27 +623,9 @@ function loadDashboard() {
 }
 
 
-/* Mobile app-style sidebar toggle */
-(function initMobileNavigation(){
- const sidebar=document.querySelector(".sidebar"),topbar=document.querySelector(".topbar");
- if(!sidebar||!topbar||document.querySelector(".mobile-menu-toggle"))return;
- const toggle=document.createElement("button");
- toggle.type="button";toggle.className="mobile-menu-toggle";toggle.textContent="☰";
- toggle.setAttribute("aria-label","Open navigation menu");toggle.setAttribute("aria-expanded","false");
- const backdrop=document.createElement("div");backdrop.className="mobile-menu-backdrop";
- backdrop.setAttribute("aria-hidden","true");document.body.appendChild(backdrop);
- topbar.insertBefore(toggle,topbar.firstChild);
- function closeMenu(){document.body.classList.remove("mobile-nav-open");toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-label","Open navigation menu");toggle.textContent="☰";}
- function openMenu(){document.body.classList.add("mobile-nav-open");toggle.setAttribute("aria-expanded","true");toggle.setAttribute("aria-label","Close navigation menu");toggle.textContent="×";}
- toggle.addEventListener("click",()=>document.body.classList.contains("mobile-nav-open")?closeMenu():openMenu());
- backdrop.addEventListener("click",closeMenu);
- sidebar.querySelectorAll("a").forEach(a=>a.addEventListener("click",closeMenu));
- document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenu();});
- window.addEventListener("resize",()=>{if(window.innerWidth>650)closeMenu();});
-})();
 
 loadDashboard();
 </script>
-<script src="js/mobile-nav.js?v=20261103-mobile-menu2"></script>
+<script src="js/mobile-nav.js?v=20261103-menu-fix3"></script>
 </body>
 </html>
