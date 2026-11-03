@@ -41,6 +41,7 @@ body{
   border-bottom:1px solid #1b684e;
 }
 .brand-icon{font-size:38px}
+.sidebar-crpf-logo{display:block;width:72px;height:78px;object-fit:contain;margin:0 auto 8px;}
 .brand h2{
   color:var(--yellow);
   font-size:19px;
@@ -249,6 +250,7 @@ td{
  body.mobile-nav-open .sidebar{transform:translateX(0)}
  body.mobile-nav-open{overflow:hidden}
  .sidebar .brand{padding:18px 8px}
+ .sidebar-crpf-logo{width:66px;height:72px;margin-bottom:8px}
  .sidebar .brand-icon{font-size:38px}
  .sidebar .brand h2{font-size:19px}
  .sidebar .nav{display:block;padding:12px 10px;overflow:visible}
@@ -271,9 +273,8 @@ td{
 .india-flag{font-size:46px;line-height:1;margin-left:auto;flex:0 0 auto}
 .mobile-tabbar{display:none}
 @media(max-width:850px){
- .topbar{display:grid!important;grid-template-columns:46px minmax(0,1fr)!important;grid-template-rows:auto auto!important;gap:8px 9px!important;padding:12px 14px 10px!important;align-items:center!important}
- .topbar>.mobile-menu-toggle{grid-column:1!important;grid-row:1!important;width:42px;height:42px}
- .topbar>.heading{grid-column:2!important;grid-row:1!important;display:flex!important;gap:9px!important;align-items:center!important;width:100%!important}
+ .topbar{display:grid!important;grid-template-columns:minmax(0,1fr)!important;grid-template-rows:auto auto!important;gap:8px!important;padding:12px 14px 10px!important;align-items:center!important}
+ .topbar>.heading{grid-column:1!important;grid-row:1!important;display:flex!important;gap:9px!important;align-items:center!important;width:100%!important}
  .crpf-logo{width:58px;height:66px}
  .brand-divider{height:58px}
  .brand-title h1{font-size:clamp(22px,6vw,29px)!important}
@@ -305,7 +306,7 @@ td{
 <!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="brand">
-    <div class="brand-icon">🛡️</div>
+    <img class="sidebar-crpf-logo" src="https://commons.wikimedia.org/wiki/Special:Redirect/file/CRPF_Logo.svg" alt="CRPF monogram">
     <h2>CRPF MESS</h2>
     <p>Cooking House System</p>
   </div>
