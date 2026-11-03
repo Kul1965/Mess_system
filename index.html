@@ -587,9 +587,34 @@ function loadDashboard() {
     sum + Number(m.advance || m.messAdvance || 0),0
   );
 
-  const stockValue = ration.reduce((sum,r) =>
-    sum + Number(r.quantity || 0) * Number(r.price || r.unitPrice || 0),0
-  );
+  const unitFactor = unit => {
+    const u=String(unit||"").toLowerCase();
+    if(["g","gram","grams"].includes(u))return {kind:"weight",factor:1};
+    if(["kg","kgs"].includes(u))return {kind:"weight",factor:1000};
+    if(u==="ml")return {kind:"volume",factor:1};
+    if(["ltr","l","litre","liter"].includes(u))return {kind:"volume",factor:1000};
+    if(["pcs","pc","piece","pieces"].includes(u))return {kind:"count",factor:1};
+    return null;
+  };
+  const stockValue = ration.reduce((sum,item) => {
+    const related=purchases.filter(p=>String(p.itemId)===String(item.id));
+    let purchasedQty=0,purchasedValue=0;
+    related.forEach(p=>{
+      const base=Number(p.baseQuantity);
+      const total=Number(p.total ?? p.amount ?? (Number(p.quantity||0)*Number(p.rate||0)));
+      if(Number.isFinite(base)&&base>0&&Number.isFinite(total)&&total>=0){
+        purchasedQty+=base;purchasedValue+=total;
+      }else{
+        const pf=unitFactor(p.unit),bf=unitFactor(item.unit);
+        if(pf&&bf&&pf.kind===bf.kind){
+          const converted=Number(p.quantity||0)*pf.factor/bf.factor;
+          if(converted>0&&Number.isFinite(converted)){purchasedQty+=converted;purchasedValue+=total;}
+        }
+      }
+    });
+    const rate=purchasedQty>0?purchasedValue/purchasedQty:Number(item.price ?? item.unitPrice ?? 0);
+    return sum+(Number(item.quantity||0)*rate);
+  },0);
 
   const low = ration.filter(r => {
     const qty = Number.parseFloat(r.quantity ?? r.stock ?? 0) || 0;
