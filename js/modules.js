@@ -115,7 +115,7 @@ function render(){
 function statsHtml(list){
   if(cfg.key==="store"){
     let low=list.filter(isLowStock).length;
-    return stat("Total Items",list.length)+stat("Low Stock",low)+stat("Stock Value",money(list.reduce((sum,item)=>{const ps=(data.purchases||[]).filter(p=>String(p.itemId)===String(item.id));let q=0,v=0;ps.forEach(p=>{const qty=Number(p.baseQuantity),value=Number(p.total??p.amount??(Number(p.quantity||0)*Number(p.rate||0)));if(Number.isFinite(qty)&&qty>0&&Number.isFinite(value)&&value>=0){q+=qty;v+=value}});const rate=q>0?v/q:Number(item.price??item.unitPrice??0);return sum+Number(item.quantity||0)*rate},0)));
+    return stat("Total Items",list.length)+stat("Low Stock",low)+stat("Stock Value",money(list.reduce((sum,item)=>sum+(Number(item.quantity??item.stock??0)||0)*(Number(item.price??item.unitPrice??0)||0),0)));
   }
   if(cfg.key==="purchases")return stat("Purchase Entries",list.length)+stat("Total Purchases",money(list.reduce((s,x)=>s+Number(x.total||x.amount||0),0)));
   if(cfg.key==="recipes")return stat("Recipes",list.length)+stat("Average Cost",money(list.length?list.reduce((s,x)=>s+Number(x.costPerServing||0),0)/list.length:0));
