@@ -310,21 +310,23 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
 <div class="modal" id="paymentModal">
  <div class="modal-box">
   <div class="modal-head"><h3>Member Payment</h3><button class="close" onclick="closePayment()">✕</button></div>
-  <div class="field"><label>Member Status</label><select id="paymentStatusFilter" onchange="renderPaymentMembers()"><option value="All">All Members</option><option>Active</option><option>Inactive</option><option>Transferred</option><option>Leave</option></select></div>
-  <div class="payment-list" id="paymentMemberList"></div>
-  <div id="paymentEntry" style="display:none">
+  <div id="paymentEntry">
    <h3 class="view-heading" id="paymentMemberTitle">Member Bill</h3>
-   <div class="payment-summary"><div><small>Total Meal Bill</small><strong id="paymentBillTotal">₹0</strong></div><div><small>Already Paid</small><strong id="paymentAlreadyPaid">₹0</strong></div><div><small>Balance Due</small><strong id="paymentBalanceDue">₹0</strong></div><div><small>Payment Status</small><strong id="paymentBillStatus">Due</strong></div></div>
-   <div class="form-grid">
-    <div class="field"><label>Payment Date</label><input id="paymentDate" type="date"></div>
-    <div class="field"><label>Payment Amount (₹)</label><input id="paymentAmount" type="number" min="0.01" step="0.01" placeholder="Enter amount"></div>
-    <div class="field full"><label>Remarks / Receipt No.</label><input id="paymentRemarks" placeholder="Cash / UPI / receipt details"></div>
+   <div id="paymentMemberStatus" class="status" style="display:inline-block;margin-bottom:10px">Active</div>
+   <div class="payment-summary">
+    <div><small>Total Meal Bill</small><strong id="paymentBillTotal">₹0</strong></div>
+    <div><small>Already Paid / Advance</small><strong id="paymentAlreadyPaid">₹0</strong></div>
+    <div><small>Balance Due</small><strong id="paymentBalanceDue">₹0</strong></div>
+    <div><small>Payment Status</small><strong id="paymentBillStatus">Not Paid</strong></div>
    </div>
-   <div class="form-actions"><button class="secondary" onclick="closePayment()">Cancel</button><button class="primary" onclick="saveMemberPayment()">Save Payment</button></div>
+   <div class="meal-entry" id="paymentAutoDetails">Bill and payment details are fetched automatically from this member's records.</div>
+   <div class="form-actions">
+    <button class="secondary" onclick="closePayment()">Close</button>
+    <button class="primary" id="receivePaymentBtn" onclick="receiveFullDue()">💰 Receive Full Due</button>
+   </div>
   </div>
  </div>
 </div>
-
 <script>
 function showToast(message,type="info"){
  const old=document.getElementById("appToast");
@@ -555,64 +557,48 @@ function viewMember(id){
 }
 function memberBillSummary(memberId){
  const d=getData();
- const m=(d.members||[]).find(x=>x.id===memberId);
- if(!m)return {total:0,paid:0,due:0,status:"No member"};
+ const m=(d.members||[]).find(x=>String(x.id)===String(memberId));
+ if(!m)return {total:0,paid:0,due:0,status:"No member",transactions:[]};
  const meals=(d.mealRecords||[]).filter(r=>(r.memberIds||[]).map(String).includes(String(memberId)));
  const mealTotal=meals.reduce((s,r)=>s+Number(r.chargePerMember||0),0);
  const tx=(d.transactions||[]).filter(t=>String(t.memberId)===String(memberId));
  const collections=tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((s,t)=>s+Number(t.amount||0),0);
  const paid=Number(m.advance||0)+collections;
  const due=Math.max(0,mealTotal-paid);
- return {total:mealTotal,paid,due,status:due<=0?"Paid":paid>0?"Part Paid":"Not Paid"};
+ return {total:mealTotal,paid,due,status:due<=0?"Paid":paid>0?"Part Paid":"Not Paid",transactions:tx};
 }
-let paymentMemberId=null;
 function openPayment(){
- paymentMemberId=null;
- document.getElementById("paymentStatusFilter").value="All";
- document.getElementById("paymentEntry").style.display="none";
- document.getElementById("paymentDate").value=new Date().toISOString().slice(0,10);
- document.getElementById("paymentAmount").value="";
- document.getElementById("paymentRemarks").value="";
- renderPaymentMembers();
- document.getElementById("paymentModal").style.display="block";
-}
-function closePayment(){document.getElementById("paymentModal").style.display="none"}
-function renderPaymentMembers(){
- const filter=document.getElementById("paymentStatusFilter").value;
- const list=members.filter(m=>filter==="All"||(m.status||"Active")===filter);
- const box=document.getElementById("paymentMemberList");
- box.innerHTML=list.length?list.map(m=>'<button type="button" class="payment-member '+(paymentMemberId===m.id?'selected':'')+'" onclick="selectPaymentMember(\''+esc(m.id)+'\')">'+esc(m.name)+' · '+esc(m.forceNo)+' <span style="float:right">'+esc(m.status||"Active")+'</span></button>').join(""):'<p class="empty">Is status mein koi member nahi hai.</p>';
-}
-function selectPaymentMember(id){
- paymentMemberId=id;
- const m=members.find(x=>String(x.id)===String(id));if(!m)return;
- const b=memberBillSummary(id);
- document.getElementById("paymentEntry").style.display="block";
+ const m=members.find(x=>String(x.id)===String(viewingId));
+ if(!m){showToast("Member details nahi mile.","error");return}
+ const b=memberBillSummary(m.id);
  document.getElementById("paymentMemberTitle").textContent=m.name+" · "+m.forceNo;
+ document.getElementById("paymentMemberStatus").textContent="Member Status: "+(m.status||"Active");
  document.getElementById("paymentBillTotal").textContent=money(b.total);
  document.getElementById("paymentAlreadyPaid").textContent=money(b.paid);
  document.getElementById("paymentBalanceDue").textContent=money(b.due);
  document.getElementById("paymentBillStatus").textContent=b.status;
- document.getElementById("paymentAmount").value=b.due>0?b.due:"";
- renderPaymentMembers();
+ document.getElementById("paymentAutoDetails").textContent="Transfer / Leave / Active / Inactive: "+(m.status||"Active")+(m.transferLocation?" · "+m.transferLocation:"")+(m.transferDate?" · "+m.transferDate:"")+" | Records: "+b.transactions.length+" payment entries";
+ const btn=document.getElementById("receivePaymentBtn");
+ btn.disabled=b.due<=0;
+ btn.textContent=b.due>0?"💰 Receive Full Due":"✓ No Balance Due";
+ btn.style.opacity=b.due>0?"1":".55";
+ document.getElementById("paymentModal").style.display="block";
 }
-function saveMemberPayment(){
- if(!paymentMemberId){showToast("Pehle member select karein.","warning");return}
- const amount=Number(document.getElementById("paymentAmount").value||0);
- const date=document.getElementById("paymentDate").value;
- if(!date||!Number.isFinite(amount)||amount<=0){showToast("Payment date aur sahi amount enter karein.","warning");return}
- const d=getData();d.transactions=Array.isArray(d.transactions)?d.transactions:[];
- const m=(d.members||[]).find(x=>String(x.id)===String(paymentMemberId));if(!m)return;
- d.transactions.push({id:"T"+Date.now(),date,type:"collection",memberId:m.id,memberName:m.name,description:"Member payment"+(document.getElementById("paymentRemarks").value.trim()?" - "+document.getElementById("paymentRemarks").value.trim():""),amount});
+function closePayment(){document.getElementById("paymentModal").style.display="none"}
+function receiveFullDue(){
+ const m=members.find(x=>String(x.id)===String(viewingId));
+ if(!m){showToast("Member details nahi mile.","error");return}
  const bill=memberBillSummary(m.id);
- const totalPaid=bill.paid+amount;
+ if(bill.due<=0){showToast("Is member ka koi balance due nahi hai.","info");return}
+ const d=getData();d.transactions=Array.isArray(d.transactions)?d.transactions:[];
+ d.transactions.push({id:"T"+Date.now(),date:new Date().toISOString().slice(0,10),type:"collection",memberId:m.id,memberName:m.name,description:"Full outstanding mess bill received",amount:bill.due});
+ const updated=memberBillSummary(m.id);
  m.finalBillAmount=bill.total;
- m.finalBillPaid=totalPaid>=bill.total?"Paid":totalPaid>0?"Part Paid":"Not Paid";
+ m.finalBillPaid="Paid";
  try{saveData(d)}catch(e){showToast("Payment save nahi hua. Dobara try karein.","error");return}
  refresh();
- selectPaymentMember(m.id);
- showToast("Payment saved successfully.","success");
- if(viewingId===m.id)viewMember(m.id);
+ openPayment();
+ showToast("Full due payment saved successfully.","success");
 }
 function whatsAppMember(){
  const m=members.find(x=>x.id===viewingId);if(!m)return;
