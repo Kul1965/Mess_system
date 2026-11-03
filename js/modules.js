@@ -65,6 +65,26 @@ function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&l
 function money(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2})}
 function options(f){if(f[2]==="staff")return '<option value="">Select staff</option>'+((data.staff||[]).filter(x=>(x.status||"Active")==="Active").map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+' — '+esc(x.duty||"Staff")+'</option>').join(""));if(f[2]==="item")return '<option value="">Choose item</option>'+((data.ration||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="member")return '<option value="">No member selected</option>'+((data.members||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="recipe"){let recipes=data.recipes||[];return '<option value="">Choose recipe</option>'+recipes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' ('+money(x.costPerServing)+'/serving)</option>').join("")}return f[4].split("|").map(x=>'<option>'+esc(x)+'</option>').join("")}
 function input(f,v=""){let [id,label,type,required]=f;let html=type==="select"||type==="item"||type==="member"||type==="recipe"||type==="staff"?'<select id="f_'+id+'" '+(required?"required":"")+'>'+options(f)+'</select>':'<input id="f_'+id+'" type="'+type+'" value="'+esc(v)+'" '+(required?"required":"")+' '+(type==="number"?'min="0" step="any"':"")+'>';return '<div class="field"><label>'+label+(required?" *":"")+'</label>'+html+'</div>'}
+function renderSettings(){
+ const s=data.settings&&typeof data.settings==="object"?data.settings:{};
+ const panel=document.getElementById("tablePanel"),stats=document.getElementById("stats");
+ if(stats)stats.style.display="none";
+ if(!panel)return;
+ panel.innerHTML='<div class="pagehead"><h3 style="margin:0 0 8px">Mess Details</h3><p class="muted">Yahan ki changes Dashboard ke header mein automatic dikhengi.</p></div>'+
+ '<div class="formgrid" style="max-width:760px">'+
+ '<div class="field"><label for="settingMessName">Mess Name</label><input id="settingMessName" value="'+esc(s.messName||"A Coy (CRPF)")+'" placeholder="A Coy (CRPF)"></div>'+
+ '<div class="field"><label for="settingCurrency">Currency</label><input id="settingCurrency" value="'+esc(s.currency||"Rs")+'" placeholder="Rs"></div>'+
+ '<div class="field"><label for="settingMessNco">Mess NCO Name</label><input id="settingMessNco" value="'+esc(s.messNco||s.messNCO||"")+'" placeholder="Enter Mess NCO name"></div>'+
+ '<div class="field"><label for="settingMessSo">Mess SO Name</label><input id="settingMessSo" value="'+esc(s.messSo||s.messSO||"")+'" placeholder="Enter Mess SO name"></div>'+
+ '</div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button type="button" onclick="saveSettings()">Save Settings</button></div>'+
+ '<div class="notice" style="margin-top:16px">Mess Name, Mess NCO aur Mess SO yahan edit karein. Dashboard par naam apne-aap update honge.</div>';
+}
+function saveSettings(){
+ const previous=data.settings&&typeof data.settings==="object"?data.settings:{};
+ data.settings={...previous,messName:document.getElementById("settingMessName").value.trim(),currency:document.getElementById("settingCurrency").value.trim()||"Rs",messNco:document.getElementById("settingMessNco").value.trim(),messSo:document.getElementById("settingMessSo").value.trim()};
+ if(!save())return;
+ showAppAlert("Settings saved successfully.");
+}
 function render(){
   try{
     const pageIcons={store:"📦",purchases:"🛒",recipes:"🍲",menu:"📅",accounts:"💰",staff:"👨‍🍳",reports:"📊",handover:"🔄",settings:"⚙️"};
@@ -155,6 +175,7 @@ function saveCurrentRecord(event){
   const id=field[0],el=document.getElementById("f_"+id);
   if(el)values[id]=el.type==="number"?Number(el.value||0):el.value.trim();
  });
+ if(cfg.key==="settings"){saveSettings();return}
  if(cfg.key==="recipes"){
   const ingredients=collectRecipeIngredients();
   if(!ingredients)return;
