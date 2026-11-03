@@ -63,7 +63,7 @@ function isLowStock(x){
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function money(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2})}
-function options(f){if(f[2]==="staff")return '<option value="">Select staff</option>'+((data.staff||[]).filter(x=>(x.status||"Active")==="Active").map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+' — '+esc(x.duty||"Staff")+'</option>').join(""));if(f[2]==="item")return '<option value="">Choose item</option>'+((data.ration||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="member")return '<option value="">No member selected</option>'+((data.members||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="recipe"){let recipes=data.recipes||[];return '<option value="">Choose recipe</option>'+recipes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' ('+money(x.costPerServing)+'/serving)</option>').join("")}return f[4].split("|").map(x=>'<option>'+esc(x)+'</option>').join("")}
+function options(f){if(f[2]==="staff")return '<option value="">Select staff</option>'+((data.staff||[]).filter(x=>(x.status||"Active")==="Active").map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+' — '+esc(x.duty||"Staff")+'</option>').join(""));if(f[2]==="item")return '<option value="">Choose item</option>'+((data.ration||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="member")return '<option value="">Choose member</option>'+((data.members||[]).filter(x=>String(x.status||"Active").toLowerCase()==="active").map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' — '+esc(x.rank||"")+(x.forceNumber?" ("+esc(x.forceNumber)+")":"")+'</option>').join(""));if(f[2]==="recipe"){let recipes=data.recipes||[];return '<option value="">Choose recipe</option>'+recipes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' ('+money(x.costPerServing)+'/serving)</option>').join("")}return f[4].split("|").map(x=>'<option>'+esc(x)+'</option>').join("")}
 function input(f,v=""){let [id,label,type,required]=f;let html=type==="select"||type==="item"||type==="member"||type==="recipe"||type==="staff"?'<select id="f_'+id+'" '+(required?"required":"")+'>'+options(f)+'</select>':'<input id="f_'+id+'" type="'+type+'" value="'+esc(v)+'" '+(required?"required":"")+' '+(type==="number"?'min="0" step="any"':"")+'>';return '<div class="field"><label>'+label+(required?" *":"")+'</label>'+html+'</div>'}
 function renderSettings(){
  const s=data.settings&&typeof data.settings==="object"?data.settings:{};
@@ -93,10 +93,11 @@ function render(){
     if(cfg.key==="settings"){renderSettings();return}
     if(cfg.key==="reports"){renderReports();return}
     let list=arr(),q=(document.getElementById("search")?.value||"").toLowerCase();
+    if(cfg.key==="staff")list=list.filter(x=>!!x.memberId&&!!x.duty);
     let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
-      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
+      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
       return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
@@ -244,6 +245,14 @@ function saveCurrentRecord(event){
 }
 
 function closeForm(){document.getElementById("modal").hidden=true}
+function viewStaff(id){
+ const x=(data.staff||[]).find(a=>String(a.id)===String(id));if(!x)return;
+ const member=(data.members||[]).find(a=>String(a.id)===String(x.memberId));
+ const old=document.getElementById("staffViewModal");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="staffViewModal";wrap.style.cssText="position:fixed;inset:0;z-index:10020;background:#000b;display:flex;align-items:center;justify-content:center;padding:16px";
+ wrap.innerHTML='<section style="width:min(100%,440px);background:#fff;color:#214d3b;border-radius:16px;padding:20px;max-height:85vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0">Mess Duty Details</h3><button type="button" class="alt" id="closeStaffView">✕</button></div><div style="margin-top:16px;line-height:2"><b>Member:</b> '+esc(x.name||member?.name||"—")+'<br><b>Force Number:</b> '+esc(member?.forceNumber||"—")+'<br><b>Rank:</b> '+esc(x.rank||member?.rank||"—")+'<br><b>Mess Duty:</b> '+esc(x.duty||"—")+'<br><b>Duty Start Date:</b> '+esc(x.dutyDate||"—")+'<br><b>Mobile:</b> '+esc(x.phone||member?.contact||member?.mobile||"—")+'<br><b>Member Status:</b> '+esc(member?.status||x.status||"—")+'</div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button type="button" id="closeStaffView2">Close</button></div></section>';
+ document.body.appendChild(wrap);const close=()=>wrap.remove();wrap.querySelector("#closeStaffView").onclick=close;wrap.querySelector("#closeStaffView2").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
+}
 function editRow(id){openForm(id)}
 function showDeleteConfirm(onConfirm){
  const old=document.getElementById("deleteConfirmModal");
