@@ -261,18 +261,6 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
      <select id="status"><option>Active</option><option>Inactive</option><option>Transferred</option><option>Leave</option></select>
     </div>
     <div class="field">
-     <label>Transfer Location / Unit</label><input id="transferLocation" placeholder="Where transferred">
-    </div>
-    <div class="field">
-     <label>Transfer Date</label><input id="transferDate" type="date">
-    </div>
-    <div class="field">
-     <label>Final Mess Bill (₹)</label><input id="finalBillAmount" type="number" min="0" step="0.01" value="0">
-    </div>
-    <div class="field">
-     <label>Final Bill Status</label><select id="finalBillPaid"><option value="Not Paid">Not Paid</option><option value="Paid">Paid</option><option value="Part Paid">Part Paid</option></select>
-    </div>
-    <div class="field">
      <label>Member Photo</label>
      <input id="photo" type="file" accept="image/*">
     </div>
@@ -420,14 +408,11 @@ function openForm(id=null){
  editingId=id;
  document.getElementById("memberForm").reset();
  document.getElementById("advance").value=0;
-  ["transferLocation","transferDate"].forEach(k=>document.getElementById(k).value="");
-  document.getElementById("finalBillAmount").value=0;
-  document.getElementById("finalBillPaid").value="Not Paid";
  document.getElementById("formTitle").textContent=id?"Edit Member":"Add New Member";
  if(id){
   const m=members.find(x=>x.id===id);
   if(!m)return;
-  ["forceNo","name","rank","contact","joiningDate","advance","status","transferLocation","transferDate","finalBillAmount","finalBillPaid","remarks"]
+  ["forceNo","name","rank","contact","joiningDate","advance","status","remarks"]
    .forEach(k=>document.getElementById(k).value=m[k]??"");
  }
  document.getElementById("formModal").style.display="block";
@@ -470,16 +455,6 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
   const photo=await readPhoto(file);
   const transferHistory=Array.isArray(old?.transferHistory)?[...old.transferHistory]:[];
-  const transferChanged=!old||old.status!==document.getElementById("status").value||
-   (old.transferLocation||"")!==document.getElementById("transferLocation").value.trim()||
-   (old.transferDate||"")!==document.getElementById("transferDate").value;
-  if(document.getElementById("status").value==="Transferred"&&transferChanged){
-   transferHistory.push({
-    date:document.getElementById("transferDate").value||new Date().toISOString().slice(0,10),
-    location:document.getElementById("transferLocation").value.trim(),
-    recordedAt:new Date().toISOString()
-   });
-  }
   const member={
    id:editingId||("M"+Date.now()),
    transferHistory,
@@ -490,10 +465,10 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
    joiningDate:document.getElementById("joiningDate").value,
    advance:Number(document.getElementById("advance").value||0),
    status:document.getElementById("status").value,
-    transferLocation:document.getElementById("transferLocation").value.trim(),
-    transferDate:document.getElementById("transferDate").value,
-    finalBillAmount:Number(document.getElementById("finalBillAmount").value||0),
-    finalBillPaid:document.getElementById("finalBillPaid").value,
+    transferLocation:old?.transferLocation||"",
+   transferDate:old?.transferDate||"",
+   finalBillAmount:Number(old?.finalBillAmount||0),
+   finalBillPaid:old?.finalBillPaid||"Not Paid",
    remarks:document.getElementById("remarks").value.trim(),
    photo:photo||(old?old.photo:"")
   };
