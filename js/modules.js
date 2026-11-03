@@ -120,22 +120,31 @@ function refreshRecipeCost(){let total=0;document.querySelectorAll("#ingredientR
 function collectRecipeIngredients(){let rows=[...document.querySelectorAll("#ingredientRows .ingredient-row")],out=[];for(let row of rows){let itemId=row.querySelector(".ingredient-item").value,q=Number(row.querySelector(".ingredient-qty").value||0);if(!itemId&&!q)continue;if(!itemId||q<=0){showAppAlert("Har ingredient ke liye ration item aur quantity dono select/enter karein.");return null}let item=(data.ration||[]).find(i=>i.id===itemId);if(!item){showAppAlert("Selected ration item Store mein nahi mila. Dobara select karein.");return null}out.push({itemId,itemName:item.name,quantity:q,unit:item.unit,rate:Number(item.price||0),lineCost:q*Number(item.price||0)})}return out}
 function closeForm(){document.getElementById("modal").hidden=true}
 function editRow(id){openForm(id)}
-function deleteRow(id){let x=arr().find(a=>a.id===id);if(!x||!confirm("Are you really sure you want to delete this item?"))return;if(cfg.key==="purchases")reversePurchase(x);arr().splice(arr().findIndex(a=>a.id===id),1);if(!save())return;render();showAppAlert((cfg.title||"Record")+" deleted successfully.")}
-function reversePurchase(p){let item=(data.ration||[]).find(x=>x.id===p.itemId);if(item){let base=toBase(p.quantity,p.unit,item.unit);item.quantity=Math.max(0,Number(item.quantity||0)-base)}}
-function toBase(q,u,base){q=Number(q||0);if(base==="g")return u==="kg"?q*1000:q;if(base==="kg")return u==="g"?q/1000:q;if(base==="ml")return u==="ltr"?q*1000:q;if(base==="ltr")return u==="ml"?q/1000:q;return q}
-document.getElementById("recordForm").addEventListener("submit",e=>{e.preventDefault();let x={id:editId||("R"+Date.now())};cfg.fields.forEach(f=>{let el=document.getElementById("f_"+f[0]);x[f[0]]=el?el.value:""});cfg.fields.filter(f=>f[2]==="number").forEach(f=>x[f[0]]=Number(x[f[0]]||0));if(cfg.key==="purchases"){let item=(data.ration||[]).find(a=>a.id===x.itemId);if(!item){showAppAlert("Select a valid store item.");return}if(editId){let old=arr().find(a=>a.id===editId);reversePurchase(old)}let base=toBase(x.quantity,x.unit,item.unit);let oldQty=Number(item.quantity||0),oldRate=Number(item.price||0),newRate=Number(x.rate||0)/(x.unit==="kg"||x.unit==="ltr"?1000:1);item.price=(oldQty+base)>0?((oldQty*oldRate)+(base*newRate))/(oldQty+base):newRate;item.quantity=oldQty+base;x.itemName=item.name;x.total=x.quantity*x.rate}if(cfg.key==="accounts"){let m=(data.members||[]).find(a=>a.id===x.memberId);x.memberName=m?.name||"";data.transactions=data.transactions||[]}if(cfg.key==="recipes"){x.ingredients=collectRecipeIngredients();if(x.ingredients===null)return;if(!x.ingredients.length){showAppAlert("Recipe banane ke liye kam se kam ek Ration Store item aur uski quantity add karein.");return}x.totalCost=x.ingredients.reduce((s,i)=>s+i.lineCost,0);x.servings=1;x.costPerServing=x.totalCost;x.ingredientSummary=x.ingredients.map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")}if(cfg.key==="menu"){let recipe=(data.recipes||[]).find(r=>r.id===x.recipeId);if(!recipe){showAppAlert("Recipe nahi mili. Pehle Recipes page mein recipe add karein.");return}x.recipeName=recipe.name;x.costPerServing=Number(recipe.costPerServing||0);x.totalCost=x.costPerServing*Number(x.servings||1);if(x.costPerServing<=0){showAppAlert("Is recipe ka cost set nahi hai. Recipes page mein cost per serving add karein.");return}}if(cfg.key==="settings"){data.settings={...(data.settings||{}),...x};save();closeForm();render();return}let list=arr();let i=list.findIndex(a=>a.id===x.id);if(i>=0)list[i]=x;else list.push(x);const didSave=save();closeForm();render();if(didSave)showAppAlert(cfg.key==="recipes"?(editId?"Recipe updated successfully.":"Recipe saved successfully."):(editId?cfg.title+" updated successfully.":cfg.title+" saved successfully."));});
-function renderSettings(){let s=data.settings||{};document.getElementById("stats").innerHTML="";document.getElementById("tablePanel").innerHTML='<div class="formgrid">'+cfg.fields.map(f=>input(f,s[f[0]]||"")).join("")+'</div><p style="margin-top:14px"><button onclick="saveSettings()">Save Settings</button></p>'}
-function saveSettings(){cfg.fields.forEach(f=>data.settings[f[0]]=document.getElementById("f_"+f[0]).value);save();showAppAlert("Settings saved on this device.");render()}
-function renderReports(){let members=data.members||[],stock=data.ration||[],purchases=data.purchases||[],tx=data.transactions||[];document.getElementById("stats").innerHTML=stat("Active Members",members.filter(x=>(x.status||"Active")==="Active").length)+stat("Stock Value",money(stock.reduce((s,x)=>s+Number(x.quantity||0)*Number(x.price||0),0)))+stat("Purchases",money(purchases.reduce((s,x)=>s+Number(x.total||0),0)))+stat("Collections",money(tx.filter(x=>x.type!=="expense").reduce((s,x)=>s+Number(x.amount||0),0)))+stat("Expenses",money(tx.filter(x=>x.type==="expense").reduce((s,x)=>s+Number(x.amount||0),0)))+stat("Low Stock",stock.filter(x=>Number(x.quantity||0)<=Number(x.minimum||0)).length);document.getElementById("tablePanel").innerHTML='<h3>Low stock items</h3><div class="tablewrap"><table><thead><tr><th>Item</th><th>Available</th><th>Minimum</th><th>Unit</th></tr></thead><tbody>'+stock.filter(x=>Number(x.quantity||0)<=Number(x.minimum||0)).map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.quantity)+'</td><td>'+esc(x.minimum)+'</td><td>'+esc(x.unit)+'</td></tr>').join("")+'</tbody></table></div><button onclick="window.print()">Print Report</button>'}
-function exportBackup(){let blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="crpf-mess-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)}
-function importBackup(file){let r=new FileReader();r.onload=()=>{try{let v=JSON.parse(r.result);if(!v||typeof v!=="object")throw Error();if(!confirm("Restore backup and replace current data on this device?"))return;data=v;save();showAppAlert("Backup restored.");location.reload()}catch(e){showAppAlert("Invalid backup file.")}};r.readAsText(file)}
-
-
-function renderLowPurchase(){
- const low=(data.ration||[]).filter(isLowStock);
- let box=document.getElementById("lowPurchasePanel");
- if(!box){box=document.createElement("section");box.id="lowPurchasePanel";box.className="panel low-purchase";document.getElementById("tablePanel").before(box);}
- box.innerHTML="<h3>🟢 Low Stock — Purchase Now</h3>"+(low.length?'<div class="low-purchase-grid">'+low.map(x=>'<div class="low-purchase-item"><div><b>'+esc(x.name)+'</b><small>Available: '+esc(x.quantity)+' '+esc(x.unit)+'</small></div><a class="btn purchase-now" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a></div>').join("")+'</div>':'<p class="muted">Abhi koi ration item low stock mein nahi hai.</p>');
+function showDeleteConfirm(onConfirm){
+ const old=document.getElementById("deleteConfirmModal");
+ if(old)old.remove();
+ const wrap=document.createElement("div");
+ wrap.id="deleteConfirmModal";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:18px";
+ wrap.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle" style="width:min(100%,380px);background:#0b3022;border:1px solid #287b52;border-radius:18px;padding:23px 20px;text-align:center;box-shadow:0 18px 55px #0009;color:#fff"><div style="width:58px;height:58px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#51252a;color:#ffb5b5;font-size:29px">🗑️</div><h2 id="deleteConfirmTitle" style="font-size:20px;color:#fff;margin:0 0 10px">Confirm Delete</h2><p style="font-size:15px;line-height:1.5;color:#d5e8dd;margin:0 0 20px">Are you really sure you want to delete this item?</p><div style="display:flex;gap:10px"><button type="button" id="deleteCancel" style="flex:1;background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae;border-radius:10px;padding:12px 8px;font-weight:700;font-size:14px">Cancel</button><button type="button" id="deleteConfirm" style="flex:1;background:#c93643;color:#fff;border:1px solid #ed6670;border-radius:10px;padding:12px 8px;font-weight:700;font-size:14px">Yes, Delete</button></div></section>';
+ document.body.appendChild(wrap);
+ const close=()=>{document.removeEventListener("keydown",keyHandler);wrap.remove()};
+ const keyHandler=e=>{if(e.key==="Escape")close()};
+ document.addEventListener("keydown",keyHandler);
+ wrap.querySelector("#deleteCancel").addEventListener("click",close);
+ wrap.querySelector("#deleteConfirm").addEventListener("click",()=>{close();onConfirm()});
+ wrap.addEventListener("click",e=>{if(e.target===wrap)close()});
+}
+function deleteRow(id){
+ let x=arr().find(a=>a.id===id);
+ if(!x)return;
+ showDeleteConfirm(()=>{
+  if(cfg.key==="purchases")reversePurchase(x);
+  arr().splice(arr().findIndex(a=>a.id===id),1);
+  if(!save())return;
+  render();
+  showAppAlert((cfg.title||"Record")+" deleted successfully.");
+ });
 }
 function viewRecipe(id){
  const r=(data.recipes||[]).find(x=>String(x.id)===String(id));if(!r)return;
