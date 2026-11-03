@@ -171,6 +171,7 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
   <div class="stat"><span>Total Members</span><strong id="total">0</strong></div>
   <div class="stat"><span>Active Members</span><strong id="active">0</strong></div>
   <div class="stat"><span>Inactive Members</span><strong id="inactive">0</strong></div>
+   <div class="stat"><span>Transferred</span><strong id="transferred">0</strong></div>
  </div>
 
  <section class="panel no-print">
@@ -529,7 +530,7 @@ function whatsAppMember(){
  const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((sum,t)=>sum+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
  const status=due>0?"UNPAID / DUE":credit>0?"ADVANCE / CREDIT":"PAID";
- const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Paid / Advance: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\n\\nDhanyavaad.";
+ const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Paid / Advance: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\nTransfer: "+(m.status==="Transferred"?(m.transferLocation||"Location not entered")+" on "+(m.transferDate||"date not entered"):"Not transferred")+"\\nFinal Mess Bill: "+money(finalBill)+"\\nFinal Bill Status: "+finalBillStatus+"\\n\\nDhanyavaad.";
  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
 }
 function closeView(){document.getElementById("viewModal").style.display="none"}
@@ -559,6 +560,6 @@ document.getElementById("date").textContent=new Date().toLocaleDateString();
 document.getElementById("addMemberBtn").addEventListener("click",()=>openForm());
 refresh();
 </script>
-<script src="js/mobile-nav.js?v=20261103-menu-fix4"></script>
+<script src="js/mobile-nav.js?v=20261103-members-transfer1"></script>
 </body>
 </html>
