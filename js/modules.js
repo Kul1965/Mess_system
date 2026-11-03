@@ -115,7 +115,7 @@ function render(){
 function statsHtml(list){
   if(cfg.key==="store"){
     let low=list.filter(isLowStock).length;
-    return stat("Total Items",list.length)+stat("Low Stock",low)+stat("Stock Value",money(list.reduce((sum,item)=>sum+(Number(item.quantity??item.stock??0)||0)*(Number(item.price??item.unitPrice??0)||0),0)));
+    return stat("Total Items",list.length)+stat("Low Stock",low)+stat("Stock Value",money(list.reduce((sum,item)=>{const u=String(item.unit||"").toLowerCase(),d=["g","gram","grams","ml"].includes(u)?1000:1;return sum+(Number(item.quantity??item.stock??0)||0)*(Number(item.price??item.unitPrice??0)||0)/d;},0)));
   }
   if(cfg.key==="purchases")return stat("Purchase Entries",list.length)+stat("Total Purchases",money(list.reduce((s,x)=>s+Number(x.total||x.amount||0),0)));
   if(cfg.key==="recipes")return stat("Recipes",list.length)+stat("Average Cost",money(list.length?list.reduce((s,x)=>s+Number(x.costPerServing||0),0)/list.length:0));
@@ -136,8 +136,8 @@ function showRationRequiredPopup(){
 function openForm(id){if(cfg.key==="recipes"&&!(data.ration||[]).length){showRationRequiredPopup();return}if(cfg.key==="menu"&&!(data.recipes||[]).length){showAppAlert("Recipe nahi hai. Pehle Recipes page mein recipe aur cost per serving add karein, phir Making Menu banayein.");return}editId=id||null;let x=id?arr().find(a=>String(a.id)===String(id)):{};document.getElementById("formTitle").textContent=id?"Edit "+cfg.title:"Add "+cfg.title;document.getElementById("fields").innerHTML=cfg.fields.map(f=>input(f,x?.[f[0]]??"")).join("")+(cfg.key==="recipes"?recipeIngredientEditor(): "");cfg.fields.forEach(f=>{let el=document.getElementById("f_"+f[0]);if(el&&x?.[f[0]]!=null)el.value=x[f[0]]});if(cfg.key==="staff"&&!id){let d=document.getElementById("f_dutyDate");if(d){const now=new Date();d.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0")}}if(cfg.key==="recipes"){(x?.ingredients||[]).forEach(i=>addIngredientRow(i.itemId,i.quantity));if(!(x?.ingredients||[]).length)addIngredientRow();refreshRecipeCost()}document.getElementById("modal").hidden=false}
 function recipeIngredientEditor(){return '<div class="field" style="grid-column:1/-1"><label>Ration Ingredients</label><div class="notice">Yahan Ration Store se item select karein. Quantity usi base unit mein dalein (g / ml / pcs). Rate aur ingredient cost automatic calculate hoga.</div><div id="ingredientRows"></div><button type="button" class="alt" onclick="addIngredientRow()">＋ Add Ingredient</button><div id="recipeCostPreview" style="margin-top:12px;font-weight:700"></div></div>'}
 function addIngredientRow(itemId="",quantity=""){let box=document.getElementById("ingredientRows");if(!box)return;let opts='<option value="">Select ration item</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+esc(i.unit)+'</option>').join("");let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:minmax(130px,2fr) minmax(75px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)";row.innerHTML='<div><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()">'+opts+'</select><small class="ingredient-rate muted" style="display:block;margin-top:4px">Rate: —</small></div><input class="ingredient-qty" type="number" min="0.001" step="any" placeholder="Qty" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><strong class="ingredient-cost">Rs 0.00</strong><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';box.appendChild(row);refreshRecipeCost()}
-function refreshRecipeCost(){let total=0;document.querySelectorAll("#ingredientRows .ingredient-row").forEach(row=>{let item=(data.ration||[]).find(i=>String(i.id)===String(row.querySelector(".ingredient-item").value)),q=Number(row.querySelector(".ingredient-qty").value||0),rate=Number(item?.price||0),cost=item&&q>0?q*rate:0;total+=cost;let rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");if(rateEl)rateEl.textContent=item?"Rate: "+money(rate)+" / "+item.unit:"Rate: —";if(costEl)costEl.textContent=money(cost)});let p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total)}
-function collectRecipeIngredients(){let rows=[...document.querySelectorAll("#ingredientRows .ingredient-row")],out=[];for(let row of rows){let itemId=row.querySelector(".ingredient-item").value,q=Number(row.querySelector(".ingredient-qty").value||0);if(!itemId&&!q)continue;if(!itemId||q<=0){showAppAlert("Har ingredient ke liye ration item aur quantity dono select/enter karein.");return null}let item=(data.ration||[]).find(i=>String(i.id)===String(itemId));if(!item){showAppAlert("Selected ration item Store mein nahi mila. Dobara select karein.");return null}out.push({itemId,itemName:item.name,quantity:q,unit:item.unit,rate:Number(item.price||0),lineCost:q*Number(item.price||0)})}return out}
+function refreshRecipeCost(){let total=0;document.querySelectorAll("#ingredientRows .ingredient-row").forEach(row=>{let item=(data.ration||[]).find(i=>String(i.id)===String(row.querySelector(".ingredient-item").value)),q=Number(row.querySelector(".ingredient-qty").value||0),rate=Number(item?.price||0),u=String(item?.unit||"").toLowerCase(),d=["g","gram","grams","ml"].includes(u)?1000:1,cost=item&&q>0?q*rate/d:0;total+=cost;let rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");if(rateEl)rateEl.textContent=item?"Rate: "+money(rate)+" / "+item.unit:"Rate: —";if(costEl)costEl.textContent=money(cost)});let p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total)}
+function collectRecipeIngredients(){let rows=[...document.querySelectorAll("#ingredientRows .ingredient-row")],out=[];for(let row of rows){let itemId=row.querySelector(".ingredient-item").value,q=Number(row.querySelector(".ingredient-qty").value||0);if(!itemId&&!q)continue;if(!itemId||q<=0){showAppAlert("Har ingredient ke liye ration item aur quantity dono select/enter karein.");return null}let item=(data.ration||[]).find(i=>String(i.id)===String(itemId));if(!item){showAppAlert("Selected ration item Store mein nahi mila. Dobara select karein.");return null}const u=String(item.unit||"").toLowerCase(),d=["g","gram","grams","ml"].includes(u)?1000:1;out.push({itemId,itemName:item.name,quantity:q,unit:item.unit,rate:Number(item.price||0),lineCost:q*Number(item.price||0)/d})}return out}
 
 function unitFactor(unit){
  const u=String(unit||"").toLowerCase();
@@ -159,7 +159,7 @@ function refreshAllRecipeCosts(){
   recipe.ingredients=(recipe.ingredients||[]).map(ingredient=>{
    const item=(data.ration||[]).find(x=>String(x.id)===String(ingredient.itemId));
    if(!item)return ingredient;
-   const rate=Number(item.price||0),lineCost=Number(ingredient.quantity||0)*rate;
+   const rate=Number(item.price||0),u=String(item.unit||"").toLowerCase(),d=["g","gram","grams","ml"].includes(u)?1000:1,lineCost=Number(ingredient.quantity||0)*rate/d;
    total+=lineCost;
    return {...ingredient,itemName:item.name,unit:item.unit,rate,lineCost};
   });
@@ -205,7 +205,7 @@ function saveCurrentRecord(event){
   if(baseQty===null){showAppAlert("Purchase unit aur Store base unit alag category ke hain. kg/g, ltr/ml, ya pcs hi use karein; pkt conversion ke liye pack size chahiye.");return}
   const total=values.quantity*values.rate;
   const old=arr().find(x=>String(x.id)===String(editId));
-  const currentStock=Number(item.quantity||0),currentValue=currentStock*Number(item.price||0);
+  const currentStock=Number(item.quantity||0),unitName=String(item.unit||"").toLowerCase(),rateDivisor=["g","gram","grams","ml"].includes(unitName)?1000:1,currentValue=currentStock*Number(item.price||0)/rateDivisor;
   const oldBaseRaw=old?(old.baseQuantity??purchaseInBase(old.quantity,old.unit,item.unit)):0;
   if(old&&(oldBaseRaw===null||!Number.isFinite(Number(oldBaseRaw)))){showAppAlert("Purane purchase unit ka conversion available nahi hai. Is record ko safely edit nahi kar sakte.");return}
   const oldBase=Number(oldBaseRaw||0);
@@ -214,8 +214,8 @@ function saveCurrentRecord(event){
   const newStock=currentStock+deltaQty,newValue=currentValue+deltaValue;
   if(newStock< -1e-9){showAppAlert("Purchase edit se stock negative ho jayega. Pehle stock balance check karein.");return}
   item.quantity=Math.max(0,newStock);
-  item.price=item.quantity>0?Math.max(0,newValue)/item.quantity:0;
-  const record={...(old||{}),...values,id:editId||("PU"+Date.now()),itemName:item.name,total,baseQuantity:baseQty,baseRate:total/baseQty};
+  item.price=item.quantity>0?(Math.max(0,newValue)/item.quantity)*rateDivisor:0;
+  const record={...(old||{}),...values,id:editId||("PU"+Date.now()),itemName:item.name,total,baseQuantity:baseQty,baseRate:(total/baseQty)*rateDivisor};
   const list=arr(),index=list.findIndex(x=>String(x.id)===String(record.id));
   if(index>=0)list[index]=record;else list.push(record);
   refreshAllRecipeCosts();
