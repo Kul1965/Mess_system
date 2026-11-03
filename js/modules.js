@@ -27,7 +27,7 @@ function showAppAlert(message){
 }
 const KEY="crpfMessData";
 const configs={
- store:{title:"Ration Store",sub:"Manage ration stock and minimum levels",key:"ration",fields:[["name","Item name","text",1],["category","Category","text"],["unit","Base unit","select",1,"g|kg|ml|ltr|pcs"],["quantity","Opening/current stock","number"],["minimum","Minimum stock alert","number"],["price","Rate per base unit (Rs)","number"]],cols:["name","category","quantity","unit","minimum","price"],stats:["Total Items","Low Stock","Stock Value"]},
+ store:{title:"Ration Store",sub:"Manage ration stock and minimum levels",key:"ration",fields:[["name","Item name","text",1],["category","Category","text"],["unit","Base unit","select",1,"g|kg|ml|ltr|pcs"],["quantity","Opening/current stock","number"],["minimum","Minimum stock alert","number"],["price","Rate per kg / litre (Rs; pcs per piece)","number"]],cols:["name","category","quantity","unit","minimum","price"],stats:["Total Items","Low Stock","Stock Value"]},
  purchases:{title:"Purchases",sub:"Record purchases and automatically update stock",key:"purchases",fields:[["date","Purchase date","date",1],["itemId","Store item","item",1],["quantity","Quantity purchased","number",1],["unit","Purchase unit","select",1,"kg|g|ltr|ml|pcs|pkt"],["rate","Rate per purchase unit (Rs)","number",1],["vendor","Supplier","text"],["bill","Bill / reference","text"]],cols:["date","itemName","quantity","unit","rate","total","vendor"]},
  recipes:{title:"Recipes",sub:"Add ration ingredients; cost is calculated from current store rates",key:"recipes",fields:[["name","Recipe name","text",1],["notes","Notes","text"]],cols:["name","ingredientSummary","totalCost","costPerServing"]},
  menu:{title:"Making Menu",sub:"Select a meal and recipe; recipe cost is calculated automatically",key:"menu",fields:[["date","Menu date","date",1],["recipeId","Select recipe","recipe",1],["servings","Number of members / servings","number",1]],cols:["date","recipeName","servings","totalCost"]},
@@ -275,11 +275,11 @@ function reversePurchase(purchase){
  const baseRaw=purchase.baseQuantity??purchaseInBase(purchase.quantity,purchase.unit,item.unit);
  if(baseRaw===null||!Number.isFinite(Number(baseRaw))){showAppAlert("Purchase unit conversion available nahi hai; stock change nahi kiya.");return false}
  const qty=Number(baseRaw),total=Number(purchase.total??(Number(purchase.quantity||0)*Number(purchase.rate||0)));
- const stock=Number(item.quantity||0),value=stock*Number(item.price||0);
+ const stock=Number(item.quantity||0),u=String(item.unit||"").toLowerCase(),divisor=["g","gram","grams","ml"].includes(u)?1000:1,value=stock*Number(item.price||0)/divisor;
  if(stock+1e-9<qty){showAppAlert("Is purchase ka kuch stock use ho chuka hai. Safe stock adjustment possible nahi; delete cancel kiya.");return false}
  const next=stock-qty,nextValue=value-total;
  item.quantity=Math.max(0,next);
- item.price=item.quantity>0?Math.max(0,nextValue)/item.quantity:0;
+ item.price=item.quantity>0?(Math.max(0,nextValue)/item.quantity)*divisor:0;
  refreshAllRecipeCosts();
  return true;
 }
@@ -297,7 +297,7 @@ function deleteRow(id){
 function viewRecipe(id){
  const r=(data.recipes||[]).find(x=>String(x.id)===String(id));if(!r)return;
  let old=document.getElementById("recipeViewModal");if(old)old.remove();
- const rows=(r.ingredients||[]).map(i=>'<tr><td>'+esc(i.itemName)+'</td><td>'+esc(i.quantity)+' '+esc(i.unit)+'</td><td>'+money(i.rate)+' / '+esc(i.unit)+'</td><td>'+money(i.lineCost)+'</td></tr>').join("");
+ const rows=(r.ingredients||[]).map(i=>'<tr><td>'+esc(i.itemName)+'</td><td>'+esc(i.quantity)+' '+esc(i.unit)+'</td><td>'+money(i.rate)+' / '+esc(["g","gram","grams"].includes(String(i.unit).toLowerCase())?"kg":String(i.unit).toLowerCase()==="ml"?"litre":i.unit)+'</td><td>'+money(i.lineCost)+'</td></tr>').join("");
  const modal=document.createElement("div");modal.id="recipeViewModal";modal.className="view-overlay";
  modal.innerHTML='<section class="view-card"><div class="view-head"><div><small>RECIPE DETAILS · 1 SERVING</small><h2>'+esc(r.name)+'</h2></div><button type="button" class="alt" onclick="document.getElementById(\'recipeViewModal\').remove()">✕</button></div><div class="view-cost"><small>Cost per serving</small><strong>'+money(r.costPerServing||r.totalCost)+'</strong></div><h3>Ingredients</h3><div class="tablewrap"><table><thead><tr><th>Ration Item</th><th>Quantity</th><th>Rate</th><th>Cost</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="muted">'+esc(r.notes||"No extra notes")+'</p><button type="button" onclick="document.getElementById(\'recipeViewModal\').remove()">Close</button></section>';
  document.body.appendChild(modal);modal.addEventListener("click",e=>{if(e.target===modal)modal.remove()});
