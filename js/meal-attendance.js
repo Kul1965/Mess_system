@@ -54,6 +54,16 @@
  window.saveMealAttendance=function(){
   const d=read(),ids=checkedIds(),chosen=selectedRecipes(),recipes=(d.recipes||[]).filter(r=>chosen.includes(r.id));
   const date=$("mealDate").value,mealType=$("mealType").value;
+  // Only Active members can receive a new meal attendance / bill.
+  // Re-check at save time so a member changed to Leave or Transferred
+  // while this page was open cannot be charged accidentally.
+  const activeIds=new Set((d.members||[]).filter(m=>(m.status||"Active")==="Active").map(m=>String(m.id)));
+  const blockedIds=ids.filter(id=>!activeIds.has(String(id)));
+  if(blockedIds.length){
+   alert("Leave ya Transferred member ki nayi hajiri / mess bill nahi ban sakti. Member list refresh kar di gayi hai.");
+   renderMembers();
+   return;
+  }
   if(!date){alert("Date select karein.");return}
   if(!recipes.length){alert("Kam se kam ek dish / recipe select karein.");return}
   if(!ids.length){alert("Jin members ne khana khaya hai unko select karein.");return}
