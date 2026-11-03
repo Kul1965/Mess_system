@@ -438,11 +438,12 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
 });
 function deleteMember(id){
  const m=members.find(x=>x.id===id);
- if(!m||!confirm("Delete member "+m.name+"?"))return;
+ if(!m||!confirm("Are you sure you want to delete "+m.name+"?"))return;
  const data=getData();
  data.members=(data.members||[]).filter(x=>x.id!==id);
- saveData(data);
+ try{saveData(data);}catch(saveErr){showToast("Member delete nahi hua. Dobara try karein.","error");return}
  refresh();
+ showToast("Member deleted successfully.","success");
 }
 function viewMember(id){
  viewingId=id;
