@@ -109,6 +109,23 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
 @keyframes toastProgress{from{width:100%}to{width:0}}
 @media(max-width:480px){.app-toast{top:8px;padding:11px 12px 14px;font-size:13px}}
 
+
+/* Mobile app-style slide-out navigation */
+.mobile-menu-toggle{display:none;border:1px solid #438568;background:#075039;color:#fff;border-radius:9px;width:42px;height:40px;font-size:23px;line-height:1;cursor:pointer;flex:0 0 42px}
+.mobile-menu-backdrop{display:none}
+@media(max-width:700px){
+ .topbar{flex-direction:row!important;align-items:center!important}
+ .mobile-menu-toggle{display:inline-flex;align-items:center;justify-content:center}
+ .topbar>div:first-of-type,.topbar>.heading{min-width:0;flex:1}
+ .sidebar{position:fixed!important;z-index:10002;top:0;left:0;width:min(285px,82vw)!important;min-width:0!important;height:100vh;height:100dvh;min-height:100vh!important;overflow-y:auto;transform:translateX(-105%);transition:transform .25s ease;box-shadow:8px 0 28px #0008}
+ body.mobile-nav-open .sidebar{transform:translateX(0)}
+ body.mobile-nav-open{overflow:hidden}
+ .sidebar .brand{padding:18px 8px}
+ .sidebar .nav{display:block;padding:12px 10px;overflow:visible}
+ .sidebar .nav a{display:block;white-space:normal;padding:13px 12px;margin:3px 0;font-size:14px;border-radius:8px}
+ .mobile-menu-backdrop{display:block;position:fixed;inset:0;background:#0009;z-index:10001;opacity:0;pointer-events:none;transition:opacity .25s}
+ body.mobile-nav-open .mobile-menu-backdrop{opacity:1;pointer-events:auto}
+}
 </style>
 </head>
 <body>
@@ -512,7 +529,8 @@ function printMember(){
  const photoHtml=m.photo?'<div class="member-photo"><img src="'+m.photo+'" alt="Member photo"></div>':'';
  const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</td><td>'+esc((r.ingredientUsage||[]).map(i=>i.itemName+': '+i.quantity+' '+i.unit).join(', '))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
  const payRows=tx.map(t=>'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td></tr>').join("");
- w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}.member-photo{text-align:center;margin:12px 0}.member-photo img{width:115px;height:115px;object-fit:cover;border:1px solid #999;border-radius:8px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3>'+photoHtml+'<p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Recipe</th><th>Ration consumed</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p><script>window.onload=()=>window.print();<\/script></body></html>');
+ w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}.member-photo{text-align:center;margin:12px 0}.member-photo img{width:115px;height:115px;object-fit:cover;border:1px solid #999;border-radius:8px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3>'+photoHtml+'<p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Recipe</th><th>Ration consumed</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p><script>window.onload=()=>window.print();<\/script><script src="js/mobile-nav.js?v=20261103-mobile-menu2"></script>
+</body></html>');
  w.document.close();
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
