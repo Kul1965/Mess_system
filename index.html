@@ -97,6 +97,7 @@ body{
   font-size:13px;
   white-space:nowrap;
 }
+.nco-pill{border-color:#d8b63d;background:#4b3b08;color:#ffe48a}.nco-pill strong{color:#fff1a8}.so-pill{border-color:#4b9cc4;background:#073b56;color:#9edcff}.so-pill strong{color:#e1f5ff}
 .content{padding:20px}
 
 /* PAGE TITLE */
@@ -343,7 +344,8 @@ td{
     <div class="top-info">
       <div class="info-pill">🏛️ Mess: <span id="messName">A Coy (CRPF)</span></div>
       <div class="info-pill" id="dateDisplay"></div>
-      <div class="info-pill">👤 Mess NCO</div>
+      <div class="info-pill nco-pill">👤 Mess NCO: <strong id="messNco">Not Set</strong></div>
+      <div class="info-pill so-pill">📋 Mess SO: <strong id="messSo">Not Set</strong></div>
     </div>
   </header>
 
@@ -530,8 +532,12 @@ td{
           <b id="messInfo">A Coy (CRPF)</b>
         </div>
         <div class="balance-row">
-          <span>Monthly Ration Limit</span>
-          <b id="rationLimit">Not Set</b>
+          <span>Mess NCO</span>
+          <b id="messNcoInfo">Not Set</b>
+        </div>
+        <div class="balance-row">
+          <span>Mess SO</span>
+          <b id="messSoInfo">Not Set</b>
         </div>
         <div class="balance-row">
           <span>System</span>
@@ -632,13 +638,13 @@ function loadDashboard() {
   set("dues",money(dues));
   set("balance",money(collection-totalExpenses));
   
-  if(data.settings){
-    const name=data.settings.messName || "A Coy (CRPF)";
-    set("messName",name);
-    set("messInfo",name);
-    set("rationLimit",data.settings.rationLimit
-      ? money(data.settings.rationLimit):"Not Set");
-  }
+  const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
+  const name=settings.messName||"A Coy (CRPF)";
+  const nco=settings.messNco||settings.messNCO||"Not Set";
+  const so=settings.messSo||settings.messSO||"Not Set";
+  set("messName",name);set("messInfo",name);
+  set("messNco",nco);set("messSo",so);
+  set("messNcoInfo",nco);set("messSoInfo",so);
 
   const tbody=document.getElementById("transactionList");
 
