@@ -44,21 +44,21 @@ button,.btn{border:0;border-radius:7px;padding:11px 14px;background:#00a94b;colo
 @media(max-width:480px){.app-toast{top:8px;padding:11px 12px 14px;font-size:13px}}
 
 
-/* Mobile app-style navigation */
-.mobile-menu-toggle{display:none;border:1px solid #438568;background:#075039;color:#fff;border-radius:9px;width:42px;height:40px;font-size:23px;line-height:1;cursor:pointer;flex:0 0 42px}
+/* Mobile app-style slide-out navigation — visible on phones and small tablets */
+.mobile-menu-toggle{display:none!important;border:1px solid #438568!important;background:#075039!important;color:#fff!important;border-radius:9px!important;width:46px!important;height:44px!important;min-width:46px!important;font-size:25px!important;line-height:1!important;cursor:pointer!important;flex:0 0 46px!important;padding:0!important;position:relative!important;z-index:10004!important}
 .mobile-menu-backdrop{display:none}
-@media(max-width:700px){
- .topbar{flex-direction:row!important;align-items:center!important}
- .mobile-menu-toggle{display:inline-flex;align-items:center;justify-content:center}
- .topbar>div:first-of-type{min-width:0;flex:1}
- .sidebar{position:fixed!important;z-index:10002;top:0;left:0;width: min(285px,82vw)!important;min-width:0!important;height:100vh;height:100dvh;min-height:100vh!important;overflow-y:auto;transform:translateX(-105%);transition:transform .25s ease;box-shadow:8px 0 28px #0008}
- body.mobile-nav-open .sidebar{transform:translateX(0)}
- body.mobile-nav-open{overflow:hidden}
+@media(max-width:850px){
+ .topbar{flex-direction:row!important;align-items:center!important;gap:10px!important}
+ .mobile-menu-toggle{display:inline-flex!important;align-items:center!important;justify-content:center!important}
+ .topbar>div:first-of-type,.topbar>.heading{min-width:0;flex:1}
+ .sidebar{position:fixed!important;z-index:10002!important;top:0!important;left:0!important;width:min(285px,82vw)!important;min-width:0!important;height:100vh!important;height:100dvh!important;min-height:100vh!important;overflow-y:auto!important;transform:translateX(-105%)!important;transition:transform .25s ease!important;box-shadow:8px 0 28px #0008!important}
+ body.mobile-nav-open .sidebar{transform:translateX(0)!important}
+ body.mobile-nav-open{overflow:hidden!important}
  .sidebar .brand{padding:18px 8px}
- .sidebar .brand-icon{font-size:38px}
+ .sidebar .brand-icon,.sidebar .emblem{font-size:38px}
  .sidebar .brand h2{font-size:19px}
- .sidebar .nav{display:block;padding:12px 10px;overflow:visible}
- .sidebar .nav a{display:block;white-space:normal;padding:13px 12px;margin:3px 0;font-size:14px;border-radius:8px}
+ .sidebar .nav{display:block!important;padding:12px 10px!important;overflow:visible!important}
+ .sidebar .nav a{display:block!important;white-space:normal!important;padding:13px 12px!important;margin:3px 0!important;font-size:14px!important;border-radius:8px!important}
  .mobile-menu-backdrop{display:block;position:fixed;inset:0;background:#0009;z-index:10001;opacity:0;pointer-events:none;transition:opacity .25s}
  body.mobile-nav-open .mobile-menu-backdrop{opacity:1;pointer-events:auto}
  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
