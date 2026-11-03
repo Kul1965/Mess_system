@@ -574,10 +574,17 @@ function loadDashboard() {
   try { data = JSON.parse(localStorage.getItem("crpfMessData") || "{}"); }
   catch (error) { console.error("Mess data could not be read:", error); }
 
-  const members = data.members || [];
-  const ration = data.ration || [];
-  const transactions = data.transactions || [];
-  const purchases = data.purchases || [];
+  const members = Array.isArray(data.members) ? data.members : [];
+  const ration = Array.isArray(data.ration) ? data.ration : [];
+  const transactions = Array.isArray(data.transactions) ? data.transactions : [];
+  const purchases = Array.isArray(data.purchases) ? data.purchases : [];
+
+  // Store keeps quantity and weighted-average price in the item's base unit.
+  // Accept numeric strings (including formatted values) without changing saved data.
+  const numberValue = value => {
+    const parsed = Number(String(value ?? 0).replace(/,/g, "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
 
   const activeMembers = members.filter(m =>
     !m.status || m.status === "Active"
@@ -587,12 +594,12 @@ function loadDashboard() {
     sum + Number(m.advance || m.messAdvance || 0),0
   );
 
-  // item.price is stored per Store base unit (g, ml, kg, litre or piece).
-  // quantity and price therefore multiply directly.
+  // Stock Value = current base-unit quantity × weighted-average base-unit rate.
+  // Purchases update item.price in the same base unit; do not sum purchase bills here.
   const stockValue = ration.reduce((sum,item) => {
-    const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
-    const rate = Number(item.price ?? item.unitPrice ?? 0) || 0;
-    return sum + quantity * rate;
+    const quantity = numberValue(item.quantity ?? item.stock ?? 0);
+    const rate = numberValue(item.price ?? item.unitPrice ?? 0);
+    return sum + (quantity * rate);
   },0);
 
   const low = ration.filter(r => {
