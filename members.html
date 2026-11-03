@@ -577,7 +577,7 @@ function openPayment(){
  document.getElementById("paymentAlreadyPaid").textContent=money(b.paid);
  document.getElementById("paymentBalanceDue").textContent=money(b.due);
  document.getElementById("paymentBillStatus").textContent=b.status;
- document.getElementById("paymentAutoDetails").textContent="Transfer / Leave / Active / Inactive: "+(m.status||"Active")+(m.transferLocation?" · "+m.transferLocation:"")+(m.transferDate?" · "+m.transferDate:"")+" | Records: "+b.transactions.length+" payment entries";
+ document.getElementById("paymentAutoDetails").innerHTML="<b>Member Status:</b> "+esc(m.status||"Active")+(m.transferLocation?" · "+esc(m.transferLocation):"")+(m.transferDate?" · "+esc(m.transferDate):"")+"<h4 style=\"margin:12px 0 6px;color:var(--yellow)\">Payment History</h4>"+(b.transactions.filter(t=>t.type==="collection"||t.type==="advance").length?b.transactions.filter(t=>t.type==="collection"||t.type==="advance").map(t=>"<div style=\"padding:7px 0;border-bottom:1px solid #287b52\">"+esc(t.date)+" · "+money(t.amount)+"<br><small>"+esc(t.description||"Payment")+"</small></div>").join(""):"No payment record yet.");
  const btn=document.getElementById("receivePaymentBtn");
  btn.disabled=b.due<=0;
  btn.textContent=b.due>0?"💰 Receive Full Due":"✓ No Balance Due";
