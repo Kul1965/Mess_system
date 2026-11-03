@@ -314,8 +314,46 @@ function renderReports(){
  }
  let content=panel.querySelector("#reportsContent");
  if(!content){content=document.createElement("div");content.id="reportsContent";panel.appendChild(content);}
- content.innerHTML='<div class="cards" style="margin:14px 0">'+counts.map(x=>'<a class="card record-link" href="'+esc(x.key==="members"?"members.html":x.key==="ration"?"ration-store.html":x.key==="purchases"?"purchases.html":x.key==="recipes"?"recipes.html":x.key==="menu"||x.key==="mealRecords"?"making-menu.html":x.key==="transactions"?"accounts.html":x.key==="staff"?"mess-staff.html":x.key==="handovers"?"mess-handover.html":"ration-store.html")+'" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><small>'+x.icon+' '+esc(x.label)+'</small><strong>'+x.count+'</strong><small style="display:block;margin-top:6px;color:#176747;font-weight:700">Open page →</small></a>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody>'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Saved records automatically isi device ke browser storage se read hote hain. Total saved entries: '+records.length+'.</p>';
+ content.innerHTML='<div class="cards" style="margin:14px 0">'+counts.map(x=>'<button type="button" class="card record-link" onclick="showRecordCategory(\\''+x.key+'\\',\\''+esc(x.label)+'\\',\\''+x.icon+'\\')" style="display:block;text-align:left;color:inherit;cursor:pointer;width:100%"><small>'+x.icon+' '+esc(x.label)+'</small><strong>'+x.count+'</strong><small style="display:block;margin-top:6px;color:#176747;font-weight:700">View records →</small></button>').join("")+'</div><div class="tablewrap"><table><thead><tr><th>Section</th><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th><th>Open</th></tr></thead><tbody>'+filtered.map(x=>'<tr><td>'+x.icon+' '+esc(x.label)+'</td><td>'+esc(x.date)+'</td><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.details||"—")+'</td><td>'+esc(x.amount)+'</td><td><a class="btn" href="'+x.link+'">View</a></td></tr>').join("")+'</tbody></table></div><div class="empty" style="display:'+(filtered.length?"none":"block")+'">'+(records.length?"Is search se koi record nahi mila. Search text badal kar dekhein.":"Abhi is browser mein koi saved record nahi mila. Pehle relevant page par record add karein.")+'</div><p class="muted" style="margin-top:12px">Saved records automatically isi device ke browser storage se read hote hain. Total saved entries: '+records.length+'.</p>';
 }
+
+function showRecordCategory(key,label,icon){
+ const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
+ const sources={
+  members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],
+  recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],
+  transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],
+  stockMovements:data.stockMovements||[]
+ };
+ const list=sources[key]||[];
+ const memberName=id=>(data.members||[]).find(m=>String(m.id)===String(id))?.name||"";
+ const dateOf=x=>x.date||x.joiningDate||x.createdAt?.slice?.(0,10)||"—";
+ const nameOf=x=>x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
+ const detailOf=x=>{
+  if(key==="members")return [x.forceNo,x.rank,x.status,x.contact,x.remarks,x.transferLocation,x.transferDate].filter(Boolean).join(" · ");
+  if(key==="ration")return [x.category,"Stock: "+(x.quantity??0)+" "+(x.unit||""),"Minimum: "+(x.minimum??x.minStock??0),"Rate: "+money(x.price||x.unitPrice||0)].join(" · ");
+  if(key==="purchases")return [x.itemName,x.quantity+" "+(x.unit||""),"Rate: "+money(x.rate||0),x.vendor,x.bill].filter(Boolean).join(" · ");
+  if(key==="recipes")return (x.ingredients||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")||x.notes||"Recipe details";
+  if(key==="menu")return [x.recipeName,x.servings?x.servings+" servings":"",x.notes].filter(Boolean).join(" · ");
+  if(key==="mealRecords")return [x.mealType,(x.recipeNames||[x.recipeName||""]).filter(Boolean).join(" + "),(x.memberIds||[]).map(memberName).filter(Boolean).join(", "),(x.ingredientUsage||[]).map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ")].filter(Boolean).join(" · ");
+  if(key==="transactions")return [x.type,x.memberName||memberName(x.memberId),x.description||x.details].filter(Boolean).join(" · ");
+  if(key==="staff")return [x.rank,x.duty,x.phone,x.status].filter(Boolean).join(" · ");
+  if(key==="handovers")return ["From: "+(x.from||""),"To: "+(x.to||""),x.notes].filter(Boolean).join(" · ");
+  if(key==="stockMovements")return [x.type,x.itemName,x.quantity+" "+(x.unit||""),x.reference].filter(Boolean).join(" · ");
+  return "";
+ };
+ const amountOf=x=>key==="purchases"?money(x.total??x.amount??0):key==="transactions"?money(x.amount||0):key==="recipes"?money(x.costPerServing??x.totalCost??0)+" / serving":(key==="mealRecords"||key==="menu")?money(x.totalCost??0):"";
+ const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10060;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:14px";
+ const rows=list.map(x=>'<tr><td>'+esc(dateOf(x))+'</td><td><b>'+esc(nameOf(x))+'</b></td><td>'+esc(detailOf(x)||"—")+'</td><td>'+esc(amountOf(x))+'</td></tr>').join("");
+ wrap.innerHTML='<section role="dialog" aria-modal="true" style="width:min(100%,850px);max-height:88vh;overflow:auto;background:var(--panel,#fff);color:var(--text,#214d3b);border-radius:16px;padding:17px;box-shadow:0 18px 55px #0009"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px"><h2 style="margin:0;font-size:20px">'+icon+' '+esc(label)+' Records ('+list.length+')</h2><button type="button" id="closeRecordCategory" class="alt">✕ Close</button></div>'+(list.length?'<div class="tablewrap"><table><thead><tr><th>Date</th><th>Name / Record</th><th>Details</th><th>Amount</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div class="empty" style="display:block;padding:25px;text-align:center">Is section ka abhi koi record save nahi hai.</div>')+'<p class="muted" style="margin:12px 0 0">Yahan sirf '+esc(label)+' ke records dikhaye gaye hain.</p></section>';
+ document.body.appendChild(wrap);
+ const close=()=>wrap.remove();
+ wrap.querySelector("#closeRecordCategory").addEventListener("click",close);
+ wrap.addEventListener("click",e=>{if(e.target===wrap)close()});
+}
+
 function renderAccountOverview(list){
  const meals=data.mealRecords||[],members=data.members||[];
  const mealTotal=meals.reduce((s,m)=>s+Number(m.totalCost||0),0);
