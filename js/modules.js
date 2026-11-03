@@ -340,32 +340,35 @@ function reportValue(v){
 function reportNested(value){
  if(Array.isArray(value)){
   if(!value.length)return '<span class="muted">None</span>';
-  if(value.every(v=>v===null||typeof v!=="object")){
-   return '<div style="display:flex;flex-wrap:wrap;gap:6px">'+value.map(v=>'<span style="background:#eaf3ee;border:1px solid #d5e5db;border-radius:7px;padding:5px 8px;font-size:12px">'+esc(reportValue(v))+'</span>').join("")+'</div>';
-  }
+  if(value.every(v=>v===null||typeof v!=="object"))return '<div style="display:flex;flex-wrap:wrap;gap:6px">'+value.map(v=>'<span style="background:#eaf3ee;border:1px solid #d5e5db;border-radius:7px;padding:5px 8px;font-size:12px">'+esc(reportValue(v))+'</span>').join("")+'</div>';
   if(value.every(v=>v&&typeof v==="object"&&!Array.isArray(v))){
-   const keys=[...new Set(value.flatMap(v=>Object.keys(v)))].filter(k=>!["id","createdAt","updatedAt"].includes(k));
-   return '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>'+keys.map(k=>'<th style="text-align:left;padding:8px;background:#eaf3ee;border-bottom:1px solid #d5e5db">'+esc(reportFieldLabel(k))+'</th>').join("")+'</tr></thead><tbody>'+value.map(row=>'<tr>'+keys.map(k=>'<td style="padding:8px;border-bottom:1px solid #e4ebe6;vertical-align:top">'+(row[k]&&typeof row[k]==="object"?reportNested(row[k]):esc(reportValue(row[k])))+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>';
+   return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px">'+value.map((row,i)=>{
+    const entries=Object.entries(row).filter(([k,v])=>!["id","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined);
+    const heading=row.itemName||row.name||row.ingredientName||("Ingredient "+(i+1));
+    return '<div style="border:1px solid #d5e5db;border-radius:9px;padding:9px;background:#f7faf8;min-width:0"><b style="display:block;margin-bottom:5px;overflow-wrap:anywhere">'+esc(heading)+'</b>'+entries.filter(([k])=>!["itemName","name","ingredientName"].includes(k)).map(([k,v])=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid #e6eee8;font-size:12px"><span style="color:#63766b">'+esc(reportFieldLabel(k))+'</span><b style="text-align:right;overflow-wrap:anywhere">'+esc(reportValue(v))+'</b></div>').join("")+'</div>';
+   }).join("")+'</div>';
   }
   return '<div style="display:grid;gap:6px">'+value.map(v=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</div>').join("")+'</div>';
  }
- if(value&&typeof value==="object"){
-  return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px">'+Object.entries(value).filter(([k])=>!["id","createdAt","updatedAt"].includes(k)).map(([k,v])=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px"><small style="display:block;color:#66786d">'+esc(reportFieldLabel(k))+'</small><b style="font-size:12px;overflow-wrap:anywhere">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</b></div>').join("")+'</div>';
- }
+ if(value&&typeof value==="object")return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px">'+Object.entries(value).filter(([k])=>!["id","createdAt","updatedAt"].includes(k)).map(([k,v])=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px;min-width:0"><small style="display:block;color:#66786d">'+esc(reportFieldLabel(k))+'</small><b style="font-size:12px;overflow-wrap:anywhere">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</b></div>').join("")+'</div>';
  return esc(reportValue(value));
 }
 function reportRecordCard(x,index,label,icon){
  const name=x.name||x.itemName||x.recipeName||x.description||x.details||x.mealType||x.type||label;
  const photo=x.photo||x.photoData||x.image||"";
+ const moneyFields=["totalCost","costPerServing","lineCost","rate","amount","total","price"];
  const skip=["id","photo","photoData","image","createdAt","updatedAt"];
  const fields=Object.entries(x).filter(([k,v])=>!skip.includes(k)&&v!==""&&v!==null&&v!==undefined).map(([k,v])=>{
-  const isIngredients=(k==="ingredients"||k==="ingredientList");
-  const content=isIngredients&&Array.isArray(v)?reportNested(v):reportNested(v);
-  return '<section style="padding:10px 0;border-bottom:1px solid #e4ebe6;min-width:0"><small style="display:block;color:#63766b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+esc(reportFieldLabel(k))+'</small><div style="overflow-wrap:anywhere">'+content+'</div></section>';
+  let content;
+  if(moneyFields.includes(k)&&typeof v==="number")content=esc("Rs "+v.toFixed(2));
+  else if(k==="ingredients"||k==="ingredientList")content=reportNested(v);
+  else content=reportNested(v);
+  return '<section style="padding:10px 0;border-bottom:1px solid #e4ebe6;min-width:0;grid-column:'+(k==="ingredients"||k==="ingredientList"?"1 / -1":"auto")+'"><small style="display:block;color:#63766b;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+esc(reportFieldLabel(k))+'</small><div style="overflow-wrap:anywhere">'+content+'</div></section>';
  }).join("");
  const image=photo?'<img src="'+esc(photo)+'" alt="Saved photo" style="width:88px;height:88px;object-fit:cover;border-radius:12px;border:1px solid #d5e5db;margin:8px 12px 8px 0">':"";
  return '<article style="border:1px solid #d5e5db;border-radius:12px;padding:13px;margin:10px 0;background:#fff;color:#214d3b;box-shadow:0 2px 8px #173e2510"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:11px;color:#63766b">'+icon+' '+esc(label)+' · Record '+(index+1)+'</span><b style="font-size:16px;display:block;width:100%">'+esc(name)+'</b></div><div style="display:flex;align-items:flex-start;flex-wrap:wrap">'+image+'<div style="flex:1;min-width:220px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));column-gap:14px">'+(fields||'<p class="muted">No extra details saved.</p>')+'</div></div></article>';
 }
+
 function showAllRecordCategories(){
  const groups=[["Members","👥","members"],["Ration Store","📦","ration"],["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],["Making Menu","📅","menu"],["Meal Records","🍽️","mealRecords"],["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]];
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
