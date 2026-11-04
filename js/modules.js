@@ -250,6 +250,7 @@ function saveCurrentRecord(event){
  }else{
   const list=arr(),old=list.find(x=>String(x.id)===String(editId))||{};
   const record={...old,...values,id:editId||("R"+Date.now())};
+  if(cfg.key==="handover")record.monthlySummary=buildMonthlyMessSummary(values.date||new Date().toISOString().slice(0,10));
   if(cfg.key==="ration"){
    record.quantity=Number(values.quantity||0);record.minimum=Number(values.minimum||0);record.price=Number(values.price||0);
   }
@@ -432,15 +433,40 @@ function renderAccountOverview(list){
  if(!box){box=document.createElement("section");box.id="accountOverview";box.className="cards";document.getElementById("pageSub").after(box);}
  box.innerHTML=stat("Meal Charges",money(mealTotal))+stat("Advance / Collection",money(collected))+stat("Expenses",money(expenses))+stat("Members",members.length);
 }
+function buildMonthlyMessSummary(dateValue){
+ const month=String(dateValue||new Date().toISOString().slice(0,10)).slice(0,7);
+ const activeMembers=(data.members||[]).filter(m=>!m.status||String(m.status).toLowerCase()==="active");
+ const perMember=Number(data.settings?.monthlyLimitPerMember??4500)||0;
+ const monthlyLimit=activeMembers.length*perMember;
+ const inMonth=x=>String(x.date||"").slice(0,7)===month;
+ const tx=(data.transactions||[]).filter(inMonth);
+ const paymentReceived=tx.filter(x=>["collection","advance"].includes(String(x.type||"").toLowerCase())).reduce((sum,x)=>sum+Number(x.amount||0),0);
+ const rationConsumed=(data.mealRecords||[]).filter(inMonth).reduce((sum,x)=>sum+Number(x.totalCost||x.cost||0),0);
+ const budgetBalance=monthlyLimit-rationConsumed;
+ const paymentBalance=paymentReceived-rationConsumed;
+ return {month,activeMembers:activeMembers.length,limitPerMember:perMember,monthlyLimit,paymentReceived,rationConsumed,budgetBalance,paymentBalance};
+}
 function renderHandoverOverview(){
  const staff=(data.staff||[]).filter(x=>(x.status||"Active")==="Active"),ration=data.ration||[],tx=data.transactions||[];
  const cash=tx.reduce((s,x)=>s+(x.type==="expense"?-1:1)*Number(x.amount||0),0);
+ const summary=buildMonthlyMessSummary(new Date().toISOString().slice(0,10));
+ const state=summary.budgetBalance>0?"Surplus":summary.budgetBalance<0?"Loss":"Balanced";
+ const stateColor=summary.budgetBalance<0?"#ffd1d1":"#b9f5cf";
  let box=document.getElementById("handoverAuto");
  if(!box){box=document.createElement("section");box.id="handoverAuto";box.className="panel handover-auto";document.getElementById("tablePanel").before(box);}
- box.innerHTML='<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div><h4>Current Staff</h4><p>'+(staff.length?staff.map(x=>esc(x.name)+" — "+esc(x.duty||"Staff")).join(" · "):"Mess Staff page par staff add karein.")+'</p><h4>Ration Stock Snapshot</h4><div class="tablewrap"><table><thead><tr><th>Item</th><th>Available</th><th>Minimum</th></tr></thead><tbody>'+ration.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.quantity)+' '+esc(x.unit)+'</td><td>'+esc(x.minimum||0)+' '+esc(x.unit)+'</td></tr>').join("")+'</tbody></table></div><p class="muted">Yeh summary saved staff, ration aur account transactions se automatic read hoti hai.</p>';
+ const saved=(data.handovers||[]).filter(x=>x.monthlySummary);
+ box.innerHTML='<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div>'+
+ '<h4>Monthly Mess Summary · '+esc(summary.month)+'</h4><div class="cards">'+
+ stat("Monthly Mess Limit ("+summary.activeMembers+" × "+money(summary.limitPerMember)+")",money(summary.monthlyLimit))+
+ stat("Payment Received",money(summary.paymentReceived))+
+ stat("Ration Consumed",money(summary.rationConsumed))+
+ '<div class="card"><small>Budget '+state+'</small><strong style="color:'+stateColor+'">'+money(Math.abs(summary.budgetBalance))+'</strong></div>'+
+ stat("Payment less Ration Cost",money(summary.paymentBalance))+
+ '</div><p class="notice">'+(summary.budgetBalance<0?"⚠️ Alert: Ration cost monthly limit se zyada hai.":summary.budgetBalance>0?"✅ Monthly limit mein se itna budget bacha hai.":"Monthly limit poori use ho gayi hai.")+' Payment Received aur Ration Consumed alag hisaab hain. Payment aur ration figures saved records se calculate hote hain.</p>'+
+ '<h4>Saved Handover Monthly Records</h4><div class="tablewrap"><table><thead><tr><th>Handover Date</th><th>Month</th><th>Monthly Limit</th><th>Payment</th><th>Ration Cost</th><th>Surplus / Loss</th></tr></thead><tbody>'+
+ (saved.length?saved.slice().reverse().map(x=>{const m=x.monthlySummary;return '<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(m.month||"—")+'</td><td>'+money(m.monthlyLimit)+'</td><td>'+money(m.paymentReceived)+'</td><td>'+money(m.rationConsumed)+'</td><td>'+money(m.budgetBalance)+'</td></tr>'}).join(""):'<tr><td colspan="6">Abhi koi monthly handover snapshot nahi hua.</td></tr>')+
+ '</tbody></table></div><h4>Current Staff</h4><p>'+(staff.length?staff.map(x=>esc(x.name)+" — "+esc(x.duty||"Staff")).join(" · "):"Mess Staff page par staff add karein.")+'</p><h4>Ration Stock Snapshot</h4><div class="tablewrap"><table><thead><tr><th>Item</th><th>Available</th><th>Minimum</th></tr></thead><tbody>'+ration.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.quantity)+' '+esc(x.unit)+'</td><td>'+esc(x.minimum||0)+' '+esc(x.unit)+'</td></tr>').join("")+'</tbody></table></div><p class="muted">Handover save karte waqt monthly summary us record ke saath save hoti hai. Monthly limit Settings se li jaati hai.</p>';
 }
-
-
 /* Mobile app-style sidebar toggle */
 (function initMobileNavigation(){
  const sidebar=document.querySelector(".sidebar"),topbar=document.querySelector(".topbar");
