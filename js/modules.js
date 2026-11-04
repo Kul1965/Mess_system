@@ -425,13 +425,38 @@ function showRecordCategory(key,label,icon){
 
 
 function renderAccountOverview(list){
- const meals=data.mealRecords||[],members=data.members||[];
- const mealTotal=meals.reduce((s,m)=>s+Number(m.totalCost||0),0);
- const collected=list.filter(x=>x.type==="collection"||x.type==="advance").reduce((s,x)=>s+Number(x.amount||0),0);
- const expenses=list.filter(x=>x.type==="expense").reduce((s,x)=>s+Number(x.amount||0),0);
+ const meals=Array.isArray(data.mealRecords)?data.mealRecords:[];
+ const members=Array.isArray(data.members)?data.members:[];
+ const purchases=Array.isArray(data.purchases)?data.purchases:[];
+ const tx=Array.isArray(data.transactions)?data.transactions:list;
+ const num=v=>{const n=Number(String(v??0).replace(/,/g,""));return Number.isFinite(n)?n:0};
+ const collections=tx.filter(x=>["collection","advance"].includes(String(x.type||"").toLowerCase()));
+ const otherExpenses=tx.filter(x=>String(x.type||"").toLowerCase()==="expense");
+ const collected=collections.reduce((s,x)=>s+num(x.amount),0);
+ const purchaseTotal=purchases.reduce((s,x)=>s+num(x.total??(num(x.quantity)*num(x.rate))),0);
+ const expenseTotal=otherExpenses.reduce((s,x)=>s+num(x.amount),0);
+ const mealTotal=meals.reduce((s,x)=>s+num(x.totalCost??x.cost),0);
+ const memberRows=members.map(m=>{
+  const id=String(m.id);
+  const memberMeals=meals.filter(r=>(r.memberIds||[]).map(String).includes(id));
+  const bill=memberMeals.reduce((s,r)=>s+num(r.chargePerMember),0);
+  const memberTx=tx.filter(t=>String(t.memberId)===id&&["collection","advance"].includes(String(t.type||"").toLowerCase()));
+  const paid=num(m.advance)+memberTx.reduce((s,t)=>s+num(t.amount),0);
+  return {name:m.name||"—",force:m.forceNo||m.forceNumber||"",bill,paid,due:Math.max(0,bill-paid),credit:Math.max(0,paid-bill)};
+ });
+ const totalMemberAdvance=members.reduce((s,m)=>s+num(m.advance),0);
+ const cashBalance=collected+totalMemberAdvance-purchaseTotal-expenseTotal;
  let box=document.getElementById("accountOverview");
- if(!box){box=document.createElement("section");box.id="accountOverview";box.className="cards";document.getElementById("pageSub").after(box);}
- box.innerHTML=stat("Meal Charges",money(mealTotal))+stat("Advance / Collection",money(collected))+stat("Expenses",money(expenses))+stat("Members",members.length);
+ if(!box){box=document.createElement("section");box.id="accountOverview";box.className="account-auto-overview";document.getElementById("pageSub").after(box);}
+ const purchaseRows=purchases.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(p=>'<tr><td>'+esc(p.date||"—")+'</td><td>'+esc(p.bill||"—")+'</td><td>'+esc(p.itemName||"—")+'</td><td>'+esc(p.vendor||"—")+'</td><td>'+esc(p.quantity??"—")+' '+esc(p.unit||"")+'</td><td>'+money(p.total??(num(p.quantity)*num(p.rate)))+'</td></tr>').join("");
+ const memberTable=memberRows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.force||"—")+'</td><td>'+money(m.bill)+'</td><td>'+money(m.paid)+'</td><td>'+money(m.due)+'</td><td>'+money(m.credit)+'</td></tr>').join("");
+ const collectionRows=collections.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(t=>'<tr><td>'+esc(t.date||"—")+'</td><td>'+esc(t.memberName||(members.find(m=>String(m.id)===String(t.memberId))||{}).name||"—")+'</td><td>'+esc(t.type||"—")+'</td><td>'+esc(t.description||"—")+'</td><td>'+money(t.amount)+'</td></tr>').join("");
+ const expenseRows=otherExpenses.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(t=>'<tr><td>'+esc(t.date||"—")+'</td><td>'+esc(t.description||t.details||"—")+'</td><td>'+money(t.amount)+'</td></tr>').join("");
+ box.innerHTML='<section class="cards">'+stat("Purchase Bills",money(purchaseTotal))+stat("Other Expenses",money(expenseTotal))+stat("Member Advance / Payments",money(collected+totalMemberAdvance))+stat("Cash Balance (calculated)",money(cashBalance))+stat("Meal Charges",money(mealTotal))+stat("Purchase Entries",purchases.length)+'</section>'+
+ '<section class="panel" style="margin-top:14px"><h3>🧾 Purchase Bills · Automatically fetched from Purchases</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Bill No.</th><th>Item</th><th>Supplier</th><th>Quantity</th><th>Amount</th></tr></thead><tbody>'+(purchaseRows||'<tr><td colspan="6">No purchase bills recorded yet.</td></tr>')+'</tbody></table></div></section>'+
+ '<section class="panel" style="margin-top:14px"><h3>👥 Member Account Balance · Automatically fetched</h3><div class="tablewrap"><table><thead><tr><th>Member</th><th>Force No.</th><th>Meal Bill</th><th>Advance / Paid</th><th>Due</th><th>Credit</th></tr></thead><tbody>'+(memberTable||'<tr><td colspan="6">No members available.</td></tr>')+'</tbody></table></div></section>'+
+ '<section class="panel" style="margin-top:14px"><h3>💰 Payments & Advances</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Member</th><th>Type</th><th>Details</th><th>Amount</th></tr></thead><tbody>'+(collectionRows||'<tr><td colspan="5">No payment or advance entries recorded.</td></tr>')+'</tbody></table></div></section>'+
+ '<section class="panel" style="margin-top:14px"><h3>📉 Other Expenses</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Details</th><th>Amount</th></tr></thead><tbody>'+(expenseRows||'<tr><td colspan="3">No other expenses recorded.</td></tr>')+'</tbody></table></div><p class="muted" style="margin-top:9px">Purchase bills are fetched directly from Purchases. Member advances and payments are fetched from member and payment records. Actual cash/bank payments must still be recorded when received or paid.</p></section>';
 }
 function buildMonthlyMessSummary(dateValue){
  const month=String(dateValue||new Date().toISOString().slice(0,10)).slice(0,7);
