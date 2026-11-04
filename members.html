@@ -304,9 +304,32 @@ td.no-print{white-space:nowrap}
   <div class="form-actions">
    <button class="secondary" onclick="printMember()">📄 Member PDF</button>
    <button class="primary" onclick="openPayment()">💰 Payment</button>
+   <button class="secondary" onclick="openLeaveCard()">🏖️ Leave Card</button>
    <button class="primary" onclick="whatsAppMember()">WhatsApp</button>
    <button class="primary" onclick="closeView()">Close</button>
   </div>
+ </div>
+</div>
+
+<!-- MEMBER LEAVE CARD -->
+<div class="modal" id="leaveModal">
+ <div class="modal-box">
+  <div class="modal-head"><h3>🏖️ Member Leave / Chhutti Card</h3><button class="close" onclick="closeLeaveCard()">✕</button></div>
+  <div id="leaveMemberTitle" class="view-heading">Member Leave</div>
+  <div id="leaveCurrentInfo" class="meal-entry">Leave details</div>
+  <div class="form-grid">
+   <div class="field"><label>Chhutti Shuru Date *</label><input id="leaveFrom" type="date"></div>
+   <div class="field"><label>Wapas Aane Ki Date *</label><input id="leaveTo" type="date"></div>
+   <div class="field full"><label>Leave Reason / Purpose</label><input id="leaveReason" type="text" placeholder="Enter reason for leave"></div>
+   <div class="field full"><label>Remarks</label><textarea id="leaveRemarks" rows="2" placeholder="Optional remarks"></textarea></div>
+  </div>
+  <div class="form-actions">
+   <button class="secondary" onclick="closeLeaveCard()">Close</button>
+   <button class="secondary" id="returnFromLeaveBtn" onclick="returnFromLeave()" style="display:none">↩ Mark Returned / Active</button>
+   <button class="primary" onclick="saveLeave()">💾 Save Leave</button>
+  </div>
+  <h3 class="view-heading">Leave History</h3>
+  <div id="leaveHistoryList"></div>
  </div>
 </div>
 
@@ -478,6 +501,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
   const member={
    id:editingId||("M"+Date.now()),
    transferHistory,
+   leaveHistory:Array.isArray(old?.leaveHistory)?[...old.leaveHistory]:[],
    forceNo:document.getElementById("forceNo").value.trim(),
    name:document.getElementById("name").value.trim(),
    rank:document.getElementById("rank").value,
@@ -545,10 +569,54 @@ function viewMember(id){
  document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
  '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Transfer Location:</b> '+esc(m.transferLocation||"—")+'<br><b>Transfer Date:</b> '+esc(m.transferDate||"—")+'<br><b>Final Mess Bill:</b> '+money(m.finalBillAmount)+'<br><b>Final Bill Status:</b> '+esc(m.finalBillPaid||"Not Paid")+'<br><b>Remarks:</b> '+esc(m.remarks)+
  '<h3 class="view-heading">Transfer History</h3>'+(Array.isArray(m.transferHistory)&&m.transferHistory.length?m.transferHistory.map(h=>'<div class="meal-entry">'+esc(h.date)+' · '+esc(h.location||"Location not entered")+'</div>').join(""):'<p>No transfer history recorded.</p>')+
+ '<h3 class="view-heading">Leave / Chhutti Details</h3><div class="meal-entry"><b>Status:</b> '+(m.status==="Leave"?"On Leave":"Not on Leave")+'<br><b>From:</b> '+esc(m.leaveFrom||"—")+'<br><b>Return Date:</b> '+esc(m.leaveTo||"—")+'<br><b>Reason:</b> '+esc(m.leaveReason||"—")+'</div>'+
+ '<h3 class="view-heading">Leave History</h3>'+(Array.isArray(m.leaveHistory)&&m.leaveHistory.length?m.leaveHistory.map(h=>'<div class="meal-entry"><b>'+esc(h.from||"—")+' to '+esc(h.to||"—")+'</b><br>'+esc(h.reason||"No reason entered")+'<br><small>Saved: '+esc(h.savedDate||"")+' · '+esc(h.status||"Leave")+'</small>'+(h.returnedDate?'<br><small>Returned: '+esc(h.returnedDate)+'</small>':'')+'</div>').join(""):'<p>No leave history recorded.</p>')+
  '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Paid / Advance</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
  '<h3 class="view-heading">Meal History – Kya Kya Khaya</h3>'+history+
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
+}
+function openLeaveCard(){
+ const m=members.find(x=>String(x.id)===String(viewingId));
+ if(!m){showToast("Member details nahi mile.","error");return}
+ document.getElementById("leaveMemberTitle").textContent=m.name+" · "+m.forceNo;
+ document.getElementById("leaveFrom").value=m.leaveFrom||new Date().toISOString().slice(0,10);
+ document.getElementById("leaveTo").value=m.leaveTo||"";
+ document.getElementById("leaveReason").value=m.leaveReason||"";
+ document.getElementById("leaveRemarks").value=m.leaveRemarks||"";
+ document.getElementById("leaveCurrentInfo").innerHTML="<b>Current Status:</b> "+esc(m.status||"Active")+(m.status==="Leave"?" · On leave":"");
+ document.getElementById("returnFromLeaveBtn").style.display=m.status==="Leave"?"inline-block":"none";
+ const history=Array.isArray(m.leaveHistory)?m.leaveHistory:[];
+ document.getElementById("leaveHistoryList").innerHTML=history.length?history.slice().reverse().map(h=>'<div class="meal-entry"><b>'+esc(h.from||"—")+' to '+esc(h.to||"—")+'</b><br>'+esc(h.reason||"No reason entered")+'<br><small>'+esc(h.status||"Leave")+(h.returnedDate?" · Returned: "+esc(h.returnedDate):"")+'</small></div>').join(""):"<p>No leave history recorded.</p>";
+ document.getElementById("leaveModal").style.display="block";
+}
+function closeLeaveCard(){document.getElementById("leaveModal").style.display="none"}
+function saveLeave(){
+ const from=document.getElementById("leaveFrom").value,to=document.getElementById("leaveTo").value;
+ if(!from||!to){showToast("Chhutti ki shuru aur wapas aane ki date dalein.","warning");return}
+ if(to<from){showToast("Wapas aane ki date pehle nahi ho sakti.","warning");return}
+ const d=getData();d.members=Array.isArray(d.members)?d.members:[];
+ const m=d.members.find(x=>String(x.id)===String(viewingId));
+ if(!m){showToast("Member details nahi mile.","error");return}
+ m.leaveHistory=Array.isArray(m.leaveHistory)?m.leaveHistory:[];
+ const open=m.leaveHistory.slice().reverse().find(h=>!h.returnedDate);
+ if(m.status==="Leave"&&open){open.from=from;open.to=to;open.reason=document.getElementById("leaveReason").value.trim();open.status="Updated"}
+ else m.leaveHistory.push({from,to,reason:document.getElementById("leaveReason").value.trim(),savedDate:new Date().toISOString().slice(0,10),status:"Leave"});
+ m.leaveFrom=from;m.leaveTo=to;m.leaveReason=document.getElementById("leaveReason").value.trim();m.leaveRemarks=document.getElementById("leaveRemarks").value.trim();m.status="Leave";
+ try{saveData(d)}catch(e){showToast("Leave save nahi hua. Dobara try karein.","error");return}
+ refresh();viewMember(viewingId);openLeaveCard();showToast("Leave card saved. Member status is Leave.","success");
+}
+function returnFromLeave(){
+ const d=getData();d.members=Array.isArray(d.members)?d.members:[];
+ const m=d.members.find(x=>String(x.id)===String(viewingId));
+ if(!m){showToast("Member details nahi mile.","error");return}
+ if(m.status!=="Leave"){showToast("Member abhi Leave par nahi hai.","info");return}
+ const history=Array.isArray(m.leaveHistory)?m.leaveHistory:[];
+ const open=history.slice().reverse().find(h=>!h.returnedDate);
+ if(open){open.returnedDate=new Date().toISOString().slice(0,10);open.status="Returned"}
+ m.status="Active";
+ try{saveData(d)}catch(e){showToast("Return status save nahi hua.","error");return}
+ refresh();viewMember(viewingId);openLeaveCard();showToast("Member marked Active / Returned.","success");
 }
 function memberBillSummary(memberId){
  const d=getData();
