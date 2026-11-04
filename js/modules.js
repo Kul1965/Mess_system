@@ -109,7 +109,7 @@ function render(){
     document.getElementById("stats").innerHTML=statsHtml(list);
     if(cfg.key==="purchases")renderLowPurchase();
     if(cfg.key==="accounts")renderAccountOverview(list);
-    if(cfg.key==="handover")renderHandoverOverview(list);
+    if(cfg.key==="handovers")renderHandoverOverview(list);
   }catch(e){
     console.error("Page render error",e);
     const empty=document.getElementById("empty");
@@ -250,7 +250,7 @@ function saveCurrentRecord(event){
  }else{
   const list=arr(),old=list.find(x=>String(x.id)===String(editId))||{};
   const record={...old,...values,id:editId||("R"+Date.now())};
-  if(cfg.key==="handover")record.monthlySummary=buildMonthlyMessSummary(values.date||new Date().toISOString().slice(0,10));
+  if(cfg.key==="handovers")record.monthlySummary=buildMonthlyMessSummary(values.date||new Date().toISOString().slice(0,10));
   if(cfg.key==="ration"){
    record.quantity=Number(values.quantity||0);record.minimum=Number(values.minimum||0);record.price=Number(values.price||0);
   }
@@ -439,7 +439,7 @@ function buildMonthlyMessSummary(dateValue){
  const perMember=Number(data.settings?.monthlyLimitPerMember??4500)||0;
  const monthlyLimit=activeMembers.length*perMember;
  const inMonth=x=>String(x.date||"").slice(0,7)===month;
- const tx=(data.transactions||[]).filter(inMonth);
+ const tx=(data.accounts||[]).filter(inMonth);
  const paymentReceived=tx.filter(x=>["collection","advance"].includes(String(x.type||"").toLowerCase())).reduce((sum,x)=>sum+Number(x.amount||0),0);
  const rationConsumed=(data.mealRecords||[]).filter(inMonth).reduce((sum,x)=>sum+Number(x.totalCost||x.cost||0),0);
  const budgetBalance=monthlyLimit-rationConsumed;
@@ -447,7 +447,7 @@ function buildMonthlyMessSummary(dateValue){
  return {month,activeMembers:activeMembers.length,limitPerMember:perMember,monthlyLimit,paymentReceived,rationConsumed,budgetBalance,paymentBalance};
 }
 function renderHandoverOverview(){
- const staff=(data.staff||[]).filter(x=>(x.status||"Active")==="Active"),ration=data.ration||[],tx=data.transactions||[];
+ const staff=(data.staff||[]).filter(x=>(x.status||"Active")==="Active"),ration=data.ration||[],tx=data.accounts||[];
  const cash=tx.reduce((s,x)=>s+(x.type==="expense"?-1:1)*Number(x.amount||0),0);
  const summary=buildMonthlyMessSummary(new Date().toISOString().slice(0,10));
  const state=summary.budgetBalance>0?"Surplus":summary.budgetBalance<0?"Loss":"Balanced";
