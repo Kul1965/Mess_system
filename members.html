@@ -324,9 +324,13 @@ td.no-print{white-space:nowrap}
     <div><small>Payment Status</small><strong id="paymentBillStatus">Not Paid</strong></div>
    </div>
    <div class="meal-entry" id="paymentAutoDetails">Bill and payment details are fetched automatically from this member's records.</div>
+   <div class="field" style="margin:12px 0">
+    <label for="paymentAmount">Payment Received (₹) — jitna paisa mila</label>
+    <input id="paymentAmount" type="number" min="0.01" step="0.01" placeholder="Enter received amount">
+   </div>
    <div class="form-actions">
     <button class="secondary" onclick="closePayment()">Close</button>
-    <button class="primary" id="receivePaymentBtn" onclick="receiveFullDue()">💰 Receive Full Due</button>
+    <button class="primary" id="receivePaymentBtn" onclick="receivePayment()">💰 Save Payment</button>
    </div>
   </div>
  </div>
@@ -576,20 +580,18 @@ function openPayment(){
  document.getElementById("paymentModal").style.display="block";
 }
 function closePayment(){document.getElementById("paymentModal").style.display="none"}
-function receiveFullDue(){
+function receivePayment(){
  const m=members.find(x=>String(x.id)===String(viewingId));
  if(!m){showToast("Member details nahi mile.","error");return}
- const bill=memberBillSummary(m.id);
- if(bill.due<=0){showToast("Is member ka koi balance due nahi hai.","info");return}
+ const amount=Number(document.getElementById("paymentAmount").value);
+ if(!Number.isFinite(amount)||amount<=0){showToast("Payment amount 0 se zyada dalein.","warning");return}
  const d=getData();d.transactions=Array.isArray(d.transactions)?d.transactions:[];
- d.transactions.push({id:"T"+Date.now(),date:new Date().toISOString().slice(0,10),type:"collection",memberId:m.id,memberName:m.name,description:"Full outstanding mess bill received",amount:bill.due});
- const updated=memberBillSummary(m.id);
- m.finalBillAmount=bill.total;
- m.finalBillPaid="Paid";
+ d.transactions.push({id:"T"+Date.now(),date:new Date().toISOString().slice(0,10),type:"collection",memberId:m.id,memberName:m.name,description:"Member payment received",amount});
  try{saveData(d)}catch(e){showToast("Payment save nahi hua. Dobara try karein.","error");return}
+ document.getElementById("paymentAmount").value="";
  refresh();
  openPayment();
- showToast("Full due payment saved successfully.","success");
+ showToast("Payment saved. Remaining due updated automatically.","success");
 }
 function whatsAppMember(){
  const m=members.find(x=>x.id===viewingId);if(!m)return;
