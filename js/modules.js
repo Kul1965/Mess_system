@@ -89,7 +89,7 @@ function render(){
     const pageIcons={store:"📦",purchases:"🛒",recipes:"🍲",menu:"📅",accounts:"💰",staff:"👨‍🍳",reports:"📊",handover:"🔄",settings:"⚙️"};
     document.getElementById("pageTitle").textContent=(pageIcons[document.body.dataset.module]||"🛡️")+" "+cfg.title;
     document.getElementById("pageSub").textContent=cfg.sub;
-    document.getElementById("dateNow").textContent=new Date().toLocaleDateString();
+    const dateNow=document.getElementById("dateNow");if(dateNow)dateNow.textContent=new Date().toLocaleDateString();
     if(cfg.key==="settings"){renderSettings();return}
     if(cfg.key==="reports"){renderReports();return}
     let list=arr(),q=(document.getElementById("search")?.value||"").toLowerCase();
