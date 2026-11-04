@@ -298,6 +298,17 @@ function reversePurchase(purchase){
  refreshAllRecipeCosts();
  return true;
 }
+function clearPurchaseHistory(){
+ if(cfg.key!=="purchases"){showAppAlert("Yeh option sirf Purchases page ke liye hai.");return}
+ const count=arr().length;
+ if(!count){showAppAlert("Purchase History pehle se khaali hai.");return}
+ showDeleteConfirm(()=>{
+  data.purchases=[];
+  if(!save())return;
+  render();
+  showAppAlert(count+" purchase records cleared. Ration Store ka current stock aur rate nahi badla.");
+ });
+}
 function deleteRow(id){
  let x=arr().find(a=>a.id===id);
  if(!x)return;
