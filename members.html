@@ -185,7 +185,12 @@ td.no-print{white-space:nowrap}
  </div>
 
  <div class="stats">
-  <div class="stat"><span>Total Members</span><strong id="total">0</strong></div>
+  <div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="setMemberFilter('All')"><span>Total Members ↗</span><strong id="total">0</strong></div>
+  <div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="setMemberFilter('Active')"><span>Active Members ↗</span><strong id="active">0</strong></div>
+  <div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="setMemberFilter('Inactive')"><span>Inactive Members ↗</span><strong id="inactive">0</strong></div>
+  <div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="setMemberFilter('Transferred')"><span>Transferred ↗</span><strong id="transferred">0</strong></div>
+  <div class="stat" role="button" tabindex="0" style="cursor:pointer" onclick="setMemberFilter('Leave')"><span>On Leave ↗</span><strong id="onLeave">0</strong></div>
+ </div>
   <div class="stat"><span>Active Members</span><strong id="active">0</strong></div>
   <div class="stat"><span>Inactive Members</span><strong id="inactive">0</strong></div>
    <div class="stat"><span>Transferred</span><strong id="transferred">0</strong></div>
@@ -415,7 +420,14 @@ function refresh(){
  members=Array.isArray(data.members)?data.members:[];
  render();
 }
-function render(){
+function setMemberFilter(status){
+  const filter=document.getElementById("filter");
+  if(!filter)return;
+  filter.value=status;
+  render();
+  document.querySelector(".panel.no-print")?.scrollIntoView({behavior:"smooth",block:"start"});
+ }
+ function render(){
  const query=document.getElementById("search").value.toLowerCase();
  const filter=document.getElementById("filter").value;
  const active=members.filter(m=>(m.status||"Active")==="Active");
@@ -424,6 +436,7 @@ function render(){
  document.getElementById("active").textContent=active.length;
  document.getElementById("inactive").textContent=members.filter(m=>m.status==="Inactive").length;
   const transferStat=document.getElementById("transferred");if(transferStat)transferStat.textContent=transferred.length;
+  const leaveStat=document.getElementById("onLeave");if(leaveStat)leaveStat.textContent=members.filter(m=>m.status==="Leave").length;
 
  const list=members.filter(m=>{
   const text=[m.forceNo,m.name,m.rank,m.contact,m.transferLocation,m.transferDate,m.finalBillPaid].join(" ").toLowerCase();
@@ -442,7 +455,6 @@ function render(){
   <td><span class="status ${(m.status||"Active")==="Inactive"?"inactive":""}">${esc(m.status||"Active")}</span></td>
   <td class="no-print"><div class="actions">
    <button class="secondary" onclick="viewMember('${m.id}')">View</button>
-   <button class="secondary" onclick="viewMember('${m.id}');openLeaveCard()">🏖️ Leave</button>
    <button class="primary" onclick="editMember('${m.id}')">Edit</button>
    <button class="danger" onclick="deleteMember('${m.id}')">Delete</button>
   </div></td>
