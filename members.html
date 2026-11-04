@@ -53,8 +53,18 @@ td{padding:11px 9px;border-bottom:1px solid #193e30;vertical-align:middle}
 .photo{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#164d38}
 .status{padding:5px 8px;border-radius:20px;font-size:10px;background:#145d3b;color:#9ff0bb}
 .inactive{background:#613535;color:#ffc1c1}
-.actions{display:flex;gap:5px;flex-wrap:wrap}
-.actions button{padding:7px 9px;font-size:11px}
+.actions{display:flex;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:3px;white-space:nowrap;min-width:max-content}
+.actions button{padding:5px 7px;font-size:10px;line-height:1.15;min-width:0;white-space:nowrap}
+td.no-print{white-space:nowrap}
+.form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:8px;margin-top:20px;width:100%;max-width:100%}
+.form-actions button{flex:0 1 auto;min-width:0;max-width:100%;white-space:normal}
+.modal-box{width:100%;max-width:750px;overflow-x:hidden}
+@media(max-width:480px){
+ .modal{padding:10px}
+ .modal-box{padding:14px;margin:10px auto}
+ .form-actions{gap:7px}
+ .form-actions button{padding:9px 10px;font-size:12px}
+}
 .empty{text-align:center;color:var(--muted);padding:30px}
 .modal{display:none;position:fixed;inset:0;background:#000b;z-index:10;overflow:auto;padding:20px}
 .modal-box{background:#073326;border:1px solid #26724f;border-radius:12px;max-width:750px;margin:25px auto;padding:22px}
