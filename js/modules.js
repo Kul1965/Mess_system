@@ -217,7 +217,7 @@ function saveCurrentRecord(event){
   if(!item){showAppAlert("Ration Store item select karein.");return}
   if(!values.quantity||values.quantity<=0||!Number.isFinite(values.rate)||values.rate<0){showAppAlert("Purchase quantity aur rate sahi enter karein.");return}
   const baseQty=purchaseInBase(values.quantity,values.unit,item.unit);
-  if(baseQty===null){showAppAlert("Purchase unit aur Store base unit alag category ke hain. kg/g, ltr/ml, ya pcs hi use karein; pkt conversion ke liye pack size chahiye.");return}
+  if(baseQty===null){const u=String(item.unit||"").toLowerCase();const compatible=(u==="g"||u==="kg")?"kg ya g":(u==="ml"||u==="ltr"||u==="l"||u==="litre"||u==="liter")?"litre ya ml":"pcs";showAppAlert("Invalid purchase unit: "+item.name+" ka Store unit "+item.unit+" hai. Is item ke liye "+compatible+" select karein.");return}
   const total=values.quantity*values.rate;
   const old=arr().find(x=>String(x.id)===String(editId));
   const currentStock=Number(item.quantity||0),currentValue=currentStock*Number(item.price||0);
