@@ -41,7 +41,7 @@ body{
   border-bottom:1px solid #1b684e;
 }
 .brand-icon{font-size:38px}
-.side-emblem-row{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 auto 3px}.sidebar-crpf-logo{display:block;width:48px;height:50px;object-fit:contain;margin:0}.side-flag{font-size:25px;line-height:1}.brand{padding:12px 8px!important}.brand h2{font-size:16px!important;margin-top:3px!important}.brand p{font-size:10px!important;margin-top:3px!important}@media(max-width:850px){.sidebar{display:flex!important;flex-direction:column!important;height:100vh!important;height:100dvh!important;overflow:hidden!important}.sidebar .brand{flex:0 0 auto!important;padding:9px 8px!important}.sidebar-crpf-logo{width:39px;height:41px}.side-flag{font-size:21px}.sidebar .nav{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:28px!important;-webkit-overflow-scrolling:touch!important}}
+.side-emblem-row{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 auto 3px}.sidebar-crpf-logo{display:block;width:48px;height:50px;object-fit:contain;margin:0}.side-flag{font-size:25px;line-height:1}.brand{padding:12px 8px!important}.brand h2{font-size:16px!important;margin-top:3px!important}.brand p{font-size:10px!important;margin-top:3px!important}@media(max-width:850px){.topbar{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 12px}.top-info{width:100%;overflow-x:auto;flex-wrap:nowrap;gap:5px;scrollbar-width:none}.top-info .info-pill{flex:0 0 auto;padding:5px 7px;font-size:10px}.brand-title h2{font-size:13px}.dashboard-date{font-size:10px;margin-top:3px}..sidebar{display:flex!important;flex-direction:column!important;height:100vh!important;height:100dvh!important;overflow:hidden!important}.sidebar .brand{flex:0 0 auto!important;padding:9px 8px!important}.sidebar-crpf-logo{width:39px;height:41px}.side-flag{font-size:21px}.sidebar .nav{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:28px!important;-webkit-overflow-scrolling:touch!important}}
 .brand h2{
   color:var(--yellow);
   font-size:19px;
@@ -84,12 +84,7 @@ body{
   margin-bottom:3px;
 }
 .heading p{font-size:13px;color:#d0e5d9}
-.top-info{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-}
+.dashboard-date{font-size:11px;color:#ffe48a;margin-top:4px;white-space:nowrap;font-variant-numeric:tabular-nums}.top-info{display:flex;gap:6px;align-items:center;flex-wrap:nowrap}.info-pill{padding:6px 8px;font-size:11px;white-space:nowrap}.nco-pill,.so-pill{max-width:none;white-space:nowrap;line-height:1.2}
 .info-pill{
   border:1px solid #438568;
   background:#075039;
@@ -336,7 +331,7 @@ td{
       <span class="brand-divider"></span>
       <div class="brand-title">
         <h1>CRPF</h1>
-        <h2>Mess Management System</h2>
+        <h2>Cooking House System</h2><div class="dashboard-date" id="dateDisplay"></div>
         <div class="tricolour-line"><i></i><i></i><i></i></div>
       </div>
       <span class="india-flag" role="img" aria-label="Indian flag">🇮🇳</span>
@@ -344,7 +339,6 @@ td{
 
     <div class="top-info">
       <div class="info-pill">🏛️ Mess: <span id="messName">A Coy (CRPF)</span></div>
-      <div class="info-pill" id="dateDisplay"></div>
       <div class="info-pill nco-pill">👤 Mess NCO: <strong id="messNco">Not Set</strong></div>
       <div class="info-pill so-pill">📋 Mess SO: <strong id="messSo">Not Set</strong></div>
     </div>
