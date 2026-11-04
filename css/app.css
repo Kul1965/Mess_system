@@ -61,7 +61,9 @@ button,.btn{border:0;border-radius:7px;padding:11px 14px;background:#00a94b;colo
  .sidebar .nav a{display:block!important;white-space:normal!important;padding:13px 12px!important;margin:3px 0!important;font-size:14px!important;border-radius:8px!important}
  .mobile-menu-backdrop{display:block;position:fixed;inset:0;background:#0009;z-index:10001;opacity:0;pointer-events:none;transition:opacity .25s}
  body.mobile-nav-open .mobile-menu-backdrop{opacity:1;pointer-events:auto}
- .sidebar .nav a[href="backup.html"]{position:sticky!important;bottom:8px!important;margin-top:10px!important;background:#0b754d!important;border:1px solid #e5bb19!important;box-shadow:0 -6px 14px #0005!important;color:#fff!important;font-weight:800!important}
+ .sidebar{overflow:hidden!important;display:flex!important;flex-direction:column!important;padding-bottom:env(safe-area-inset-bottom,0px)!important}
+ .sidebar .nav{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:42px!important;-webkit-overflow-scrolling:touch!important}
+ .sidebar .nav a[href="backup.html"]{position:static!important;bottom:auto!important;margin-top:10px!important;margin-bottom:12px!important;background:#0b754d!important;border:1px solid #e5bb19!important;box-shadow:none!important;color:#fff!important;font-weight:800!important}
  .sidebar .nav a[href="backup.html"]:before{content:"★ ";color:#ffe36b}
  .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
