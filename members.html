@@ -442,6 +442,7 @@ function render(){
   <td><span class="status ${(m.status||"Active")==="Inactive"?"inactive":""}">${esc(m.status||"Active")}</span></td>
   <td class="no-print"><div class="actions">
    <button class="secondary" onclick="viewMember('${m.id}')">View</button>
+   <button class="secondary" onclick="viewMember('${m.id}');openLeaveCard()">🏖️ Leave</button>
    <button class="primary" onclick="editMember('${m.id}')">Edit</button>
    <button class="danger" onclick="deleteMember('${m.id}')">Delete</button>
   </div></td>
