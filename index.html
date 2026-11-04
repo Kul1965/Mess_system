@@ -41,7 +41,7 @@ body{
   border-bottom:1px solid #1b684e;
 }
 .brand-icon{font-size:38px}
-.side-emblem-row{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 auto 3px}.sidebar-crpf-logo{display:block;width:48px;height:50px;object-fit:contain;margin:0}.side-flag{font-size:25px;line-height:1}.brand{padding:12px 8px!important}.brand h2{font-size:16px!important;margin-top:3px!important}.brand p{font-size:10px!important;margin-top:3px!important}@media(max-width:850px){.topbar{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 12px}.top-info{width:100%;overflow-x:auto;flex-wrap:nowrap;gap:5px;scrollbar-width:none}.top-info .info-pill{flex:0 0 auto;padding:5px 7px;font-size:10px}.brand-title h2{font-size:13px}.dashboard-date{font-size:10px;margin-top:3px}..sidebar{display:flex!important;flex-direction:column!important;height:100vh!important;height:100dvh!important;overflow:hidden!important}.sidebar .brand{flex:0 0 auto!important;padding:9px 8px!important}.sidebar-crpf-logo{width:39px;height:41px}.side-flag{font-size:21px}.sidebar .nav{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:28px!important;-webkit-overflow-scrolling:touch!important}}
+.side-emblem-row{display:flex;align-items:center;justify-content:center;gap:7px;margin:0 auto 3px}.sidebar-crpf-logo{display:block;width:48px;height:50px;object-fit:contain;margin:0}.side-flag{font-size:25px;line-height:1}.brand{padding:12px 8px!important}.brand h2{font-size:16px!important;margin-top:3px!important}.brand p{font-size:10px!important;margin-top:3px!important}@media(max-width:850px){.topbar{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:9px 12px}.top-info{width:100%;overflow-x:auto;flex-wrap:nowrap;gap:5px;scrollbar-width:none}.top-info .info-pill{flex:0 0 auto;padding:5px 7px;font-size:10px}.brand-title h2{font-size:13px}.dashboard-date{font-size:10px;margin-top:3px}.sidebar{display:flex!important;flex-direction:column!important;height:100vh!important;height:100dvh!important;overflow:hidden!important}.sidebar .brand{flex:0 0 auto!important;padding:9px 8px!important}.sidebar-crpf-logo{width:39px;height:41px}.side-flag{font-size:21px}.sidebar .nav{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:28px!important;-webkit-overflow-scrolling:touch!important}}
 .brand h2{
   color:var(--yellow);
   font-size:19px;
@@ -292,6 +292,19 @@ td{
 }
 @media(max-width:390px){.crpf-logo{width:48px;height:58px}.brand-divider{height:52px}.brand-title h2{font-size:12px!important}.india-flag{font-size:27px}}
 
+
+/* Dashboard header compact layout to match other pages */
+@media(max-width:850px){
+ .topbar{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:7px!important;padding:9px 12px 8px!important}
+ .topbar>.heading{display:flex!important;align-items:center!important;gap:9px!important;width:100%!important;min-width:0!important}
+ .brand-title h1{font-size:clamp(22px,6vw,29px)!important}
+ .brand-title h2{font-size:clamp(13px,3.7vw,18px)!important;white-space:nowrap!important}
+ .dashboard-date{font-size:10px!important;margin-top:3px!important;white-space:nowrap!important}
+ .top-info{display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:5px!important;width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;scrollbar-width:none!important;padding-bottom:2px!important}
+ .top-info::-webkit-scrollbar{display:none!important}
+ .top-info .info-pill{flex:0 0 auto!important;font-size:10px!important;padding:5px 7px!important;white-space:nowrap!important;line-height:1.2!important;max-width:none!important}
+ .top-info .nco-pill,.top-info .so-pill{white-space:nowrap!important;max-width:none!important;line-height:1.2!important}
+}
 </style>
 </head>
 
