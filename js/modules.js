@@ -74,12 +74,16 @@ function renderSettings(){
  '<div class="formgrid" style="max-width:760px">'+
  '<div class="field"><label for="settingMessName">Mess Name</label><input id="settingMessName" value="'+esc(s.messName||"A Coy (CRPF)")+'" placeholder="A Coy (CRPF)"></div>'+
  '<div class="field"><label for="settingCurrency">Currency</label><input id="settingCurrency" value="'+esc(s.currency||"Rs")+'" placeholder="Rs"></div>'+
- '</div><div style="display:flex;justify-content:flex-end;margin-top:18px"><button type="button" onclick="saveSettings()">Save Settings</button></div>'+
+ '<div class="field"><label for="settingMonthlyLimit">Monthly Mess Limit per Member (Rs)</label><input id="settingMonthlyLimit" type="number" min="0" step="1" value="'+esc(s.monthlyLimitPerMember??4500)+'" placeholder="4500"></div>'+
+ '</div><div class="notice" style="margin-top:12px">Monthly limit ko yahan kabhi bhi badal sakte hain. Handover summary mein active members × yeh limit karke monthly total niklega. Purane mahino ka hisaab unki saved monthly setting se alag rakha jayega.</div>'+
+ '<div style="display:flex;justify-content:flex-end;margin-top:18px"><button type="button" onclick="saveSettings()">Save Settings</button></div>'+
  '<div class="notice" style="margin-top:16px">Mess NCO / Mess SO badalne ke liye Mess Staff page par unka naam aur duty update karein. Dashboard par naam automatic update hoga.</div>';
 }
 function saveSettings(){
  const previous=data.settings&&typeof data.settings==="object"?data.settings:{};
- data.settings={...previous,messName:document.getElementById("settingMessName").value.trim(),currency:document.getElementById("settingCurrency").value.trim()||"Rs"};
+ const monthlyLimitPerMember=Number(document.getElementById("settingMonthlyLimit").value);
+ if(!Number.isFinite(monthlyLimitPerMember)||monthlyLimitPerMember<0){showAppAlert("Monthly Mess Limit sahi number mein dalein.");return;}
+ data.settings={...previous,messName:document.getElementById("settingMessName").value.trim(),currency:document.getElementById("settingCurrency").value.trim()||"Rs",monthlyLimitPerMember};
  delete data.settings.messNco;delete data.settings.messNCO;delete data.settings.messSo;delete data.settings.messSO;
  if(!save())return;
  showAppAlert("Settings saved successfully.");
