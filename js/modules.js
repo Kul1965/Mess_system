@@ -163,12 +163,12 @@ function refreshAllRecipeCosts(){
   recipe.ingredients=(recipe.ingredients||[]).map(ingredient=>{
    const item=(data.ration||[]).find(x=>String(x.id)===String(ingredient.itemId));
    if(!item)return ingredient;
-   const rate=Number(item.price||0),lineCost=Number(ingredient.quantity||0)*rate;
+   const from=ingredient.unit||item.unit,converted=purchaseInBase(Number(ingredient.quantity||0),from,item.unit);
+   const rate=Number(item.price||0),lineCost=converted===null?0:converted*rate;
    total+=lineCost;
-   return {...ingredient,itemName:item.name,unit:item.unit,rate,lineCost};
+   return {...ingredient,itemName:item.name,unit:from,stockUnit:item.unit,rate,lineCost};
   });
-  recipe.totalCost=total;
-  recipe.costPerServing=total;
+  recipe.totalCost=total;recipe.costPerServing=total;
   recipe.ingredientSummary=recipe.ingredients.map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ");
  });
 }
