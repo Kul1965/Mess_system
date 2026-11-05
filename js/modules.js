@@ -107,7 +107,6 @@ function render(){
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
     document.getElementById("stats").innerHTML=statsHtml(list);
-    if(cfg.key==="purchases")renderLowPurchase();
     if(cfg.key==="transactions")renderAccountOverview(list);
     if(cfg.key==="handovers")renderHandoverOverview(list);
   }catch(e){
