@@ -33,14 +33,13 @@ function convertQty(q,from,to){
  if(!f||!t||f.kind!==t.kind)return null;
  return Number(q)*f.factor/t.factor;
 }
+function recipeUnitFor(item){const u=String(item?.unit||"").toLowerCase();if(["kg","kgs","g","gram","grams"].includes(u))return "g";if(["ltr","l","litre","liter","ml"].includes(u))return "ml";return "pcs"}
 function aggregate(recipes,d){
  const map=new Map();
  recipes.forEach(r=>(r.ingredients||[]).forEach(i=>{
-  const item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId));
-  const stockUnit=item?.unit||i.unit,qty=convertQty(Number(i.quantity||0),i.unit||stockUnit,stockUnit);
-  if(qty===null)return;
-  const key=String(i.itemId||i.itemName);
-  const old=map.get(key)||{itemId:i.itemId,itemName:i.itemName,unit:stockUnit,perServing:0,rate:Number(i.rate||0),lineCost:0};
+  const item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId)),unit=item?recipeUnitFor(item):(i.unit||"pcs");
+  const qty=convertQty(Number(i.quantity||0),i.unit||unit,unit);if(qty===null)return;
+  const key=String(i.itemId||i.itemName),old=map.get(key)||{itemId:i.itemId,itemName:i.itemName,unit,perServing:0,rate:Number(i.rate||0),lineCost:0};
   old.perServing+=qty;old.lineCost+=Number(i.lineCost||0);map.set(key,old);
  }));
  return [...map.values()];
@@ -54,7 +53,7 @@ function updatePreview(){
   const ingredients=aggregate(recipes,d);
   const prettyQty=(value,unit)=>{const n=Number(value||0),u=String(unit||"");if(u==="g"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" kg";if(u==="ml"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" L";return n.toLocaleString("en-IN",{maximumFractionDigits:2})+" "+u;};
   $("rationPreview").innerHTML=ingredients.map(i=>{
-   const total=i.perServing*count,item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId)),available=Number(item?.quantity||0),short=count>0&&available+1e-9<total;
+   const total=i.perServing*count,item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId)),available=item?convertQty(Number(item.quantity||0),item.unit,i.unit):0,short=count>0&&(available===null||available+1e-9<total);
    return '<tr><td><div class="ration-item-name"><span class="ration-item-icon">🥣</span><span>'+esc(i.itemName||item?.name||"Ration")+'</span></div></td><td><span class="qty-pill">'+esc(prettyQty(i.perServing,i.unit||item?.unit))+'</span></td><td><span class="qty-total '+(short?'short-stock':'')+'">'+esc(prettyQty(total,i.unit||item?.unit))+'</span>'+(short?'<small style="display:block;color:#ff9da3;margin-top:5px;font-weight:700">⚠ Stock kam</small>':'')+'</td></tr>';
   }).join("")||'<tr><td class="ration-empty" colspan="3">Selected recipes mein ration ingredients nahi hain.</td></tr>';
   $("stockNote").textContent=count?"Selected "+count+" members ke liye sabhi dishes ka combined ration dikhaya gaya hai.":"Members select karein; total ration quantity calculate hogi.";
@@ -86,12 +85,13 @@ function updatePreview(){
   if(!ids.length){alert("Jin members ne khana khaya hai unko select karein.");return}
   if(recipes.some(r=>Number(r.costPerServing||r.totalCost||0)<=0)){alert("Kisi selected recipe ka cost zero hai. Recipe aur ration rate check karein.");return}
   const perMember=recipes.reduce((s,r)=>s+Number(r.costPerServing||r.totalCost||0),0);
-  const ingredients=aggregate(recipes,d),usage=ingredients.map(i=>({...i,quantity:i.perServing*ids.length,lineCost:i.lineCost*ids.length}));
+  const ingredients=aggregate(recipes,d),usage=ingredients.map(i=>{const item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId)),recipeQuantity=i.perServing*ids.length,stockQuantity=item?convertQty(recipeQuantity,i.unit,item.unit):null;return {...i,recipeQuantity,quantity:stockQuantity,unit:item?.unit||i.unit,lineCost:i.lineCost*ids.length};});
   if(!usage.length){alert("Selected recipes mein ration ingredients nahi hain. Recipe edit karein.");return}
   for(const u of usage){
    const item=(d.ration||[]).find(x=>String(x.id)===String(u.itemId));
    if(!item){alert("Ration Store mein "+u.itemName+" nahi mila. Recipe edit karein.");return}
-   if(Number(item.quantity||0)<u.quantity){alert("Stock kam hai: "+item.name+". Zaroorat "+u.quantity+" "+item.unit+", available "+item.quantity+".");return}
+   if(u.quantity===null||!Number.isFinite(u.quantity)){alert("Unit conversion nahi ho saka: "+item.name+". Store unit aur recipe unit check karein.");return}
+   if(Number(item.quantity||0)+1e-9<u.quantity){alert("Stock kam hai: "+item.name+". Zaroorat "+u.recipeQuantity+" "+recipeUnitFor(item)+" (Store mein "+u.quantity+" "+item.unit+"), available "+item.quantity+" "+item.unit+".");return}
   }
   const totalCost=perMember*ids.length,dishNames=recipes.map(r=>r.name);
   if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga."))return;
