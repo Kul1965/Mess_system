@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup & Restore | CRPF Mess</title><link rel="stylesheet" href="css/app.css?v=20261103-menu-fix3"></head><body><div class="app"><aside class="sidebar"><div class="brand">🛡️<b>CRPF MESS</b><small>Cooking House System</small></div><nav class="nav"><a href="index.html">▦ Dashboard</a><a href="members.html">👥 Members</a><a href="ration-store.html">📦 Ration Store</a><a href="purchases.html">🛒 Purchases</a><a href="recipes.html">🍲 Recipes</a><a href="making-menu.html">📅 Making Menu</a><a href="mess-staff.html">👨‍🍳 Mess Staff</a><a href="accounts.html">💰 Accounts</a><a href="reports.html">📊 Reports</a><a href="mess-handover.html">🔄 Mess Handover</a><a href="settings.html">⚙️ Settings</a><a class="active" href="backup.html">💾 Backup & Restore</a></nav></aside><main class="main"><header class="topbar"><h1>CRPF Mess Management System</h1><span id="dateNow"></span></header><div class="content"><div class="pagehead"><h2>💾 Backup & Restore</h2><div class="muted">Ek hi full backup mein sabhi pages ka data save hoga — Members, Ration, Purchases, Recipes, Menu, Accounts, Staff, Handover aur Reports ke records.</div></div><section class="cards" id="backupStats"><div class="card"><small>Members</small><strong id="members">0</strong></div><div class="card"><small>Ration Items</small><strong id="items">0</strong></div><div class="card"><small>Purchases</small><strong id="purchases">0</strong></div><div class="card"><small>Recipes</small><strong id="recipes">0</strong></div><div class="card"><small>Meal Records</small><strong id="meals">0</strong></div><div class="card"><small>Account Entries</small><strong id="transactions">0</strong></div><div class="card"><small>Mess Staff</small><strong id="staff">0</strong></div><div class="card"><small>Handover Records</small><strong id="handovers">0</strong></div></section><section class="panel"><h3>One Full Backup – Create / Update</h3><p class="muted" style="margin:10px 0 16px">Update Existing Backup dabayein aur phone se apni purani <b>CRPF-Mess-Backup.json</b> file select karein. Us file mein sabhi pages ka latest data overwrite ho jayega. Agar pehli baar hai to Create Backup dabayein.</p><button onclick="updateExistingBackup()">🔄 Update Existing Backup</button><button class="alt" style="margin-left:8px" onclick="createBackup()">💾 Create New Backup</button><p class="muted" style="margin-top:12px">Member photos aur browser mein saved tamam app records bhi backup mein shamil hain.</p></section><section class="panel" style="margin-top:14px;border:1px solid #bd3942"><h3 style="color:#bd3942">⚠️ Reset All Mess Data</h3><p class="muted">Is device ke CRPF Mess app ka poora data delete hoga: Members, Ration, Purchases, Recipes, Meals, Accounts, Staff, Handover aur histories. Backup JSON file phone mein alag safe rahegi.</p><button class="danger" type="button" onclick="resetAllMessData()">Delete All Mess Data</button></section>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup & Restore | CRPF Mess</title><link rel="stylesheet" href="css/app.css?v=20261105-backup-restore3"></head><body><div class="app"><aside class="sidebar"><div class="brand">🛡️<b>CRPF MESS</b><small>Cooking House System</small></div><nav class="nav"><a href="index.html">▦ Dashboard</a><a href="members.html">👥 Members</a><a href="ration-store.html">📦 Ration Store</a><a href="purchases.html">🛒 Purchases</a><a href="recipes.html">🍲 Recipes</a><a href="making-menu.html">📅 Making Menu</a><a href="mess-staff.html">👨‍🍳 Mess Staff</a><a href="accounts.html">💰 Accounts</a><a href="reports.html">📊 Reports</a><a href="mess-handover.html">🔄 Mess Handover</a><a href="settings.html">⚙️ Settings</a><a class="active" href="backup.html">💾 Backup & Restore</a></nav></aside><main class="main"><header class="topbar"><h1>CRPF Mess Management System</h1><span id="dateNow"></span></header><div class="content"><div class="pagehead"><h2>💾 Backup & Restore</h2><div class="muted">Ek hi full backup mein sabhi pages ka data save hoga — Members, Ration, Purchases, Recipes, Menu, Accounts, Staff, Handover aur Reports ke records.</div></div><section class="cards" id="backupStats"><div class="card"><small>Members</small><strong id="members">0</strong></div><div class="card"><small>Ration Items</small><strong id="items">0</strong></div><div class="card"><small>Purchases</small><strong id="purchases">0</strong></div><div class="card"><small>Recipes</small><strong id="recipes">0</strong></div><div class="card"><small>Meal Records</small><strong id="meals">0</strong></div><div class="card"><small>Account Entries</small><strong id="transactions">0</strong></div><div class="card"><small>Mess Staff</small><strong id="staff">0</strong></div><div class="card"><small>Handover Records</small><strong id="handovers">0</strong></div></section><section class="panel"><h3>One Full Backup – Create / Update</h3><p class="muted" style="margin:10px 0 16px">Update Existing Backup dabayein aur phone se apni purani <b>CRPF-Mess-Backup.json</b> file select karein. Us file mein sabhi pages ka latest data overwrite ho jayega. Agar pehli baar hai to Create Backup dabayein.</p><button onclick="updateExistingBackup()">🔄 Update Existing Backup</button><button class="alt" style="margin-left:8px" onclick="createBackup()">💾 Create New Backup</button><p class="muted" style="margin-top:12px">Member photos aur browser mein saved tamam app records bhi backup mein shamil hain.</p></section><section class="panel" style="margin-top:14px;border:1px solid #bd3942"><h3 style="color:#bd3942">⚠️ Reset All Mess Data</h3><p class="muted">Is device ke CRPF Mess app ka poora data delete hoga: Members, Ration, Purchases, Recipes, Meals, Accounts, Staff, Handover aur histories. Backup JSON file phone mein alag safe rahegi.</p><button class="danger" type="button" onclick="resetAllMessData()">Delete All Mess Data</button></section>
 <section class="panel" style="margin-top:14px"><h3>Restore Full Backup</h3><p class="muted" style="margin:10px 0 16px">Restore karne par is device ka current CRPF Mess data backup wale data se replace ho jayega. Pehle current backup bana lein.</p><input id="backupFile" type="file" accept=".json,application/json"><button class="danger" style="margin-top:12px" onclick="restore()">Restore Selected Backup</button><p id="message" class="muted" style="margin-top:12px"></p></section></div></main></div><script>
 const KEY="crpfMessData";
 const $=id=>document.getElementById(id);
@@ -99,55 +99,50 @@ function restore(){
  const reader=new FileReader();
  reader.onerror=()=>setMessage("Backup file read nahi ho saki.",true);
  reader.onload=()=>{
-  let parsed;
-  try{parsed=JSON.parse(reader.result)}catch(e){setMessage("Backup JSON file adhuri ya invalid hai.",true);return}
-  let data=null;
-  // Version 2 full backups store the original localStorage value here.
+  let parsed,data=null;
+  try{parsed=JSON.parse(reader.result)}catch(e){setMessage("Backup JSON invalid hai. Original file safe rakhein.",true);return}
   if(parsed&&parsed.backupFormat==="CRPF-MESS-FULL-BACKUP"&&parsed.storage&&typeof parsed.storage[KEY]==="string"){
-   try{data=JSON.parse(parsed.storage[KEY])}catch(e){}
+   try{data=JSON.parse(parsed.storage[KEY])}catch(e){setMessage("Backup ke andar app data parse nahi hua.",true);return}
   }
-  // Compatibility with older full backups and plain JSON exports.
-  if(!data&&parsed&&parsed.appData&&typeof parsed.appData==="object")data=parsed.appData;
+  if(!data&&parsed&&parsed.appData&&typeof parsed.appData==="object"&&!Array.isArray(parsed.appData))data=parsed.appData;
   if(!data&&parsed&&typeof parsed==="object"&&!Array.isArray(parsed)&&!parsed.backupFormat)data=parsed;
-  if(!data||typeof data!=="object"||Array.isArray(data)){
-   setMessage("Backup file mein CRPF Mess data nahi mila. File ko delete na karein.",true);return;
-  }
+  if(!data||typeof data!=="object"||Array.isArray(data)){setMessage("Is file mein CRPF Mess data nahi mila. File delete na karein.",true);return}
   const count=k=>Array.isArray(data[k])?data[k].length:0;
-  const summary="Members: "+count("members")+", Ration: "+count("ration")+", Purchases: "+count("purchases")+", Recipes: "+count("recipes")+", Meals: "+count("mealRecords")+", Accounts: "+count("transactions")+".";
+  const summary="Members "+count("members")+" | Staff "+count("staff")+" | Ration "+count("ration")+" | Purchases "+count("purchases")+" | Recipes "+count("recipes")+" | Meals "+count("mealRecords")+" | Accounts "+count("transactions");
   const fullText=JSON.stringify(data);
-  if(!confirm("Backup data mil gaya. "+summary+" Restore karne se is browser ka current mess data replace hoga. Continue?"))return;
+  if(!confirm("Backup data check ho gaya. "+summary+". Restore karne se is browser ka current mess data replace hoga. Continue?"))return;
   try{
+   // This app stores all records in one localStorage entry. Clear that entry first
+   // so an old/partial value cannot consume quota during replacement.
+   localStorage.removeItem(KEY);
    localStorage.setItem(KEY,fullText);
-   setMessage("✓ Backup restore ho gaya. "+summary+" Page refresh ho raha hai…");
+   const check=JSON.parse(localStorage.getItem(KEY)||"null");
+   if(!check||!Array.isArray(check.members)&&!Array.isArray(check.ration))throw new Error("Saved data verification failed");
+   setMessage("✓ Restore successful. "+summary+". Page reload ho raha hai…");
    setTimeout(()=>location.reload(),1000);
    return;
   }catch(err){
-   if(err.name!=="QuotaExceededError"&&err.name!=="NS_ERROR_DOM_QUOTA_REACHED"){
-    setMessage("Restore error: "+err.message,true);return;
-   }
-  }
-  // Storage quota fallback: preserve all records, but omit embedded photos.
-  try{
-   const reduced=JSON.parse(fullText);
-   let removed=0;
-   const photoFields=["photo","image","imageData","photoData","avatar"];
-   ["members","staff"].forEach(group=>{
-    if(Array.isArray(reduced[group])) reduced[group].forEach(item=>{
-     if(item&&typeof item==="object") photoFields.forEach(field=>{
-      if(typeof item[field]==="string"&&item[field].startsWith("data:image/")){delete item[field];removed++}
+   try{
+    const reduced=JSON.parse(fullText);
+    let removed=0;
+    ["members","staff"].forEach(group=>{
+     if(Array.isArray(reduced[group]))reduced[group].forEach(item=>{
+      if(item&&typeof item==="object"&&typeof item.photo==="string"&&item.photo.startsWith("data:image/")){delete item.photo;removed++}
      });
     });
-   });
-   localStorage.setItem(KEY,JSON.stringify(reduced));
-   setMessage("✓ Backup restore ho gaya. Sabhi records wapas aa gaye; storage bachane ke liye "+removed+" photo hatai gayi. Page refresh ho raha hai…");
-   setTimeout(()=>location.reload(),1400);
-  }catch(err){
-   setMessage("Restore abhi bhi fail hua: browser storage limit kam hai. Original JSON file safe rakhein; use dobara delete na karein. Error: "+err.name,true);
+    localStorage.setItem(KEY,JSON.stringify(reduced));
+    const check=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(!check)throw new Error("Saved data verification failed");
+    setMessage("✓ Records restore ho gaye. Storage limit ke karan "+removed+" photos skip hui. "+summary+". Page reload ho raha hai…");
+    setTimeout(()=>location.reload(),1300);
+   }catch(second){
+    setMessage("Restore nahi ho paya: "+second.name+" — "+second.message+". Backup file safe rakhein; abhi koi aur reset na karein.",true);
+   }
   }
  };
  reader.readAsText(file);
 }
 refreshCounts();
-</script><script src="js/shared-header.js?v=20261104-flag-css"></script>
-<script src="js/mobile-nav.js?v=20261103-menu-fix4"></script>
+</script><script src="js/shared-header.js?v=20261105-backup-restore3"></script>
+<script src="js/mobile-nav.js?v=20261105-backup-restore3"></script>
 </body></html>
