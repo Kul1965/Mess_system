@@ -344,6 +344,24 @@ function reversePurchase(purchase){
  refreshAllRecipeCosts();
  return true;
 }
+function resetPurchaseAndStock(){
+ if(cfg.key!=="purchases"){showAppAlert("Yeh option sirf Purchases page ke liye hai.");return}
+ const purchaseCount=(data.purchases||[]).length,stockCount=(data.ration||[]).length;
+ const ok=confirm("FINAL CONFIRMATION\n\nSirf Purchases aur current Ration Stock reset honge.\n\n• "+purchaseCount+" purchase records delete\n• "+stockCount+" ration items ka stock 0 aur rate 0\n• Stock movement history clear\n\nMembers, Recipes, Meals, Accounts aur Ration item names/units safe rahenge.\n\nKya aapne backup bana liya hai aur reset karna chahte hain?");
+ if(!ok)return;
+ const old=JSON.stringify(data);
+ try{
+  data.purchases=[];data.stockMovements=[];
+  (data.ration||[]).forEach(item=>{item.quantity=0;item.price=0});
+  refreshAllRecipeCosts();
+  if(!save())throw new Error("Data save nahi hua");
+  render();
+  showAppAlert("Purchase aur Ration Stock reset ho gaya. Members, Recipes, Meals aur Accounts safe hain. Ab fresh purchase entry kar sakte hain.");
+ }catch(e){
+  try{const restored=JSON.parse(old);Object.keys(data).forEach(k=>delete data[k]);Object.assign(data,restored);save()}catch(rollbackError){console.error("Reset rollback failed",rollbackError)}
+  showAppAlert("Reset save nahi hua. Page refresh karke backup verify karein.");
+ }
+}
 function clearPurchaseHistory(){
  if(cfg.key!=="purchases"){showAppAlert("Yeh option sirf Purchases page ke liye hai.");return}
  const count=arr().length;
