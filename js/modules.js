@@ -139,10 +139,40 @@ function showRationRequiredPopup(){
 }
 function openForm(id){if(cfg.key==="recipes"&&!(data.ration||[]).length){showRationRequiredPopup();return}if(cfg.key==="menu"&&!(data.recipes||[]).length){showAppAlert("Recipe nahi hai. Pehle Recipes page mein recipe aur cost per serving add karein, phir Making Menu banayein.");return}editId=id||null;let x=id?arr().find(a=>String(a.id)===String(id)):{};document.getElementById("formTitle").textContent=id?"Edit "+cfg.title:"Add "+cfg.title;document.getElementById("fields").innerHTML=cfg.fields.map(f=>input(f,x?.[f[0]]??"")).join("")+(cfg.key==="store"?'<div class="notice" style="grid-column:1/-1">Yeh sirf Ration Store ka item register hai — yahan purchase nahi hoti. Kharidari Purchases page par karein. Stock unit item ke stock aur recipe hisaab ke liye zaroori hai. Opening stock aur rate sirf tab bharein jab item ka pehle se stock maujood ho.</div>':"")+(cfg.key==="recipes"?recipeIngredientEditor(): "");cfg.fields.forEach(f=>{let el=document.getElementById("f_"+f[0]);if(el&&x?.[f[0]]!=null)el.value=x[f[0]]});if(cfg.key==="staff"&&!id){let d=document.getElementById("f_dutyDate");if(d){const now=new Date();d.value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0")}}if(cfg.key==="recipes"){(x?.ingredients||[]).forEach(i=>addIngredientRow(i.itemId,i.quantity));if(!(x?.ingredients||[]).length)addIngredientRow();refreshRecipeCost()}document.getElementById("modal").hidden=false}
 function recipeIngredientEditor(){return '<div class="field" style="grid-column:1/-1"><label>Ration Ingredients</label><div class="notice">Yahan Ration Store se item select karein. Quantity usi base unit mein dalein (g / ml / pcs). Rate aur ingredient cost automatic calculate hoga.</div><div id="ingredientRows"></div><button type="button" class="alt" onclick="addIngredientRow()">＋ Add Ingredient</button><div id="recipeCostPreview" style="margin-top:12px;font-weight:700"></div></div>'}
-function addIngredientRow(itemId="",quantity=""){let box=document.getElementById("ingredientRows");if(!box)return;let opts='<option value="">Select ration item</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+esc(i.unit)+'</option>').join("");let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:minmax(130px,2fr) minmax(75px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)";row.innerHTML='<div><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()">'+opts+'</select><small class="ingredient-rate muted" style="display:block;margin-top:4px">Rate: —</small></div><input class="ingredient-qty" type="number" min="0.001" step="any" placeholder="Qty" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><strong class="ingredient-cost">Rs 0.00</strong><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';box.appendChild(row);refreshRecipeCost()}
-function refreshRecipeCost(){let total=0;document.querySelectorAll("#ingredientRows .ingredient-row").forEach(row=>{let item=(data.ration||[]).find(i=>String(i.id)===String(row.querySelector(".ingredient-item").value)),q=Number(row.querySelector(".ingredient-qty").value||0),rate=Number(item?.price||0),cost=item&&q>0?q*rate:0;total+=cost;let rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");if(rateEl)rateEl.textContent=item?"Rate: "+money(rate)+" / "+item.unit:"Rate: —";if(costEl)costEl.textContent=money(cost)});let p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total)}
-function collectRecipeIngredients(){let rows=[...document.querySelectorAll("#ingredientRows .ingredient-row")],out=[];for(let row of rows){let itemId=row.querySelector(".ingredient-item").value,q=Number(row.querySelector(".ingredient-qty").value||0);if(!itemId&&!q)continue;if(!itemId||q<=0){showAppAlert("Har ingredient ke liye ration item aur quantity dono select/enter karein.");return null}let item=(data.ration||[]).find(i=>String(i.id)===String(itemId));if(!item){showAppAlert("Selected ration item Store mein nahi mila. Dobara select karein.");return null}out.push({itemId,itemName:item.name,quantity:q,unit:item.unit,rate:Number(item.price||0),lineCost:q*Number(item.price||0)})}return out}
-
+function recipeUnitFor(item){const u=String(item?.unit||"").toLowerCase();if(["kg","kgs","g","gram","grams"].includes(u))return "g";if(["ltr","l","litre","liter","ml"].includes(u))return "ml";return "pcs"}
+function addIngredientRow(itemId="",quantity=""){
+ let box=document.getElementById("ingredientRows");if(!box)return;
+ let opts='<option value="">Select ration item</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+recipeUnitFor(i)+' (Store '+esc(i.unit)+')</option>').join("");
+ let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:minmax(130px,2fr) minmax(75px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)";
+ row.innerHTML='<div><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()">'+opts+'</select><small class="ingredient-rate muted" style="display:block;margin-top:4px">Rate: —</small></div><input class="ingredient-qty" type="number" min="0.001" step="any" placeholder="Qty in g / ml / pcs" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><strong class="ingredient-cost">Rs 0.00</strong><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';
+ box.appendChild(row);refreshRecipeCost();
+}
+function refreshRecipeCost(){
+ let total=0;
+ document.querySelectorAll("#ingredientRows .ingredient-row").forEach(row=>{
+  const item=(data.ration||[]).find(i=>String(i.id)===String(row.querySelector(".ingredient-item").value));
+  const q=Number(row.querySelector(".ingredient-qty").value||0),unit=item?recipeUnitFor(item):"",stockQty=item&&q>0?purchaseInBase(q,unit,item.unit):null;
+  const rate=Number(item?.price||0),cost=stockQty===null?0:stockQty*rate;total+=cost;
+  const rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");
+  if(rateEl)rateEl.textContent=item?"Store rate: "+money(rate)+" / "+item.unit+" · Recipe unit: "+unit:"Rate: —";
+  if(costEl)costEl.textContent=money(cost);
+ });
+ const p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total);
+}
+function collectRecipeIngredients(){
+ let rows=[...document.querySelectorAll("#ingredientRows .ingredient-row")],out=[];
+ for(const row of rows){
+  const itemId=row.querySelector(".ingredient-item").value,q=Number(row.querySelector(".ingredient-qty").value||0);
+  if(!itemId&&!q)continue;
+  if(!itemId||q<=0){showAppAlert("Har ingredient ke liye ration item aur quantity dono select/enter karein.");return null}
+  const item=(data.ration||[]).find(i=>String(i.id)===String(itemId));
+  if(!item){showAppAlert("Selected ration item Store mein nahi mila. Dobara select karein.");return null}
+  const unit=recipeUnitFor(item),stockQty=purchaseInBase(q,unit,item.unit);
+  if(stockQty===null){showAppAlert("Unit conversion nahi ho sakta: "+item.name);return null}
+  out.push({itemId,itemName:item.name,quantity:q,unit,stockUnit:item.unit,rate:Number(item.price||0),lineCost:stockQty*Number(item.price||0)});
+ }
+ return out;
+}
 function unitFactor(unit){
  const u=String(unit||"").toLowerCase();
  if(u==="g"||u==="gram"||u==="grams")return {kind:"weight",factor:1};
@@ -161,16 +191,27 @@ function refreshAllRecipeCosts(){
  (data.recipes||[]).forEach(recipe=>{
   let total=0;
   recipe.ingredients=(recipe.ingredients||[]).map(ingredient=>{
-   const item=(data.ration||[]).find(x=>String(x.id)===String(ingredient.itemId));
-   if(!item)return ingredient;
-   const from=ingredient.unit||item.unit,converted=purchaseInBase(Number(ingredient.quantity||0),from,item.unit);
-   const rate=Number(item.price||0),lineCost=converted===null?0:converted*rate;
+   const item=(data.ration||[]).find(x=>String(x.id)===String(ingredient.itemId));if(!item)return ingredient;
+   const target=recipeUnitFor(item),from=ingredient.unit||item.unit,qty=purchaseInBase(Number(ingredient.quantity||0),from,target);
+   const stockQty=qty===null?null:purchaseInBase(qty,target,item.unit),rate=Number(item.price||0),lineCost=stockQty===null?0:stockQty*rate;
    total+=lineCost;
-   return {...ingredient,itemName:item.name,unit:from,stockUnit:item.unit,rate,lineCost};
+   return {...ingredient,itemName:item.name,quantity:qty===null?ingredient.quantity:qty,unit:target,stockUnit:item.unit,rate,lineCost};
   });
   recipe.totalCost=total;recipe.costPerServing=total;
   recipe.ingredientSummary=recipe.ingredients.map(i=>i.itemName+" "+i.quantity+" "+i.unit).join(", ");
  });
+}
+function migrateRecipeUnits(){
+ if(Number(data.recipeUnitVersion||0)>=1)return;
+ (data.recipes||[]).forEach(recipe=>{
+  recipe.ingredients=(recipe.ingredients||[]).map(ingredient=>{
+   const item=(data.ration||[]).find(x=>String(x.id)===String(ingredient.itemId));if(!item)return ingredient;
+   const target=recipeUnitFor(item),from=ingredient.unit||item.unit,qty=purchaseInBase(Number(ingredient.quantity||0),from,target);
+   return qty===null?ingredient:{...ingredient,quantity:qty,unit:target,stockUnit:item.unit};
+  });
+ });
+ data.recipeUnitVersion=1;refreshAllRecipeCosts();
+ try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){console.error("Recipe unit migration could not be saved",e);}
 }
 function migrateRateUnits(){
  if(Number(data.rateUnitVersion||0)>=3)return;
