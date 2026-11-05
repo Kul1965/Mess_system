@@ -19,25 +19,42 @@
   $("recipeHelp").textContent=recipes.length?"Ek meal mein kai dishes tick karein — jaise Dal + Chawal + Sabji.":"Pehle Recipes page par har dish ki recipe banayein.";
   updatePreview();
  }
- function aggregate(recipes){
-  const map=new Map();
-  recipes.forEach(r=>(r.ingredients||[]).forEach(i=>{
-   const key=i.itemId||i.itemName;
-   const old=map.get(key)||{itemId:i.itemId,itemName:i.itemName,unit:i.unit,perServing:0,rate:Number(i.rate||0),lineCost:0};
-   old.perServing+=Number(i.quantity||0);old.lineCost+=Number(i.lineCost||0);map.set(key,old);
-  }));
-  return [...map.values()];
- }
- function updatePreview(){
+ function unitFactor(unit){
+ const u=String(unit||"").toLowerCase();
+ if(["g","gram","grams"].includes(u))return {kind:"weight",factor:1};
+ if(["kg","kgs"].includes(u))return {kind:"weight",factor:1000};
+ if(u==="ml")return {kind:"volume",factor:1};
+ if(["ltr","l","litre","liter"].includes(u))return {kind:"volume",factor:1000};
+ if(["pcs","pc","piece","pieces"].includes(u))return {kind:"count",factor:1};
+ return null;
+}
+function convertQty(q,from,to){
+ const f=unitFactor(from),t=unitFactor(to);
+ if(!f||!t||f.kind!==t.kind)return null;
+ return Number(q)*f.factor/t.factor;
+}
+function aggregate(recipes,d){
+ const map=new Map();
+ recipes.forEach(r=>(r.ingredients||[]).forEach(i=>{
+  const item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId));
+  const stockUnit=item?.unit||i.unit,qty=convertQty(Number(i.quantity||0),i.unit||stockUnit,stockUnit);
+  if(qty===null)return;
+  const key=String(i.itemId||i.itemName);
+  const old=map.get(key)||{itemId:i.itemId,itemName:i.itemName,unit:stockUnit,perServing:0,rate:Number(i.rate||0),lineCost:0};
+  old.perServing+=qty;old.lineCost+=Number(i.lineCost||0);map.set(key,old);
+ }));
+ return [...map.values()];
+}
+function updatePreview(){
   const d=read(),ids=checkedIds(),count=ids.length,chosen=selectedRecipes();
   const recipes=(d.recipes||[]).filter(r=>chosen.includes(r.id));
   const perMember=recipes.reduce((s,r)=>s+Number(r.costPerServing||r.totalCost||0),0);
   $("mealChargeView").textContent=money(perMember);$("memberCountView").textContent=count;$("mealTotalView").textContent=money(perMember*count);
   if(!recipes.length){$("rationPreview").innerHTML='<tr><td colspan="3">Ek ya zyada dishes select karein.</td></tr>';$("stockNote").textContent="Dal, Chawal, Sabji jaise dishes select karein.";return}
-  const ingredients=aggregate(recipes);
+  const ingredients=aggregate(recipes,d);
   const prettyQty=(value,unit)=>{const n=Number(value||0),u=String(unit||"");if(u==="g"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" kg";if(u==="ml"&&n>=1000)return (n/1000).toLocaleString("en-IN",{maximumFractionDigits:2})+" L";return n.toLocaleString("en-IN",{maximumFractionDigits:2})+" "+u;};
   $("rationPreview").innerHTML=ingredients.map(i=>{
-   const total=i.perServing*count,item=(d.ration||[]).find(x=>x.id===i.itemId),available=Number(item?.quantity||0),short=count>0&&available<total;
+   const total=i.perServing*count,item=(d.ration||[]).find(x=>String(x.id)===String(i.itemId)),available=Number(item?.quantity||0),short=count>0&&available+1e-9<total;
    return '<tr><td><div class="ration-item-name"><span class="ration-item-icon">🥣</span><span>'+esc(i.itemName||item?.name||"Ration")+'</span></div></td><td><span class="qty-pill">'+esc(prettyQty(i.perServing,i.unit||item?.unit))+'</span></td><td><span class="qty-total '+(short?'short-stock':'')+'">'+esc(prettyQty(total,i.unit||item?.unit))+'</span>'+(short?'<small style="display:block;color:#ff9da3;margin-top:5px;font-weight:700">⚠ Stock kam</small>':'')+'</td></tr>';
   }).join("")||'<tr><td class="ration-empty" colspan="3">Selected recipes mein ration ingredients nahi hain.</td></tr>';
   $("stockNote").textContent=count?"Selected "+count+" members ke liye sabhi dishes ka combined ration dikhaya gaya hai.":"Members select karein; total ration quantity calculate hogi.";
@@ -69,16 +86,16 @@
   if(!ids.length){alert("Jin members ne khana khaya hai unko select karein.");return}
   if(recipes.some(r=>Number(r.costPerServing||r.totalCost||0)<=0)){alert("Kisi selected recipe ka cost zero hai. Recipe aur ration rate check karein.");return}
   const perMember=recipes.reduce((s,r)=>s+Number(r.costPerServing||r.totalCost||0),0);
-  const ingredients=aggregate(recipes),usage=ingredients.map(i=>({...i,quantity:i.perServing*ids.length,lineCost:i.lineCost*ids.length}));
+  const ingredients=aggregate(recipes,d),usage=ingredients.map(i=>({...i,quantity:i.perServing*ids.length,lineCost:i.lineCost*ids.length}));
   if(!usage.length){alert("Selected recipes mein ration ingredients nahi hain. Recipe edit karein.");return}
   for(const u of usage){
-   const item=(d.ration||[]).find(x=>x.id===u.itemId);
+   const item=(d.ration||[]).find(x=>String(x.id)===String(u.itemId));
    if(!item){alert("Ration Store mein "+u.itemName+" nahi mila. Recipe edit karein.");return}
    if(Number(item.quantity||0)<u.quantity){alert("Stock kam hai: "+item.name+". Zaroorat "+u.quantity+" "+item.unit+", available "+item.quantity+".");return}
   }
   const totalCost=perMember*ids.length,dishNames=recipes.map(r=>r.name);
   if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga."))return;
-  usage.forEach(u=>{const item=d.ration.find(x=>x.id===u.itemId);item.quantity=Number(item.quantity||0)-u.quantity;});
+  usage.forEach(u=>{const item=d.ration.find(x=>String(x.id)===String(u.itemId));item.quantity=Number(item.quantity||0)-u.quantity;});
   d.mealRecords=Array.isArray(d.mealRecords)?d.mealRecords:[];
   d.mealRecords.push({id:"MEAL"+Date.now(),date,mealType,recipeIds:recipes.map(r=>r.id),recipeNames:dishNames,recipeName:dishNames.join(" + "),items:dishNames,memberIds:ids,chargePerMember:perMember,totalCost,ingredientUsage:usage,createdAt:new Date().toISOString()});
   d.stockMovements=Array.isArray(d.stockMovements)?d.stockMovements:[];
