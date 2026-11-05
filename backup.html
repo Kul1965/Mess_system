@@ -100,29 +100,40 @@ function restore(){
  reader.onerror=()=>setMessage("Backup file read nahi ho saki.",true);
  reader.onload=()=>{
   let parsed;
-  try{parsed=JSON.parse(reader.result)}catch(e){setMessage("Invalid JSON backup. Current data safe hai.",true);return}
+  try{parsed=JSON.parse(reader.result)}catch(e){setMessage("Invalid JSON backup. File ko dobara check karein.",true);return}
   const isFull=parsed&&parsed.backupFormat==="CRPF-MESS-FULL-BACKUP"&&parsed.storage&&typeof parsed.storage==="object";
   const data=isFull?parsed.appData:parsed;
-  if(!data||typeof data!=="object"||Array.isArray(data)){setMessage("Backup file format sahi nahi hai. Current data safe hai.",true);return}
-  if(!confirm("Restore karne se is device ka current CRPF Mess data replace ho jayega. Kya aap sure hain?"))return;
-  const previous={};
-  for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k!==null)previous[k]=localStorage.getItem(k)}
+  if(!data||typeof data!=="object"||Array.isArray(data)){setMessage("Backup file format sahi nahi hai.",true);return}
+  const compact=JSON.stringify(data);
+  const sizeMB=(new Blob([compact]).size/1024/1024).toFixed(2);
+  if(!confirm("Backup file sahi format mein hai. Data size lagbhag "+sizeMB+" MB hai. Restore karne se current app data replace hoga. Continue?"))return;
   try{
-   if(isFull){
-    Object.entries(parsed.storage).forEach(([k,v])=>localStorage.setItem(k,String(v)));
-    if(!parsed.storage[KEY])localStorage.setItem(KEY,JSON.stringify(data));
-   }else{
-    localStorage.setItem(KEY,JSON.stringify(data));
-   }
+   localStorage.setItem(KEY,compact);
    refreshCounts();
-   setMessage("✓ Full backup restored successfully! Sabhi pages ka data wapas aa gaya. Page refresh ho raha hai…");
+   setMessage("✓ Full backup restored successfully! Sabhi records wapas aa gaye. Page refresh ho raha hai…");
    setTimeout(()=>location.reload(),900);
-  }catch(e){
-   try{
-    Object.keys(previous).forEach(k=>localStorage.setItem(k,previous[k]));
-    for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&!Object.prototype.hasOwnProperty.call(previous,k))localStorage.removeItem(k)}
-   }catch(rollbackError){console.error("Restore rollback failed",rollbackError)}
-   setMessage("Restore nahi hua. Storage full ho sakta hai; current data ko jitna mumkin tha wapas rakha gaya hai.",true);
+   return;
+  }catch(firstError){
+   if(firstError.name!=="QuotaExceededError" && firstError.name!=="NS_ERROR_DOM_QUOTA_REACHED"){
+    setMessage("Restore error: "+firstError.message,true);return;
+   }
+  }
+  // If browser storage is too small, retry while retaining all records but omitting member photos.
+  try{
+   const reduced=JSON.parse(compact);
+   let removed=0;
+   if(Array.isArray(reduced.members)){
+    reduced.members.forEach(m=>{
+     if(m&&m.photo){delete m.photo;removed++}
+    });
+   }
+   const reducedText=JSON.stringify(reduced);
+   localStorage.setItem(KEY,reducedText);
+   refreshCounts();
+   setMessage("✓ Members aur baaki sabhi records restore ho gaye. Browser storage limit ke karan "+removed+" member photo restore nahi ho paye. Page refresh ho raha hai…");
+   setTimeout(()=>location.reload(),1400);
+  }catch(secondError){
+   setMessage("Restore abhi bhi nahi hua. Backup file safe hai, lekin browser storage limit bahut kam hai. File delete na karein; asli JSON file mujhe bhejein, main data ko chhote hisson mein restore karne ka tareeqa banaunga.",true);
   }
  };
  reader.readAsText(file);
