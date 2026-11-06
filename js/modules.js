@@ -149,8 +149,8 @@ function updateOfficePartyLabels(){
  const toRole=type==="office_received"?"Mess NCO":"Mess SO";
  const fromLabel=document.querySelector('label[for="f_fromStaff"]');
  const toLabel=document.querySelector('label[for="f_toStaff"]');
- if(fromLabel)fromLabel.textContent=fromRole+" ka naam";
- if(toLabel)toLabel.textContent=toRole+" ka naam";
+ if(fromLabel)fromLabel.textContent=fromRole;
+ if(toLabel)toLabel.textContent=toRole;
 }
 function recipeIngredientEditor(){return '<div class="field" style="grid-column:1/-1"><label>Ration Ingredients</label><div class="notice">Yahan Ration Store se item select karein. Quantity usi base unit mein dalein (g / ml / pcs). Rate aur ingredient cost automatic calculate hoga.</div><div id="ingredientRows"></div><button type="button" class="alt" onclick="addIngredientRow()">＋ Add Ingredient</button><div id="recipeCostPreview" style="margin-top:12px;font-weight:700"></div></div>'}
 function recipeUnitFor(item){const u=String(item?.unit||"").toLowerCase();if(["kg","kgs","g","gram","grams"].includes(u))return "g";if(["ltr","l","litre","liter","ml"].includes(u))return "ml";return "pcs"}
