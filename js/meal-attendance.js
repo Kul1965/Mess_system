@@ -6,10 +6,23 @@
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const money=v=>"Rs "+Number(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
  const cookField=document.getElementById("cookWhatsApp");
- if(cookField&&!cookField.value){
-  const cooks=(read().staff||[]).filter(s=>(s.status||"Active")==="Active"&&String(s.duty||"").toLowerCase()==="cook"&&(s.phone||s.mobile||s.contact));
-  if(cooks.length===1)cookField.value=String(cooks[0].phone||cooks[0].mobile||cooks[0].contact).replace(/[^0-9]/g,"");
+ const cookSelect=document.getElementById("cookSelect");
+ function renderCookOptions(){
+  if(!cookSelect)return;
+  const d=read();
+  const cooks=(d.staff||[]).filter(s=>String(s.status||"Active").toLowerCase()==="active"&&String(s.duty||"").trim().toLowerCase()==="cook");
+  const previous=cookSelect.value;
+  cookSelect.innerHTML='<option value="">Cook select karein</option>'+cooks.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name||"Cook")+(s.phone||s.mobile||s.contact?" — "+esc(s.phone||s.mobile||s.contact):" — Number nahi diya")+"</option>").join("");
+  if(cooks.some(s=>String(s.id)===previous))cookSelect.value=previous;
+  else if(cooks.length===1)cookSelect.value=String(cooks[0].id);
+  syncCookPhone();
  }
+ function syncCookPhone(){
+  if(!cookSelect||!cookField)return;
+  const selected=(read().staff||[]).find(s=>String(s.id)===String(cookSelect.value));
+  cookField.value=selected?String(selected.phone||selected.mobile||selected.contact||"").replace(/[^0-9]/g,""):"";
+ }
+ if(cookSelect)cookSelect.addEventListener("change",syncCookPhone);
  const checkedIds=()=>[...document.querySelectorAll(".meal-member:checked")].map(x=>x.value);
  const selectedRecipes=()=>[...document.querySelectorAll(".meal-recipe:checked")].map(c=>c.value);
  function renderMembers(){
@@ -125,5 +138,5 @@ function updatePreview(){
  $("mealMemberList").addEventListener("change",updatePreview);
  $("mealRecipeList").addEventListener("change",updatePreview);
  $("mealDate").value=new Date().toLocaleDateString("en-CA");$("dateNow").textContent=new Date().toLocaleDateString();
- renderMembers();renderRecipeOptions();renderRecords();
+ renderCookOptions();renderMembers();renderRecipeOptions();renderRecords();
 })();
