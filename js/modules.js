@@ -261,7 +261,8 @@ async function saveCurrentRecord(event){
   }
  }
  if(cfg.key==="settings"){saveSettings();return}
- if(cfg.key==="handovers"){const validNco=name=>(data.staff||[]).some(x=>(x.status||"Active")==="Active"&&String(x.name)===String(name)&&String(x.duty||"").trim().toLowerCase()==="mess nco");if(!validNco(values.from)||!validNco(values.to)){showAppAlert("Purana aur naya dono Mess NCO ko Mess Staff page par active Mess NCO set karein.");return}if(String(values.from)===String(values.to)){showAppAlert("Purana aur naya Mess NCO alag select karein.");return}}\n if(cfg.key==="transactions"&&["office_received","office_deposited"].includes(values.type)){
+ if(cfg.key==="handovers"){const validNco=name=>(data.staff||[]).some(x=>(x.status||"Active")==="Active"&&String(x.name)===String(name)&&String(x.duty||"").trim().toLowerCase()==="mess nco");if(!validNco(values.from)||!validNco(values.to)){showAppAlert("Purana aur naya dono Mess NCO ko Mess Staff page par active Mess NCO set karein.");return}if(String(values.from)===String(values.to)){showAppAlert("Purana aur naya Mess NCO alag select karein.");return}}
+ if(cfg.key==="transactions"&&["office_received","office_deposited"].includes(values.type)){
   const fromRole=values.type==="office_received"?"Mess SO":"Mess NCO",toRole=values.type==="office_received"?"Mess NCO":"Mess SO";
   const valid=(name,role)=>(data.staff||[]).some(x=>(x.status||"Active")==="Active"&&String(x.name)===String(name)&&String(x.duty||"").trim().toLowerCase()===role.toLowerCase());
   if(!valid(values.fromStaff,fromRole)||!valid(values.toStaff,toRole)){showAppAlert("Mess Staff page par active Mess NCO aur Mess SO set karein. Lene: SO se NCO. Jama: NCO se SO.");return}
