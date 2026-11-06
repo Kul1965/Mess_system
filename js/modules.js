@@ -242,7 +242,7 @@ function migrateRateUnits(){
  try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){console.error("Rate migration could not be saved",e);}
  if(typeof refreshAllRecipeCosts==="function")refreshAllRecipeCosts();
 }
-async async function saveCurrentRecord(event){
+async function saveCurrentRecord(event){
  event.preventDefault();
  const values={};
  for(const field of cfg.fields){
