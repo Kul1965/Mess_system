@@ -517,7 +517,7 @@ function renderAccountOverview(list){
  '<tr><th>Ration kharida (Purchase Bills)</th><td>'+money(purchaseTotal)+'</td></tr>'+
  '<tr><th>Members ka Mess Advance</th><td>'+money(totalMemberAdvance)+'</td></tr>'+
  '<tr><th>Dono ka jod (Ration + Advance)</th><td><strong>'+money(combinedTotal)+'</strong></td></tr>'+
- '<tr><th>Advance mein se ration kharidne ke baad</th><td><strong style="color:'+(cashBalance<0?'#ffb5b5':'#b9f5cf')+'">'+(cashBalance<0?'Kami ':'Bacha ')+money(Math.abs(cashBalance))+'</strong></td></tr>'+
+ '<tr><th>Mess NCO ko handover dene wala balance</th><td><strong style="color:'+(cashBalance<0?'#ffb5b5':'#b9f5cf')+'">'+(cashBalance<0?'Kami ':'Bacha ')+money(Math.abs(cashBalance))+'</strong></td></tr>'+
  '<tr><th>Meal ka charge ab tak record hua</th><td>'+money(mealTotal)+'</td></tr>'+
  '</tbody></table></div><p class="muted" style="margin-top:10px">Samjhein: '+money(totalMemberAdvance)+' advance jama maana gaya. '+money(purchaseTotal)+' ka ration kharida gaya. Isliye advance se ration ka paisa dene par '+money(cashGap)+' ki kami dikh rahi hai. '+money(mealTotal)+' sirf ab tak recorded meal charge hai; yeh total ration purchase ka amount nahi hai. Purchase bill aur member advance alag hisaab hain, inka jod '+money(combinedTotal)+' hai.</p></section>'+
  '<section class="panel" style="margin-top:14px"><h3>🧾 Ration Purchase Bills · Purchases se aaya hua</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Bill No.</th><th>Item</th><th>Supplier</th><th>Quantity</th><th>Amount</th></tr></thead><tbody>'+(purchaseRows||'<tr><td colspan="6">No purchase bills recorded yet.</td></tr>')+'</tbody></table></div></section>'+
