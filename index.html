@@ -748,7 +748,17 @@ function loadDashboard() {
           <b>${safe(menu[key] || "Not added")}</b>
         </div>
       `).join("");
-
+  } else if(todayMealRecords.length){
+    document.getElementById("todayMenu").innerHTML =
+      '<p style="color:#a9c8b9;margin:0 0 10px">Aaj save hue meals:</p>' +
+      todayMealRecords.slice().reverse().map(record=>`
+        <div class="stock-row">
+          <span>${safe(record.mealType || "Meal")}</span>
+          <b>${safe((record.recipeNames || record.items || [record.recipeName || "Meal"]).join(" + "))}</b>
+        </div>
+      `).join("");
+  } else {
+    document.getElementById("todayMenu").textContent = "No menu or meal record added for today";
   }
 }
 
