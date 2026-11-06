@@ -109,7 +109,7 @@ function render(){
       const id=String(x.id||"").replace(/\\/g,"");
       const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
-      return '<tr>'+cfg.cols.map(k=>'<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(x[k]):x[k])+'</td>').join("")+'<td><div class="actions">'+action+'</div></td></tr>';
+      return '<tr>'+cfg.cols.map(k=>{let value=x[k];if(cfg.key==="transactions"&&k==="type"){const typeLabels={office_received:"Mess NCO ko paisa mila (Mess SO ne diya)",office_deposited:"Mess SO ko paisa jama (Mess NCO ne diya)",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};value=typeLabels[value]||value;}return '<td>'+esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(value):value)+'</td>'}).join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
     document.getElementById("stats").innerHTML=statsHtml(list);
