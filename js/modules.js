@@ -322,7 +322,7 @@ async function saveCurrentRecord(event){
  }else{
   const list=arr(),old=list.find(x=>String(x.id)===String(editId))||{};
   const record={...old,...values,id:editId||("R"+Date.now())};
-  if(cfg.key==="handovers"){record.monthlySummary=buildMonthlyMessSummary(values.date||new Date().toISOString().slice(0,10));record.stockSnapshot=(data.ration||[]).map(x=>({itemName:x.name,quantity:Number(x.quantity||0),unit:x.unit,estimatedValue:Number(x.quantity||0)*Number(x.price||0)}));}
+  if(cfg.key==="handovers"){record.monthlySummary=buildMonthlyMessSummary(values.date||new Date().toISOString().slice(0,10));record.stockSnapshot=(data.ration||[]).map(x=>({itemName:x.name,quantity:Number(x.quantity||0),unit:x.unit,rate:Number(x.price||0),estimatedValue:Number(x.quantity||0)*Number(x.price||0)}));record.stockTotalValue=record.stockSnapshot.reduce((s,x)=>s+Number(x.estimatedValue||0),0);record.cashReconciliation=record.monthlySummary.officeReceived+record.monthlySummary.cuttingCollected-record.monthlySummary.officeDeposited-record.monthlySummary.purchaseTotal-record.monthlySummary.expenseTotal;}
   if(cfg.key==="ration"){
    record.quantity=Number(values.quantity||0);record.minimum=Number(values.minimum||0);record.price=Number(values.price||0);
   }
@@ -598,6 +598,7 @@ function renderHandoverOverview(){
  const handoverText=[
   "CRPF MESS HANDOVER — "+summary.month,
   "Outgoing Mess NCO: "+(nco?.name||"—"),
+  "Incoming Mess NCO: "+(saved.length?(saved[saved.length-1].to||"—"):"Handover form mein select karein"),
   "Mess SO: "+(so?.name||"—"),
   "Office se mila: "+money(summary.officeReceived),
   "Jawan Mess Cutting (meal records se auto): "+money(summary.cuttingCollected),
