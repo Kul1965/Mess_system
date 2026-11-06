@@ -129,7 +129,7 @@ function statsHtml(list){
   if(cfg.key==="purchases")return stat("Purchase Entries",list.length)+stat("Total Purchases",money(list.reduce((s,x)=>s+Number(x.total||x.amount||0),0)));
   if(cfg.key==="recipes")return stat("Recipes",list.length)+stat("Average Cost",money(list.length?list.reduce((s,x)=>s+Number(x.costPerServing||0),0)/list.length:0));
   if(cfg.key==="menu")return stat("Menu Dates",list.length);
-  if(cfg.key==="accounts")return stat("Entries",list.length)+stat("Collections",money(list.filter(x=>x.type==="collection"||x.type==="advance").reduce((s,x)=>s+Number(x.amount||0),0)))+stat("Expenses",money(list.filter(x=>x.type==="expense").reduce((s,x)=>s+Number(x.amount||0),0)));
+  if(cfg.key==="accounts"){const meals=data.mealRecords||[];const autoCutting=meals.reduce((s,r)=>s+Number(r.chargePerMember||0)*(Array.isArray(r.memberIds)?r.memberIds.length:0),0);return stat("Entries",list.length)+stat("Mess Cutting (auto)",money(autoCutting))+stat("Expenses",money(list.filter(x=>["expense","special_expense"].includes(String(x.type||"").toLowerCase())).reduce((s,x)=>s+Number(x.amount||0),0)));}
   return stat("Records",list.length);
 }
 function stat(a,b){return '<div class="card"><small>'+a+'</small><strong>'+b+'</strong></div>'}
@@ -503,8 +503,9 @@ function renderAccountOverview(list){
  const monthlyLimit=activeMembers.length*limitPerMember;
  const sumType=(types)=>monthlyTx.filter(x=>types.includes(String(x.type||"").toLowerCase())).reduce((s,x)=>s+num(x.amount),0);
  const officeReceived=sumType(["office_received"]);
- const cuttingCollected=sumType(["cutting_collected","collection"]);
+ const cuttingCollected=meals.filter(inMonth).reduce((s,r)=>s+num(r.chargePerMember)*(Array.isArray(r.memberIds)?r.memberIds.length:0),0);
  const officeDeposited=sumType(["office_deposited"]);
+ const cuttingRemaining=Math.max(0,cuttingCollected-officeDeposited);
  const otherExpenses=sumType(["expense","special_expense","surplus_spend"]);
  const purchaseTotal=monthlyPurchases.reduce((s,x)=>s+num(x.total??(num(x.quantity)*num(x.rate))),0);
  const expenseTotal=otherExpenses;
@@ -526,7 +527,7 @@ function renderAccountOverview(list){
  const surplusColor=surplus>=0?"#b9f5cf":"#ffb5b5";
  let box=document.getElementById("accountOverview");
  if(!box){box=document.createElement("section");box.id="accountOverview";box.className="account-auto-overview";document.getElementById("pageSub").after(box);}
- box.innerHTML='<section class="cards">'+stat("Monthly Limit · "+activeMembers.length+" × "+money(limitPerMember),money(monthlyLimit))+stat("Office se mila",money(officeReceived))+stat("Mess Cutting collected",money(cuttingCollected))+stat("Office mein jama",money(officeDeposited))+stat("Monthly ration bills",money(purchaseTotal))+stat("Actual other expenses",money(expenseTotal))+'</section>'+
+ box.innerHTML='<section class="cards">'+stat("Monthly Limit · "+activeMembers.length+" × "+money(limitPerMember),money(monthlyLimit))+stat("Office se mila",money(officeReceived))+stat("Mess Cutting (auto)",money(cuttingCollected))+stat("Office mein jama",money(officeDeposited))+stat("Bacha Cutting paisa",money(cuttingRemaining))+stat("Monthly ration bills",money(purchaseTotal))+stat("Actual other expenses",money(expenseTotal))+'</section>'+
  '<section class="panel" style="margin-top:14px"><h3>🧮 Monthly Account Reconciliation · '+esc(month)+'</h3><div class="tablewrap"><table><tbody>'+
  '<tr><th>Active members × Settings monthly limit</th><td>'+money(monthlyLimit)+'</td></tr>'+
  '<tr><th>Ration purchase bills this month</th><td>'+money(purchaseTotal)+'</td></tr>'+
@@ -535,8 +536,8 @@ function renderAccountOverview(list){
  '<tr><th>Surplus / (Limit se adhik kharch)</th><td><b style="color:'+surplusColor+'">'+(surplus<0?"Extra expenditure ":"Surplus ")+money(Math.abs(surplus))+'</b></td></tr>'+
  '</tbody></table></div><p class="notice">Surplus alag record hai. Isse cash balance na samjhein. Surplus se kharch karne ke liye Add New mein “Surplus se approved expense” chunein aur Approval / receipt reference zaroor bharein. Yeh monthly limit-based calculation hai; opening ration stock ka value handover mein alag record hoga.</p></section>'+
  '<section class="panel" style="margin-top:14px"><h3>🏦 Cash Movement · Office / Mess Cutting</h3><div class="tablewrap"><table><tbody>'+
- '<tr><th>Office se cash mila</th><td>'+money(officeReceived)+'</td></tr><tr><th>Jawanon se Mess Cutting collected</th><td>'+money(cuttingCollected)+'</td></tr><tr><th>Office mein wapas jama</th><td>'+money(officeDeposited)+'</td></tr>'+
- '<tr><th>Cash movement ka net (purchases/expenses se pehle)</th><td><b>'+money(officeReceived+cuttingCollected-officeDeposited)+'</b></td></tr></tbody></table></div><p class="muted">Har receipt aur office deposit ko alag transaction ke roop mein enter karein. Is net figure ko actual cash-in-hand tabhi maanें jab saare cash receipts/payments record ho chuke hon.</p></section>'+
+ '<tr><th>Office se cash mila</th><td>'+money(officeReceived)+'</td></tr><tr><th>Jawanon se Mess Cutting (meal charges se automatic)</th><td>'+money(cuttingCollected)+'</td></tr><tr><th>Office mein wapas jama (manual entry)</th><td>'+money(officeDeposited)+'</td></tr>'+
+ '<tr><th>Jama ke baad bacha Cutting paisa</th><td><b>'+money(cuttingRemaining)+'</b></td></tr><tr><th>Cash movement ka net (purchases/expenses se pehle)</th><td><b>'+money(officeReceived+cuttingRemaining)+'</b></td></tr></tbody></table></div><p class="muted">Har receipt aur office deposit ko alag transaction ke roop mein enter karein. Is net figure ko actual cash-in-hand tabhi maanें jab saare cash receipts/payments record ho chuke hon.</p></section>'+
  '<section class="panel" style="margin-top:14px"><h3>🧾 Ration Purchase Bills · Current month</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Bill No.</th><th>Item</th><th>Supplier</th><th>Quantity</th><th>Amount</th></tr></thead><tbody>'+(purchaseRows||'<tr><td colspan="6">No purchase bills recorded this month.</td></tr>')+'</tbody></table></div></section>'+
  '<section class="panel" style="margin-top:14px"><h3>📒 Office / Collection / Expense Entries</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Type</th><th>Member</th><th>Details</th><th>Approval / Ref.</th><th>Amount</th></tr></thead><tbody>'+(txRows||'<tr><td colspan="6">No entries this month.</td></tr>')+'</tbody></table></div></section>'+
  '<section class="panel" style="margin-top:14px"><h3>👥 Member Account Balance · Existing records</h3><div class="tablewrap"><table><thead><tr><th>Member</th><th>Force No.</th><th>Meal Bill</th><th>Advance / Paid</th><th>Due</th><th>Credit</th></tr></thead><tbody>'+(memberTable||'<tr><td colspan="6">No members available.</td></tr>')+'</tbody></table></div></section>'+
@@ -553,7 +554,8 @@ function buildMonthlyMessSummary(dateValue){
  const purchaseTotal=purchases.reduce((s,x)=>s+Number(x.total??(Number(x.quantity||0)*Number(x.rate||0))),0);
  const expenseTotal=tx.filter(x=>["expense","special_expense","surplus_spend"].includes(String(x.type||"").toLowerCase())).reduce((s,x)=>s+Number(x.amount||0),0);
  const officeReceived=tx.filter(x=>x.type==="office_received").reduce((s,x)=>s+Number(x.amount||0),0);
- const cuttingCollected=tx.filter(x=>["cutting_collected","collection"].includes(String(x.type||"").toLowerCase())).reduce((s,x)=>s+Number(x.amount||0),0);
+ const meals=(data.mealRecords||[]).filter(inMonth);
+ const cuttingCollected=meals.reduce((s,r)=>s+Number(r.chargePerMember||0)*(Array.isArray(r.memberIds)?r.memberIds.length:0),0);
  const officeDeposited=tx.filter(x=>x.type==="office_deposited").reduce((s,x)=>s+Number(x.amount||0),0);
  const totalExpense=purchaseTotal+expenseTotal;
  return {month,activeMembers:members.length,limitPerMember,monthlyLimit,purchaseTotal,expenseTotal,totalExpense,surplus:monthlyLimit-totalExpense,officeReceived,cuttingCollected,officeDeposited};
