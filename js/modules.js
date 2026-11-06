@@ -39,6 +39,12 @@ const configs={
 };
 let cfg=configs[document.body.dataset.module]||configs.store;
 let data=read(),editId=null;
+(function removeLegacyMessAdvance(){
+ let changed=false;
+ (data.members||[]).forEach(member=>{if(Object.prototype.hasOwnProperty.call(member,"advance")){delete member.advance;changed=true;}});
+ if(Array.isArray(data.transactions)){const before=data.transactions.length;data.transactions=data.transactions.filter(tx=>String(tx.type||"").toLowerCase()!=="advance");if(data.transactions.length!==before)changed=true;}
+ if(changed){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){console.error("Mess Advance cleanup could not be saved",e);}}
+})();
 function read(){try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return {}}}
 function save(){
   try{
