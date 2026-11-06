@@ -5,6 +5,11 @@
  const write=d=>{try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){alert("Data save nahi hua. Browser storage full ho sakta hai.");return false}};
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const money=v=>"Rs "+Number(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+ const cookField=document.getElementById("cookWhatsApp");
+ if(cookField&&!cookField.value){
+  const cooks=(read().staff||[]).filter(s=>(s.status||"Active")==="Active"&&String(s.duty||"").toLowerCase()==="cook"&&(s.phone||s.mobile||s.contact));
+  if(cooks.length===1)cookField.value=String(cooks[0].phone||cooks[0].mobile||cooks[0].contact).replace(/[^0-9]/g,"");
+ }
  const checkedIds=()=>[...document.querySelectorAll(".meal-member:checked")].map(x=>x.value);
  const selectedRecipes=()=>[...document.querySelectorAll(".meal-recipe:checked")].map(c=>c.value);
  function renderMembers(){
