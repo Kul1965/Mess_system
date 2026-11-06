@@ -422,7 +422,7 @@ td{
 
       <div class="stat">
         <div>
-          <div class="stat-label">Mess Advance</div>
+          <div class="stat-label">Office se liya gaya paisa</div>
           <div class="stat-number" id="advance">Rs 0</div>
         </div>
         <div class="stat-icon">🪙</div>
@@ -633,9 +633,21 @@ function loadDashboard() {
     !m.status || m.status === "Active"
   );
 
-  const totalAdvance = members.reduce((sum,m) =>
-    sum + Number(m.advance || m.messAdvance || 0),0
-  );
+  const officeMoneyReceived = transactions
+    .filter(t => String(t.type || "").toLowerCase() === "office_received")
+    .reduce((sum,t) => sum + numberValue(t.amount),0);
+
+  const mealRecords = Array.isArray(data.mealRecords) ? data.mealRecords : [];
+  const unpaidCount = activeMembers.filter(member => {
+    const id = String(member.id);
+    const mealTotal = mealRecords
+      .filter(record => (Array.isArray(record.memberIds) ? record.memberIds : []).map(String).includes(id))
+      .reduce((sum,record) => sum + numberValue(record.chargePerMember),0);
+    const paid = transactions
+      .filter(t => String(t.memberId) === id && ["cutting_collected","collection"].includes(String(t.type || "").toLowerCase()))
+      .reduce((sum,t) => sum + numberValue(t.amount),0);
+    return mealTotal - paid > 0.009;
+  }).length;
 
   // Stock Value = current base-unit quantity × weighted-average base-unit rate.
   // Purchases update item.price in the same base unit; do not sum purchase bills here.
@@ -667,12 +679,12 @@ function loadDashboard() {
   };
 
   set("members",activeMembers.length);
-  set("advance",money(totalAdvance));
+  set("advance",money(officeMoneyReceived));
   set("items",ration.length);
   set("stockValue",money(stockValue));
   set("purchases",money(totalPurchases));
   set("expenses",money(totalExpenses));
-  set("unpaid",(data.unpaidMembers || []).length);
+  set("unpaid",unpaidCount);
   set("normalStock",ration.length-low.length);
   set("lowStock",low.length);
   set("totalStock",ration.length);
@@ -717,6 +729,8 @@ function loadDashboard() {
 
   const now = new Date();
   const today = [now.getFullYear(),String(now.getMonth()+1).padStart(2,"0"),String(now.getDate()).padStart(2,"0")].join("-");
+  const todayMealRecords=mealRecords.filter(record=>String(record.date||"").slice(0,10)===today);
+  set("meals",todayMealRecords.length);
   const menu=(data.menu || []).find(m=>m.date===today);
 
   if(menu){
@@ -734,7 +748,7 @@ function loadDashboard() {
           <b>${safe(menu[key] || "Not added")}</b>
         </div>
       `).join("");
-    set("meals",meals.filter(([name,key])=>menu[key]).length);
+
   }
 }
 
