@@ -28,7 +28,7 @@ function showAppAlert(message){
 const KEY="crpfMessData";
 const configs={
  store:{title:"Ration Store",sub:"Item register and current stock — purchases are entered on the Purchases page",key:"ration",fields:[["name","Item name","text",1],["category","Category","text"],["unit","Stock unit (required)","select",1,"g|kg|ml|ltr|pcs"],["quantity","Opening stock (only if stock already exists)","number"],["minimum","Minimum stock alert","number"],["price","Opening rate per stock unit (Rs)","number"]],cols:["name","category","quantity","unit","minimum","price"],stats:["Total Items","Low Stock","Stock Value"]},
- purchases:{title:"Purchases",sub:"Record purchases and automatically update stock",key:"purchases",fields:[["date","Purchase date","date",1],["itemId","Store item","item",1],["quantity","Quantity purchased","number",1],["unit","Purchase unit","select",1,"kg|g|ltr|ml|pcs"],["rate","Rate per purchase unit (Rs)","number",1],["vendor","Supplier","text"],["bill","Bill / reference","text"]],cols:["date","itemName","quantity","unit","rate","total","vendor"]},
+ purchases:{title:"Purchases",sub:"Record purchases and automatically update stock",key:"purchases",fields:[["date","Purchase date","date",1],["itemId","Store item","item",1],["quantity","Quantity purchased","number",1],["unit","Purchase unit","select",1,"kg|g|ltr|ml|pcs"],["rate","Rate per purchase unit (Rs)","number",1],["vendor","Supplier","text"],["bill","Bill / reference","text"],["billDocument","Bill photo / PDF","file"]],cols:["date","itemName","quantity","unit","rate","total","vendor","bill","billDocument"]},
  recipes:{title:"Recipes",sub:"Add ration ingredients; cost is calculated from current store rates",key:"recipes",fields:[["name","Recipe name","text",1],["notes","Notes","text"]],cols:["name","ingredientSummary","totalCost","costPerServing"]},
  menu:{title:"Making Menu",sub:"Select a meal and recipe; recipe cost is calculated automatically",key:"menu",fields:[["date","Menu date","date",1],["recipeId","Select recipe","recipe",1],["servings","Number of members / servings","number",1]],cols:["date","recipeName","servings","totalCost"]},
  accounts:{title:"Accounts",sub:"Office se paisa lena aur jama karna; Mess Cutting automatic calculate hoti hai",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"office_received|office_deposited|expense|special_expense|surplus_spend"],["fromStaff","Mess SO","staff"],["toStaff","Mess NCO","staff"],["description","Details / purpose","text",1],["amount","Amount (Rs)","number",1],["approvedBy","Approval / receipt reference (Surplus spend: required)","text"],["document","Bill photo / Application document","file"]],cols:["date","type","messNcoName","messSoName","description","amount","document"]},
@@ -242,7 +242,7 @@ function migrateRateUnits(){
  try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){console.error("Rate migration could not be saved",e);}
  if(typeof refreshAllRecipeCosts==="function")refreshAllRecipeCosts();
 }
-async function saveCurrentRecord(event){
+async async function saveCurrentRecord(event){
  event.preventDefault();
  const values={};
  for(const field of cfg.fields){
@@ -591,40 +591,46 @@ function renderHandoverOverview(){
  const ration=Array.isArray(data.ration)?data.ration:[];
  const summary=buildMonthlyMessSummary(new Date().toISOString().slice(0,10));
  const saved=(data.handovers||[]).filter(x=>x.monthlySummary);
- const stockValue=ration.reduce((s,x)=>s+Number(x.quantity||0)*Number(x.price||0),0);
- const stockRows=ration.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(Number(x.quantity||0).toLocaleString("en-IN"))+' '+esc(x.unit||"")+'</td><td>'+money(x.price||0)+' / '+esc(x.unit||"")+'</td><td>'+money(Number(x.quantity||0)*Number(x.price||0))+'</td></tr>').join("");
- const calculatedCash=summary.officeReceived+summary.cuttingCollected-summary.officeDeposited-summary.purchaseTotal-summary.expenseTotal;
+ const stockSnapshot=ration.map(x=>({itemName:x.name,quantity:Number(x.quantity||0),unit:x.unit||"",rate:Number(x.price||0),estimatedValue:Number(x.quantity||0)*Number(x.price||0)}));
+ const stockValue=stockSnapshot.reduce((s,x)=>s+x.estimatedValue,0);
+ const stockRows=stockSnapshot.map(x=>'<tr><td>'+esc(x.itemName)+'</td><td>'+esc(x.quantity.toLocaleString("en-IN"))+' '+esc(x.unit)+'</td><td>'+money(x.rate)+' / '+esc(x.unit)+'</td><td>'+money(x.estimatedValue)+'</td></tr>').join("");
+ const totalReceived=summary.officeReceived+summary.cuttingCollected;
+ const totalOut=summary.officeDeposited+summary.purchaseTotal+summary.expenseTotal;
+ const calculatedCash=totalReceived-totalOut;
  const nco=staff.find(x=>String(x.duty||"").toLowerCase()==="mess nco");
  const so=staff.find(x=>String(x.duty||"").toLowerCase()==="mess so");
+ const latest=saved.length?saved[saved.length-1]:null;
+ const cashColor=calculatedCash>=0?"#b9f5cf":"#ffb5b5";
+ const surplusColor=summary.surplus>=0?"#f2c94c":"#ffb5b5";
  const handoverText=[
   "CRPF MESS HANDOVER — "+summary.month,
-  "Outgoing Mess NCO: "+(nco?.name||"—"),
-  "Incoming Mess NCO: "+(saved.length?(saved[saved.length-1].to||"—"):"Handover form mein select karein"),
+  "Purana Mess NCO: "+(nco?.name||"—"),
+  "Naya Mess NCO: "+(latest?.to||"Form mein select karein"),
   "Mess SO: "+(so?.name||"—"),
   "Office se mila: "+money(summary.officeReceived),
   "Jawan Mess Cutting (meal records se auto): "+money(summary.cuttingCollected),
+  "Kul prapt paisa: "+money(totalReceived),
   "Office mein jama: "+money(summary.officeDeposited),
-  "Ration purchase: "+money(summary.purchaseTotal),
-  "Other / special expense: "+money(summary.expenseTotal),
-  "Estimated cash balance (opening cash ke bina): "+money(calculatedCash),
-  "Balance ration value: "+money(stockValue),
-  "Item-wise stock:",
-  ...ration.map(x=>x.name+": "+Number(x.quantity||0)+" "+(x.unit||"")+" @ "+money(x.price||0)+" = "+money(Number(x.quantity||0)*Number(x.price||0))),
-  "Note: Physical stock aur cash gin kar verify karein. Demo software; senior officer permission ke saath use karein."
+  "Ration purchase bills: "+money(summary.purchaseTotal),
+  "Other / special / approved expense: "+money(summary.expenseTotal),
+  "Kul jama/kharch: "+money(totalOut),
+  "Hisab se bacha cash: "+money(calculatedCash),
+  "Balance Ration ki kul value: "+money(stockValue),
+  "Item-wise balance ration:",
+  ...stockSnapshot.map(x=>x.itemName+": "+x.quantity+" "+x.unit+" @ "+money(x.rate)+" = "+money(x.estimatedValue)),
+  "Note: Actual cash aur ration physical count se milayein. Demo software; senior officers ki permission ke saath hi use karein."
  ].join("\n");
  const waUrl="https://wa.me/?text="+encodeURIComponent(handoverText);
  let box=document.getElementById("handoverAuto");
  if(!box){box=document.createElement("section");box.id="handoverAuto";box.className="panel handover-auto";document.getElementById("tablePanel").before(box);}
- const cashColor=calculatedCash>=0?"#b9f5cf":"#ffb5b5";
- const surplusColor=summary.surplus>=0?"#f2c94c":"#ffb5b5";
- box.innerHTML='<div class="handover-actions" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px"><button type="button" onclick="window.print()">📄 Handover PDF / Print</button><a class="btn" href="'+waUrl+'" target="_blank" rel="noopener" style="background:#138b50;color:#fff;text-decoration:none;padding:11px 15px;border-radius:9px;font-weight:700">🟢 WhatsApp Handover</a></div>'+
+ box.innerHTML='<div class="handover-actions" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px"><button type="button" onclick="window.print()">📄 Handover PDF / Print</button><a class="btn" href="'+waUrl+'" target="_blank" rel="noopener" style="background:#138b50;color:#fff;text-decoration:none;padding:11px 15px;border-radius:9px;font-weight:700">🟢 Naye Mess NCO ko WhatsApp</a></div>'+
  '<section class="panel" style="border:2px solid #f2c94c;background:linear-gradient(145deg,#10432f,#082b20);margin-bottom:16px;padding:18px"><h2 style="color:#f2c94c;margin:0 0 12px;text-align:center">मेस की बचत / Surplus</h2><p>मासिक सीमा: '+summary.activeMembers+' जवान × '+money(summary.limitPerMember)+' = <b>'+money(summary.monthlyLimit)+'</b></p><p>राशन खरीद + दर्ज अन्य खर्च: <b>'+money(summary.totalExpense)+'</b></p><div style="text-align:center;border:2px dashed #f2c94c;border-radius:12px;padding:13px;margin:10px 0"><small>इस महीने की बचत / सीमा से अधिक खर्च</small><div style="font-size:30px;font-weight:800;color:'+surplusColor+'">'+money(Math.abs(summary.surplus))+'</div><b>'+(summary.surplus>=0?"यह बचत अलग रहेगी; अनुमति मिलने पर ही खर्च करें।":"मासिक सीमा से अधिक खर्च")+'</b></div><p style="font-size:13px">Surplus खर्च के लिए Accounts में स्वीकृति / रसीद संदर्भ दर्ज करें।</p></section>'+
- '<h3>स्वचालित मेस हैंडओवर सारांश · '+esc(summary.month)+'</h3><section class="cards">'+stat("Office se mila",money(summary.officeReceived))+stat("Jawan Mess Cutting · auto",money(summary.cuttingCollected))+stat("Office mein jama",money(summary.officeDeposited))+stat("Ration purchase",money(summary.purchaseTotal))+stat("Other / special expense",money(summary.expenseTotal))+stat("Balance Ration value",money(stockValue))+stat("अनुमानित नकद शेष*",money(calculatedCash))+'</section>'+
- '<section class="panel" style="margin-top:14px"><h4>💰 नकद का मिलान</h4><div class="tablewrap"><table><tbody><tr><th>Office se Mess NCO ko mila</th><td>'+money(summary.officeReceived)+'</td></tr><tr><th>Jawan Mess Cutting (Meal records se auto)</th><td>'+money(summary.cuttingCollected)+'</td></tr><tr><th>Office mein Mess NCO ne jama kiya</th><td>− '+money(summary.officeDeposited)+'</td></tr><tr><th>Ration purchase bills</th><td>− '+money(summary.purchaseTotal)+'</td></tr><tr><th>Other / special / approved expense</th><td>− '+money(summary.expenseTotal)+'</td></tr><tr><th><b>अनुमानित नकद शेष*</b></th><td><b style="color:'+cashColor+'">'+money(calculatedCash)+'</b></td></tr></tbody></table></div><p class="notice">*यह हिसाब इस महीने की दर्ज entries पर आधारित है; इसमें पिछले महीने से आया opening cash शामिल नहीं है। असली cash गिनकर Handover form में दर्ज करें और अंतर Notes में लिखें। Mess Cutting meal records से अपने-आप जुड़ती है; Office में जमा रकम अलग से दर्ज करनी होगी।</p></section>'+
- '<section class="panel" style="margin-top:14px"><h4>📦 Balance Ration — item-wise closing stock</h4><div class="tablewrap"><table><thead><tr><th>राशन वस्तु</th><th>बची मात्रा</th><th>औसत दर</th><th>कुल मूल्य</th></tr></thead><tbody>'+(stockRows||'<tr><td colspan="4">Ration Store mein item nahi hai.</td></tr>')+'</tbody><tfoot><tr><th colspan="3">कुल Balance Ration की अनुमानित कीमत</th><th>'+money(stockValue)+'</th></tr></tfoot></table></div><p class="notice">मात्रा Ration Store के current stock से automatic आती है। Handover से पहले हर item का physical वजन / गिनती करें। Rate Store की current weighted-average rate है; यह अनुमानित मूल्य है।</p></section>'+
- '<section class="panel" style="margin-top:14px"><h4>🤝 Handover जिम्मेदारी</h4><div class="tablewrap"><table><tbody><tr><th>Outgoing Mess NCO</th><td>'+esc(nco?.name||"Mess Staff page par Mess NCO set karein")+'</td></tr><tr><th>Mess SO</th><td>'+esc(so?.name||"Mess Staff page par Mess SO set karein")+'</td></tr><tr><th>Incoming Mess NCO</th><td>Handover form mein select karein</td></tr><tr><th>Verification</th><td>Physical cash, ration, pending bills aur documents milayein</td></tr></tbody></table></div></section>'+
- '<h4>पिछले Handover रिकॉर्ड</h4><div class="tablewrap"><table><thead><tr><th>तारीख</th><th>महीना</th><th>राशन मूल्य</th><th>नकद दर्ज</th><th>Notes</th></tr></thead><tbody>'+(saved.length?saved.slice().reverse().map(x=>'<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(x.monthlySummary?.month||"—")+'</td><td>'+money((x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0))+'</td><td>'+money(x.cash||0)+'</td><td>'+esc(x.notes||"—")+'</td></tr>').join(""):'<tr><td colspan="5">अभी कोई Handover रिकॉर्ड नहीं है।</td></tr>')+'</tbody></table></div>'+
- '<p class="notice">PDF बनाने के लिए ऊपर “Handover PDF / Print” दबाएँ और Print विकल्प में “Save as PDF” चुनें। WhatsApp पर text summary भेजी जाएगी; PDF/photo को WhatsApp में अलग से attach करें।</p>';
+ '<h3>स्वचालित मेस हैंडओवर सारांश · '+esc(summary.month)+'</h3><section class="cards">'+stat("Office se mila",money(summary.officeReceived))+stat("Jawan Mess Cutting · auto",money(summary.cuttingCollected))+stat("कुल प्राप्त रकम",money(totalReceived))+stat("Office mein jama",money(summary.officeDeposited))+stat("Ration purchase",money(summary.purchaseTotal))+stat("Other expense",money(summary.expenseTotal))+stat("Balance Ration value",money(stockValue))+stat("हिसाब से बचा Cash",money(calculatedCash))+'</section>'+
+ '<section class="panel" style="margin-top:14px"><h4>💰 नकद का पूरा मिलान</h4><div class="tablewrap"><table><tbody><tr><th>Office se Mess NCO ko mila</th><td>'+money(summary.officeReceived)+'</td></tr><tr><th>Jawan Mess Cutting — automatic</th><td>+ '+money(summary.cuttingCollected)+'</td></tr><tr><th><b>कुल प्राप्त रकम</b></th><td><b>'+money(totalReceived)+'</b></td></tr><tr><th>Office mein Mess SO ko jama</th><td>− '+money(summary.officeDeposited)+'</td></tr><tr><th>Ration purchase bills</th><td>− '+money(summary.purchaseTotal)+'</td></tr><tr><th>Other / special / approved expense</th><td>− '+money(summary.expenseTotal)+'</td></tr><tr><th><b>हिसाब से बचा नकद</b></th><td><b style="color:'+cashColor+'">'+money(calculatedCash)+'</b></td></tr></tbody></table></div><p class="notice">Mess Cutting meal attendance se automatic calculate hoti hai. Office se liya aur office mein jama paisa Accounts mein manually enter karein. Purchase bills aur expenses minus hote hain. Opening cash / purana balance is monthly calculation mein shamil nahi hai; actual cash ginkar handover form mein likhein.</p></section>'+
+ '<section class="panel" style="margin-top:14px"><h4>📦 Balance Ration — item-wise closing stock</h4><div class="tablewrap"><table><thead><tr><th>राशन वस्तु</th><th>बची मात्रा</th><th>दर</th><th>कुल मूल्य</th></tr></thead><tbody>'+(stockRows||'<tr><td colspan="4">Ration Store mein item nahi hai.</td></tr>')+'</tbody><tfoot><tr><th colspan="3">कुल Balance Ration की अनुमानित कीमत</th><th>'+money(stockValue)+'</th></tr></tfoot></table></div><p class="notice">Quantity Ration Store ke current balance se automatic aati hai. Purchase add aur meal save hone par stock update hota hai. Handover se pehle har item ka physical weight / count verify karein. Value current weighted-average store rate se estimate hai.</p></section>'+
+ '<section class="panel" style="margin-top:14px"><h4>🤝 Handover जिम्मेदारी</h4><div class="tablewrap"><table><tbody><tr><th>Purana Mess NCO</th><td>'+esc(nco?.name||"Mess Staff page par Mess NCO set karein")+'</td></tr><tr><th>Naya Mess NCO</th><td>'+esc(latest?.to||"Handover form mein select karein")+'</td></tr><tr><th>Mess SO</th><td>'+esc(so?.name||"Mess Staff page par Mess SO set karein")+'</td></tr><tr><th>Physical verification</th><td>Cash, ration quantity/value, pending bills aur attached documents milayein</td></tr></tbody></table></div></section>'+
+ '<h4>पिछले Handover रिकॉर्ड</h4><div class="tablewrap"><table><thead><tr><th>तारीख</th><th>महीना</th><th>राशन मूल्य</th><th>नकद दर्ज</th><th>Notes</th></tr></thead><tbody>'+(saved.length?saved.slice().reverse().map(x=>'<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(x.monthlySummary?.month||"—")+'</td><td>'+money(x.stockTotalValue??(x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0))+'</td><td>'+money(x.cash||0)+'</td><td>'+esc(x.notes||"—")+'</td></tr>').join(""):'<tr><td colspan="5">अभी कोई Handover रिकॉर्ड नहीं है।</td></tr>')+'</tbody></table></div>'+
+ '<p class="notice">PDF ke liye “Handover PDF / Print” dabayein aur Print menu mein “Save as PDF” chunein. WhatsApp se text summary naye Mess NCO ko bhejein. Document/PDF alag se attach kar sakte hain.</p>';
 }
 /* Mobile app-style sidebar toggle */
 (function initMobileNavigation(){
