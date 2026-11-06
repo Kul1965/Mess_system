@@ -105,6 +105,17 @@ function updatePreview(){
   updatePreview();renderRecords();
   alert("Meal save ho gaya! "+ids.length+" members ka ration deduct hua aur "+money(totalCost)+" ka charge per meal total add hua.");
  };
+ function sendCookRation(){
+  const d=read(),ids=checkedIds(),chosen=selectedRecipes(),recipes=(d.recipes||[]).filter(r=>chosen.includes(r.id));
+  if(!recipes.length){alert("Pehle dishes / recipes select karein.");return}
+  if(!ids.length){alert("Pehle khana khane wale members select karein.");return}
+  const phone=String($("cookWhatsApp").value||"").replace(/[^0-9]/g,"");
+  if(!phone){alert("Cook ka WhatsApp number country code ke saath dalein.");return}
+  const lines=aggregate(recipes,d).map(i=>i.itemName+": "+(i.perServing*ids.length)+" "+i.unit);
+  const message=["CRPF MESS — RATION LIST","Date: "+$("mealDate").value,"Meal: "+$("mealType").value,"Dishes: "+recipes.map(r=>r.name).join(" + "),"Members: "+ids.length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\n");
+  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank","noopener");
+ }
+ $("sendCookRation").addEventListener("click",sendCookRation);
  $("mealMemberSearch").addEventListener("input",renderMembers);
  $("mealMemberList").addEventListener("change",updatePreview);
  $("mealRecipeList").addEventListener("change",updatePreview);
