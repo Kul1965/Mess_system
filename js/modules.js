@@ -34,7 +34,7 @@ const configs={
  accounts:{title:"Accounts",sub:"Office se paisa lena aur jama karna; Mess Cutting automatic calculate hoti hai",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"office_received|office_deposited|expense|special_expense|surplus_spend"],["fromStaff","Mess SO","staff"],["toStaff","Mess NCO","staff"],["description","Details / purpose","text",1],["amount","Amount (Rs)","number",1],["approvedBy","Approval / receipt reference (Surplus spend: required)","text"],["document","Bill photo / Application document","file"]],cols:["date","type","messNcoName","messSoName","description","amount","document"]},
  staff:{title:"Mess Staff",sub:"Select an existing member and assign mess duty",key:"staff",fields:[["memberId","Choose Member","member",1],["duty","Assign Duty","select",1,"Mess Commander|Mess NCO|Mess SO|Cook|Member"],["dutyDate","Duty Start Date","date",1]],cols:["name","rank","duty","dutyDate","phone","status"]},
  reports:{title:"Reports & Records",sub:"View summaries from saved mess records",key:"reports",fields:[],cols:[]},
- handover:{title:"Mess Handover",sub:"Record monthly mess commander handover",key:"handovers",fields:[["date","Handover date","date",1],["from","Outgoing commander","staff",1],["to","Incoming commander","staff",1],["cash","Cash balance (Rs)","number"],["notes","Stock / account notes","text"]],cols:["date","from","to","cash","notes"]},
+ handover:{title:"Mess Handover",sub:"Purane Mess NCO se naye Mess NCO ko ration, cash aur pending records ka handover",key:"handovers",fields:[["date","Handover date","date",1],["from","Purana Mess NCO","staff",1],["to","Naya Mess NCO","staff",1],["cash","Asal ginā hua cash (Rs)","number"],["notes","Ration antar / pending bill / anya notes","text"]],cols:["date","from","to","cash","notes"]},
  settings:{title:"Settings",sub:"Mess identity and local preferences",key:"settings",fields:[["messName","Mess name","text",1],["currency","Currency label","text",1]],cols:[]}
 };
 let cfg=configs[document.body.dataset.module]||configs.store;
@@ -261,7 +261,7 @@ async function saveCurrentRecord(event){
   }
  }
  if(cfg.key==="settings"){saveSettings();return}
- if(cfg.key==="transactions"&&["office_received","office_deposited"].includes(values.type)){
+ if(cfg.key==="handovers"){const validNco=name=>(data.staff||[]).some(x=>(x.status||"Active")==="Active"&&String(x.name)===String(name)&&String(x.duty||"").trim().toLowerCase()==="mess nco");if(!validNco(values.from)||!validNco(values.to)){showAppAlert("Purana aur naya dono Mess NCO ko Mess Staff page par active Mess NCO set karein.");return}if(String(values.from)===String(values.to)){showAppAlert("Purana aur naya Mess NCO alag select karein.");return}}\n if(cfg.key==="transactions"&&["office_received","office_deposited"].includes(values.type)){
   const fromRole=values.type==="office_received"?"Mess SO":"Mess NCO",toRole=values.type==="office_received"?"Mess NCO":"Mess SO";
   const valid=(name,role)=>(data.staff||[]).some(x=>(x.status||"Active")==="Active"&&String(x.name)===String(name)&&String(x.duty||"").trim().toLowerCase()===role.toLowerCase());
   if(!valid(values.fromStaff,fromRole)||!valid(values.toStaff,toRole)){showAppAlert("Mess Staff page par active Mess NCO aur Mess SO set karein. Lene: SO se NCO. Jama: NCO se SO.");return}
