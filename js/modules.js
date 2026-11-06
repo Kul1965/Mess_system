@@ -512,7 +512,7 @@ function renderAccountOverview(list){
  const expenseRows=otherExpenses.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(t=>'<tr><td>'+esc(t.date||"—")+'</td><td>'+esc(t.description||t.details||"—")+'</td><td>'+money(t.amount)+'</td></tr>').join("");
  const combinedTotal=purchaseTotal+totalMemberAdvance;
  const cashGap=Math.max(0,-cashBalance);
- box.innerHTML='<section class="cards">'+stat("Ration Purchased (Bills)",money(purchaseTotal))+stat("Member Mess Advance",money(totalMemberAdvance))+stat("Ration + Advance (Total)",money(combinedTotal))+stat("Cash Short / Extra",money(cashGap))+stat("Meal Charges Recorded",money(mealTotal))+stat("Purchase Entries",purchases.length)+'</section>'+
+ box.innerHTML='<section class="cards">'+stat("Ration Purchased (Bills)",money(purchaseTotal))+stat("Member Mess Advance",money(totalMemberAdvance))+stat("Ration + Advance (Total)",money(combinedTotal))+stat("Mess NCO ko dene wala balance",money(cashGap))+stat("Meal Charges Recorded",money(mealTotal))+stat("Purchase Entries",purchases.length)+'</section>'+
  '<section class="panel" style="margin-top:14px"><h3>🧮 Mess ka seedha hisaab</h3><div class="tablewrap"><table><tbody>'+
  '<tr><th>Ration kharida (Purchase Bills)</th><td>'+money(purchaseTotal)+'</td></tr>'+
  '<tr><th>Members ka Mess Advance</th><td>'+money(totalMemberAdvance)+'</td></tr>'+
@@ -547,7 +547,14 @@ function renderHandoverOverview(){
  let box=document.getElementById("handoverAuto");
  if(!box){box=document.createElement("section");box.id="handoverAuto";box.className="panel handover-auto";document.getElementById("tablePanel").before(box);}
  const saved=(data.handovers||[]).filter(x=>x.monthlySummary);
- box.innerHTML='<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div>'+
+ const members=Array.isArray(data.members)?data.members:[];
+ const purchases=Array.isArray(data.purchases)?data.purchases:[];
+ const memberAdvance=members.reduce((s,m)=>s+Number(m.advance||0),0);
+ const rationBills=purchases.reduce((s,p)=>s+Number(p.total??(Number(p.quantity||0)*Number(p.rate||0))),0);
+ const ncoBalance=rationBills-memberAdvance;
+ const ncoColor=ncoBalance>=0?"#f2c94c":"#b9f5cf";
+ box.innerHTML='<section class="panel" style="border:2px solid #d6a62a;background:#103b2b;margin-bottom:16px;padding:18px"><h3 style="color:#f2c94c;margin-top:0">⭐ MESS NCO KO DENE WALA HANDOVER BALANCE</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><small>Mess ke liye ration kharida</small><h2>'+money(rationBills)+'</h2></div><div><small>Members se Mess Advance mila</small><h2>'+money(memberAdvance)+'</h2></div></div><hr style="border-color:#d6a62a"><small>Ration bill − Mess Advance = NCO ko dene wala balance</small><h1 style="font-size:32px;color:'+ncoColor+';margin:8px 0">'+money(ncoBalance)+'</h1><b style="color:#fff">Yeh rakam Mess NCO ko handover mein deni / settle karni hai.</b></section>'+
+ '<h3>Automatic Mess Handover Summary</h3><div class="cards">'+stat("Active Mess Staff",staff.length)+stat("Ration Items",ration.length)+stat("Available Cash (ledger)",money(cash))+stat("Transactions",tx.length)+'</div>'+
  '<h4>Monthly Mess Summary · '+esc(summary.month)+'</h4><div class="cards">'+
  stat("Monthly Mess Limit ("+summary.activeMembers+" × "+money(summary.limitPerMember)+")",money(summary.monthlyLimit))+
  stat("Payment Received",money(summary.paymentReceived))+
