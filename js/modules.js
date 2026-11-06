@@ -31,7 +31,7 @@ const configs={
  purchases:{title:"Purchases",sub:"Record purchases and automatically update stock",key:"purchases",fields:[["date","Purchase date","date",1],["itemId","Store item","item",1],["quantity","Quantity purchased","number",1],["unit","Purchase unit","select",1,"kg|g|ltr|ml|pcs"],["rate","Rate per purchase unit (Rs)","number",1],["vendor","Supplier","text"],["bill","Bill / reference","text"]],cols:["date","itemName","quantity","unit","rate","total","vendor"]},
  recipes:{title:"Recipes",sub:"Add ration ingredients; cost is calculated from current store rates",key:"recipes",fields:[["name","Recipe name","text",1],["notes","Notes","text"]],cols:["name","ingredientSummary","totalCost","costPerServing"]},
  menu:{title:"Making Menu",sub:"Select a meal and recipe; recipe cost is calculated automatically",key:"menu",fields:[["date","Menu date","date",1],["recipeId","Select recipe","recipe",1],["servings","Number of members / servings","number",1]],cols:["date","recipeName","servings","totalCost"]},
- accounts:{title:"Accounts",sub:"Office se paisa lena aur jama karna; Mess Cutting automatic calculate hoti hai",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"office_received|office_deposited|expense|special_expense|surplus_spend"],["fromStaff","Mess SO","staff"],["toStaff","Mess NCO","staff"],["description","Details / purpose","text",1],["amount","Amount (Rs)","number",1],["approvedBy","Approval / receipt reference (Surplus spend: required)","text"],["document","Bill photo / Application document","file"]],cols:["date","type","messNcoName","messSoName","description","amount"]},
+ accounts:{title:"Accounts",sub:"Office se paisa lena aur jama karna; Mess Cutting automatic calculate hoti hai",key:"transactions",fields:[["date","Date","date",1],["type","Transaction type","select",1,"office_received|office_deposited|expense|special_expense|surplus_spend"],["fromStaff","Mess SO","staff"],["toStaff","Mess NCO","staff"],["description","Details / purpose","text",1],["amount","Amount (Rs)","number",1],["approvedBy","Approval / receipt reference (Surplus spend: required)","text"],["document","Bill photo / Application document","file"]],cols:["date","type","messNcoName","messSoName","description","amount","document"]},
  staff:{title:"Mess Staff",sub:"Select an existing member and assign mess duty",key:"staff",fields:[["memberId","Choose Member","member",1],["duty","Assign Duty","select",1,"Mess Commander|Mess NCO|Mess SO|Cook|Member"],["dutyDate","Duty Start Date","date",1]],cols:["name","rank","duty","dutyDate","phone","status"]},
  reports:{title:"Reports & Records",sub:"View summaries from saved mess records",key:"reports",fields:[],cols:[]},
  handover:{title:"Mess Handover",sub:"Record monthly mess commander handover",key:"handovers",fields:[["date","Handover date","date",1],["from","Outgoing commander","staff",1],["to","Incoming commander","staff",1],["cash","Cash balance (Rs)","number"],["notes","Stock / account notes","text"]],cols:["date","from","to","cash","notes"]},
@@ -242,14 +242,24 @@ function migrateRateUnits(){
  try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){console.error("Rate migration could not be saved",e);}
  if(typeof refreshAllRecipeCosts==="function")refreshAllRecipeCosts();
 }
-async function saveCurrentRecord(event){
+async async function saveCurrentRecord(event){
  event.preventDefault();
  const values={};
- cfg.fields.forEach(field=>{
+ for(const field of cfg.fields){
   const id=field[0],el=document.getElementById("f_"+id);
-  if(el&&el.type==="file"){const file=el.files&&el.files[0];if(file){if(file.size>2*1024*1024){showAppAlert("Document 2 MB se chhota rakhein.");return;}if(!(/^image\//.test(file.type)||file.type==="application/pdf")){showAppAlert("Sirf bill photo ya PDF document upload karein.");return;}values[id]=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,data:reader.result});reader.onerror=reject;reader.readAsDataURL(file);});}}
-  else if(el)values[id]=el.type==="number"?Number(el.value||0):el.value.trim();
- });
+  if(!el)continue;
+  if(el.type==="file"){
+   const file=el.files&&el.files[0];
+   if(file){
+    if(file.size>2*1024*1024){showAppAlert("Document 2 MB se chhota rakhein.");return;}
+    if(!(/^image\\//.test(file.type)||file.type==="application/pdf")){showAppAlert("Sirf bill photo ya PDF document upload karein.");return;}
+    try{values[id]=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,data:reader.result});reader.onerror=reject;reader.readAsDataURL(file);});}
+    catch(error){showAppAlert("Document read nahi ho paya. Dobara try karein.");return;}
+   }
+  }else{
+   values[id]=el.type==="number"?Number(el.value||0):el.value.trim();
+  }
+ }
  if(cfg.key==="settings"){saveSettings();return}
  if(cfg.key==="transactions"&&["office_received","office_deposited"].includes(values.type)){
   const fromRole=values.type==="office_received"?"Mess SO":"Mess NCO",toRole=values.type==="office_received"?"Mess NCO":"Mess SO";
