@@ -221,7 +221,7 @@ td.no-print{white-space:nowrap}
     <thead><tr>
      <th>Photo</th><th>Force No.</th><th>Member Name</th>
      <th>Rank</th><th>Contact</th><th>Joining Date</th>
-     <th>Mess Advance</th><th>Status</th><th class="no-print">Actions</th>
+     <th>Status</th><th class="no-print">Actions</th>
     </tr></thead>
     <tbody id="memberRows"></tbody>
    </table>
@@ -269,10 +269,7 @@ td.no-print{white-space:nowrap}
      <label>Joining Date *</label>
      <input id="joiningDate" type="date" required>
     </div>
-    <div class="field">
-     <label>Mess Advance (₹)</label>
-     <input id="advance" type="number" min="0" step="0.01" value="0">
-    </div>
+    
     <div class="field">
      <label>Status</label>
      <select id="status"><option>Active</option><option>Inactive</option><option>Transferred</option><option>Leave</option></select>
@@ -343,7 +340,7 @@ td.no-print{white-space:nowrap}
    <div id="paymentMemberStatus" class="status" style="display:inline-block;margin-bottom:10px">Active</div>
    <div class="payment-summary">
     <div><small>Total Meal Bill</small><strong id="paymentBillTotal">₹0</strong></div>
-    <div><small>Already Paid / Advance</small><strong id="paymentAlreadyPaid">₹0</strong></div>
+    <div><small>Already Mess Cutting Paid</small><strong id="paymentAlreadyPaid">₹0</strong></div>
     <div><small>Balance Due</small><strong id="paymentBalanceDue">₹0</strong></div>
     <div><small>Payment Status</small><strong id="paymentBillStatus">Not Paid</strong></div>
    </div>
@@ -413,6 +410,10 @@ function money(v){
 }
 function refresh(){
  const data=getData();
+ let cleaned=false;
+ (data.members||[]).forEach(x=>{if(Object.prototype.hasOwnProperty.call(x,"advance")){delete x.advance;cleaned=true;}});
+ if(Array.isArray(data.transactions)){const before=data.transactions.length;data.transactions=data.transactions.filter(x=>String(x.type||"").toLowerCase()!=="advance");if(data.transactions.length!==before)cleaned=true;}
+ if(cleaned)saveData(data);
  members=Array.isArray(data.members)?data.members:[];
  render();
 }
@@ -447,7 +448,6 @@ function setMemberFilter(status){
   <td>${esc(m.rank)}</td>
   <td>${esc(m.contact)}</td>
   <td>${esc(m.joiningDate)}</td>
-  <td>${money(m.advance)}</td>
   <td><span class="status ${(m.status||"Active")==="Inactive"?"inactive":""}">${esc(m.status||"Active")}</span></td>
   <td class="no-print"><div class="actions">
    <button class="secondary" onclick="viewMember('${m.id}')">View</button>
@@ -459,12 +459,12 @@ function setMemberFilter(status){
 function openForm(id=null){
  editingId=id;
  document.getElementById("memberForm").reset();
- document.getElementById("advance").value=0;
+ 
  document.getElementById("formTitle").textContent=id?"Edit Member":"Add New Member";
  if(id){
   const m=members.find(x=>x.id===id);
   if(!m)return;
-  ["forceNo","name","rank","contact","joiningDate","advance","status","remarks"]
+  ["forceNo","name","rank","contact","joiningDate","status","remarks"]
    .forEach(k=>document.getElementById(k).value=m[k]??"");
  }
  document.getElementById("formModal").style.display="block";
@@ -516,7 +516,6 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
    rank:document.getElementById("rank").value,
    contact:document.getElementById("contact").value.trim(),
    joiningDate:document.getElementById("joiningDate").value,
-   advance:Number(document.getElementById("advance").value||0),
    status:document.getElementById("status").value,
     transferLocation:old?.transferLocation||"",
    transferDate:old?.transferDate||"",
@@ -572,7 +571,7 @@ function viewMember(id){
  const records=(data.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(id)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
  const tx=(data.transactions||[]).filter(t=>t.memberId===id);
  const mealTotal=records.reduce((s,r)=>s+Number(r.chargePerMember||0),0);
- const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((s,t)=>s+Number(t.amount||0),0);
+ const paid=tx.filter(t=>t.type==="collection"||t.type==="cutting_collected").reduce((s,t)=>s+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
  const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.ingredientUsage||[]).map(i=>esc(i.itemName)+': '+esc(i.quantity)+' '+esc(i.unit)).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
  document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
@@ -580,7 +579,7 @@ function viewMember(id){
  '<h3 class="view-heading">Transfer History</h3>'+(Array.isArray(m.transferHistory)&&m.transferHistory.length?m.transferHistory.map(h=>'<div class="meal-entry">'+esc(h.date)+' · '+esc(h.location||"Location not entered")+'</div>').join(""):'<p>No transfer history recorded.</p>')+
  '<h3 class="view-heading">Leave / Chhutti Details</h3><div class="meal-entry"><b>Status:</b> '+(m.status==="Leave"?"On Leave":"Not on Leave")+'<br><b>From:</b> '+esc(m.leaveFrom||"—")+'<br><b>Return Date:</b> '+esc(m.leaveTo||"—")+'<br><b>Reason:</b> '+esc(m.leaveReason||"—")+'</div>'+
  '<h3 class="view-heading">Leave History</h3>'+(Array.isArray(m.leaveHistory)&&m.leaveHistory.length?m.leaveHistory.map(h=>'<div class="meal-entry"><b>'+esc(h.from||"—")+' to '+esc(h.to||"—")+'</b><br>'+esc(h.reason||"No reason entered")+'<br><small>Saved: '+esc(h.savedDate||"")+' · '+esc(h.status||"Leave")+'</small>'+(h.returnedDate?'<br><small>Returned: '+esc(h.returnedDate)+'</small>':'')+'</div>').join(""):'<p>No leave history recorded.</p>')+
- '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Paid / Advance</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
+ '<h3 class="view-heading">Account Summary</h3><div class="account-grid"><div><small>Total Meal Charge</small><strong>'+money(mealTotal)+'</strong></div><div><small>Total Mess Cutting Paid</small><strong>'+money(paid)+'</strong></div><div><small>Remaining Due</small><strong>'+money(due)+'</strong></div><div><small>Credit Balance</small><strong>'+money(credit)+'</strong></div></div>'+
  '<h3 class="view-heading">Meal History – Kya Kya Khaya</h3>'+history+
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
@@ -634,7 +633,7 @@ function memberBillSummary(memberId){
  const meals=(d.mealRecords||[]).filter(r=>(r.memberIds||[]).map(String).includes(String(memberId)));
  const mealTotal=meals.reduce((s,r)=>s+Number(r.chargePerMember||0),0);
  const tx=(d.transactions||[]).filter(t=>String(t.memberId)===String(memberId));
- const collections=tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((s,t)=>s+Number(t.amount||0),0);
+ const collections=tx.filter(t=>t.type==="collection"||t.type==="cutting_collected").reduce((s,t)=>s+Number(t.amount||0),0);
  const paid=Number(m.advance||0)+collections;
  const due=Math.max(0,mealTotal-paid);
  return {total:mealTotal,paid,due,status:due<=0?"Paid":paid>0?"Part Paid":"Not Paid",transactions:tx};
@@ -649,7 +648,7 @@ function openPayment(){
  document.getElementById("paymentAlreadyPaid").textContent=money(b.paid);
  document.getElementById("paymentBalanceDue").textContent=money(b.due);
  document.getElementById("paymentBillStatus").textContent=b.status;
- document.getElementById("paymentAutoDetails").innerHTML="<b>Member Status:</b> "+esc(m.status||"Active")+(m.transferLocation?" · "+esc(m.transferLocation):"")+(m.transferDate?" · "+esc(m.transferDate):"")+"<h4 style=\"margin:12px 0 6px;color:var(--yellow)\">Payment History</h4>"+(b.transactions.filter(t=>t.type==="collection"||t.type==="advance").length?b.transactions.filter(t=>t.type==="collection"||t.type==="advance").map(t=>"<div style=\"padding:7px 0;border-bottom:1px solid #287b52\">"+esc(t.date)+" · "+money(t.amount)+"<br><small>"+esc(t.description||"Payment")+"</small></div>").join(""):"No payment record yet.");
+ document.getElementById("paymentAutoDetails").innerHTML="<b>Member Status:</b> "+esc(m.status||"Active")+(m.transferLocation?" · "+esc(m.transferLocation):"")+(m.transferDate?" · "+esc(m.transferDate):"")+"<h4 style=\"margin:12px 0 6px;color:var(--yellow)\">Payment History</h4>"+(b.transactions.filter(t=>t.type==="collection"||t.type==="cutting_collected").length?b.transactions.filter(t=>t.type==="collection"||t.type==="cutting_collected").map(t=>"<div style=\"padding:7px 0;border-bottom:1px solid #287b52\">"+esc(t.date)+" · "+money(t.amount)+"<br><small>"+esc(t.description||"Payment")+"</small></div>").join(""):"No payment record yet.");
  const btn=document.getElementById("receivePaymentBtn");
  btn.disabled=b.due<=0;
  btn.textContent=b.due>0?"💰 Receive Full Due":"✓ No Balance Due";
@@ -663,7 +662,7 @@ function receivePayment(){
  const amount=Number(document.getElementById("paymentAmount").value);
  if(!Number.isFinite(amount)||amount<=0){showToast("Payment amount 0 se zyada dalein.","warning");return}
  const d=getData();d.transactions=Array.isArray(d.transactions)?d.transactions:[];
- d.transactions.push({id:"T"+Date.now(),date:new Date().toISOString().slice(0,10),type:"collection",memberId:m.id,memberName:m.name,description:"Member payment received",amount});
+ d.transactions.push({id:"T"+Date.now(),date:new Date().toISOString().slice(0,10),type:"cutting_collected",memberId:m.id,memberName:m.name,description:"Member payment received",amount});
  try{saveData(d)}catch(e){showToast("Payment save nahi hua. Dobara try karein.","error");return}
  document.getElementById("paymentAmount").value="";
  refresh();
@@ -678,13 +677,13 @@ function whatsAppMember(){
  const records=(data.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(m.id));
  const tx=(data.transactions||[]).filter(t=>t.memberId===m.id);
  const mealTotal=records.reduce((sum,r)=>sum+Number(r.chargePerMember||0),0);
- const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((sum,t)=>sum+Number(t.amount||0),0);
+ const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="cutting_collected").reduce((sum,t)=>sum+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
- const status=due>0?"UNPAID / DUE":credit>0?"ADVANCE / CREDIT":"PAID";
+ const status=due>0?"UNPAID / DUE":credit>0?"CREDIT":"PAID";
  const finalBill=Number(m.finalBillAmount||0);
  const finalBillStatus=m.finalBillPaid||"Not Paid";
  const transferText=m.status==="Transferred"?(m.transferLocation||"Location not entered")+" on "+(m.transferDate||"date not entered"):"Not transferred";
- const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Paid / Advance: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\nTransfer: "+transferText+"\\nFinal Mess Bill: "+money(finalBill)+"\\nFinal Bill Status: "+finalBillStatus+"\\n\\nDhanyavaad.";
+ const msg="Namaste "+m.name+" ji,\\nCRPF Mess Account Statement\\nTotal Meal Charge: "+money(mealTotal)+"\\nTotal Mess Cutting Paid: "+money(paid)+"\\nUnpaid Due: "+money(due)+"\\nCredit Balance: "+money(credit)+"\\nStatus: "+status+"\\nTransfer: "+transferText+"\\nFinal Mess Bill: "+money(finalBill)+"\\nFinal Bill Status: "+finalBillStatus+"\\n\\nDhanyavaad.";
  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(msg),"_blank");
 }
 function closeView(){document.getElementById("viewModal").style.display="none"}
@@ -700,12 +699,12 @@ function printMember(){
  const d=getData(),records=(d.mealRecords||[]).filter(r=>(r.memberIds||[]).includes(m.id)).sort((a,b)=>(a.date||"").localeCompare(b.date||""));
  const tx=(d.transactions||[]).filter(t=>t.memberId===m.id);
  const total=records.reduce((n,r)=>n+Number(r.chargePerMember||0),0);
- const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="advance").reduce((n,t)=>n+Number(t.amount||0),0);
+ const paid=Number(m.advance||0)+tx.filter(t=>t.type==="collection"||t.type==="cutting_collected").reduce((n,t)=>n+Number(t.amount||0),0);
  const w=window.open("","_blank");if(!w){showToast("Please allow pop-ups to print the member statement.");return}
  const photoHtml=m.photo?'<div class="member-photo"><img src="'+m.photo+'" alt="Member photo"></div>':'';
  const mealRows=records.map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</td><td>'+esc((r.ingredientUsage||[]).map(i=>i.itemName+': '+i.quantity+' '+i.unit).join(', '))+'</td><td>'+money(r.chargePerMember)+'</td></tr>').join("");
  const payRows=tx.map(t=>'<tr><td>'+esc(t.date)+'</td><td>'+esc(t.type)+'</td><td>'+esc(t.description)+'</td><td>'+money(t.amount)+'</td></tr>').join("");
- w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}.member-photo{text-align:center;margin:12px 0}.member-photo img{width:115px;height:115px;object-fit:cover;border:1px solid #999;border-radius:8px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3>'+photoHtml+'<p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Paid / advance<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Recipe</th><th>Ration consumed</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p></body></html>');
+ w.document.write('<!doctype html><html><head><title>Member Statement</title><style>body{font:14px Arial;padding:28px;color:#222}h2,h3{text-align:center}.member-photo{text-align:center;margin:12px 0}.member-photo img{width:115px;height:115px;object-fit:cover;border:1px solid #999;border-radius:8px}table{width:100%;border-collapse:collapse;margin:12px 0}th,td{border:1px solid #bbb;padding:8px;text-align:left} .summary{display:flex;gap:18px;flex-wrap:wrap;margin:16px 0}.summary div{border:1px solid #aaa;padding:10px;flex:1}small{color:#555}</style></head><body><h2>CRPF MESS – COOKING HOUSE</h2><h3>Individual Member Meal & Account Statement</h3>'+photoHtml+'<p><b>Name:</b> '+esc(m.name)+' &nbsp; <b>Force No:</b> '+esc(m.forceNo)+' &nbsp; <b>Rank:</b> '+esc(m.rank)+'</p><div class="summary"><div>Total meal charges<br><b>'+money(total)+'</b></div><div>Mess Cutting paid<br><b>'+money(paid)+'</b></div><div>Balance due<br><b>'+money(Math.max(0,total-paid))+'</b></div></div><h3>Meal Details – What Member Ate</h3><table><tr><th>Date</th><th>Recipe</th><th>Ration consumed</th><th>Charge</th></tr>'+mealRows+'</table><h3>Payment History</h3><table><tr><th>Date</th><th>Type</th><th>Details</th><th>Amount</th></tr>'+payRows+'</table><p>Generated: '+esc(new Date().toLocaleString())+'</p></body></html>');
  w.document.close();
  w.focus();
  w.print();
