@@ -252,7 +252,7 @@ async function saveCurrentRecord(event){
    const file=el.files&&el.files[0];
    if(file){
     if(file.size>2*1024*1024){showAppAlert("Document 2 MB se chhota rakhein.");return;}
-    if(!(/^image\\//.test(file.type)||file.type==="application/pdf")){showAppAlert("Sirf bill photo ya PDF document upload karein.");return;}
+    if(!(String(file.type||"").startsWith("image/")||file.type==="application/pdf")){showAppAlert("Sirf bill photo ya PDF document upload karein.");return;}
     try{values[id]=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,data:reader.result});reader.onerror=reject;reader.readAsDataURL(file);});}
     catch(error){showAppAlert("Document read nahi ho paya. Dobara try karein.");return;}
    }
