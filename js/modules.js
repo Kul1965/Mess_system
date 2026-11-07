@@ -69,8 +69,31 @@ function isLowStock(x){
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function money(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2})}
+async function compressUploadImage(file){
+ const maxBytes=1800*1024;
+ const dataUrl=await new Promise((resolve,reject)=>{
+  const reader=new FileReader();reader.onerror=()=>reject(new Error("Photo read nahi ho payi."));
+  reader.onload=()=>{
+   const img=new Image();img.onerror=()=>reject(new Error("Photo open nahi ho payi."));
+   img.onload=()=>{
+    let maxSide=1800,quality=0.84;const canvas=document.createElement("canvas");
+    const encode=()=>{
+     const scale=Math.min(1,maxSide/Math.max(img.width,img.height));
+     canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+     const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+     const data=canvas.toDataURL("image/jpeg",quality),bytes=Math.ceil((data.length-data.indexOf(",")-1)*0.75);
+     if(bytes>maxBytes&&(quality>0.5||maxSide>480)){if(quality>0.5)quality=Math.max(0.5,quality-0.1);else maxSide=Math.max(480,Math.round(maxSide*0.8));encode();return}
+     if(bytes>maxBytes){reject(new Error("Photo compress karne ke baad bhi 1.8 MB se badi hai."));return}
+     resolve(data);
+    };encode();
+   };img.src=reader.result;
+  };reader.readAsDataURL(file);
+ });
+ const baseName=(file.name||"upload").split(".").slice(0,-1).join(".")||"upload";
+ return {name:baseName+".jpg",type:"image/jpeg",data:dataUrl,originalSize:file.size,compressedSize:Math.ceil((dataUrl.length-dataUrl.indexOf(",")-1)*0.75)};
+}
 function options(f){if(f[2]==="staff")return '<option value="">Select staff</option>'+((data.staff||[]).filter(x=>(x.status||"Active")==="Active"&&["mess nco","mess so"].includes(String(x.duty||"").trim().toLowerCase())).map(x=>'<option value="'+esc(x.name)+'">'+esc(x.name)+' — '+esc(x.duty)+'</option>').join(""));if(f[2]==="item")return '<option value="">Choose item</option>'+((data.ration||[]).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join(""));if(f[2]==="member")return '<option value="">Choose member</option>'+((data.members||[]).filter(x=>String(x.status||"Active").toLowerCase()==="active").map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' — '+esc(x.rank||"")+(x.forceNumber?" ("+esc(x.forceNumber)+")":"")+'</option>').join(""));if(f[2]==="recipe"){let recipes=data.recipes||[];return '<option value="">Choose recipe</option>'+recipes.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+' ('+money(x.costPerServing)+'/serving)</option>').join("")}const labels={office_received:"Office se liya gaya paisa",cutting_collected:"Jawan se Mess Cutting mili",office_deposited:"Office mein paisa jama",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};return f[4].split("|").map(x=>'<option value="'+esc(x)+'">'+esc(labels[x]||x)+'</option>').join("")}
-function input(f,v=""){let [id,label,type,required]=f;let html=type==="select"||type==="item"||type==="member"||type==="recipe"||type==="staff"?'<select id="f_'+id+'" '+(required?"required":"")+'>'+options(f)+'</select>':type==="file"?'<input id="f_'+id+'" type="file" accept="image/*,.pdf" '+(required?"required":"")+'><small class="muted">Bill photo ya application PDF/JPG/PNG (max 2 MB)</small>':'<input id="f_'+id+'" type="'+type+'" value="'+esc(v)+'" '+(required?"required":"")+' '+(type==="number"?'min="0" step="any"':"")+'>';return '<div class="field"><label>'+label+(required?" *":"")+'</label>'+html+'</div>'}
+function input(f,v=""){let [id,label,type,required]=f;let html=type==="select"||type==="item"||type==="member"||type==="recipe"||type==="staff"?'<select id="f_'+id+'" '+(required?"required":"")+'>'+options(f)+'</select>':type==="file"?'<input id="f_'+id+'" type="file" accept="image/*,.pdf" '+(required?"required":"")+'><small class="muted">Photo automatic compress hokar 1.8 MB se chhoti save hogi; PDF max 2 MB</small>':'<input id="f_'+id+'" type="'+type+'" value="'+esc(v)+'" '+(required?"required":"")+' '+(type==="number"?'min="0" step="any"':"")+'>';return '<div class="field"><label>'+label+(required?" *":"")+'</label>'+html+'</div>'}
 function renderSettings(){
  const s=data.settings&&typeof data.settings==="object"?data.settings:{};
  const panel=document.getElementById("tablePanel"),stats=document.getElementById("stats");
@@ -251,10 +274,16 @@ async function saveCurrentRecord(event){
   if(el.type==="file"){
    const file=el.files&&el.files[0];
    if(file){
-    if(file.size>2*1024*1024){showAppAlert("Document 2 MB se chhota rakhein.");return;}
     if(!(String(file.type||"").startsWith("image/")||file.type==="application/pdf")){showAppAlert("Sirf bill photo ya PDF document upload karein.");return;}
-    try{values[id]=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,data:reader.result});reader.onerror=reject;reader.readAsDataURL(file);});}
-    catch(error){showAppAlert("Document read nahi ho paya. Dobara try karein.");return;}
+    try{
+     if(String(file.type||"").startsWith("image/")){
+      values[id]=await compressUploadImage(file);
+      showAppAlert("Photo automatically compress hokar "+(values[id].compressedSize/1024).toFixed(0)+" KB save hogi.");
+     }else{
+      if(file.size>2*1024*1024){showAppAlert("PDF 2 MB se chhoti honi chahiye. Photo upload karenge to automatic compress ho jayegi.");return;}
+      values[id]=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,type:file.type,data:reader.result});reader.onerror=reject;reader.readAsDataURL(file);});
+     }
+    }catch(error){showAppAlert(error.message||"Document read nahi ho paya. Dobara try karein.");return;}
    }
   }else{
    values[id]=el.type==="number"?Number(el.value||0):el.value.trim();
