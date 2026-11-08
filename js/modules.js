@@ -146,14 +146,73 @@ function openDocumentPreview(id){
  const old=document.getElementById("documentPreviewModal");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="documentPreviewModal";
  wrap.style.cssText="position:fixed;inset:0;z-index:10050;background:#101714;display:flex;flex-direction:column;width:100%;height:100%;height:100dvh;overflow:hidden";
- const header=document.createElement("div");header.style.cssText="height:54px;min-height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#176747;color:#fff;gap:10px";
- const title=document.createElement("strong");title.textContent=doc.name||"Purchase Bill";
- const close=document.createElement("button");close.type="button";close.textContent="✕ Close";close.style.cssText="background:#fff;color:#176747;border:0;border-radius:8px;padding:9px 13px;font-weight:700";close.onclick=()=>wrap.remove();
+ const header=document.createElement("div");header.style.cssText="min-height:54px;display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#176747;color:#fff;gap:8px;flex:0 0 auto";
+ const title=document.createElement("strong");title.textContent=doc.name||"Purchase Bill";title.style.cssText="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px";
+ const close=document.createElement("button");close.type="button";close.textContent="✕ Close";close.style.cssText="background:#fff;color:#176747;border:0;border-radius:8px;padding:9px 12px;font-weight:700;flex:0 0 auto";close.onclick=()=>wrap.remove();
  header.append(title,close);wrap.appendChild(header);
  if(String(doc.type||"").startsWith("image/")){
-  const img=document.createElement("img");img.src=doc.data;img.alt=doc.name||"Purchase bill";img.style.cssText="display:block;width:100%;height:calc(100% - 54px);object-fit:contain;background:#101714";wrap.appendChild(img);
+  const img=document.createElement("img");img.src=doc.data;img.alt=doc.name||"Purchase bill";img.style.cssText="display:block;width:100%;height:0;min-height:0;flex:1 1 auto;object-fit:contain;background:#101714";wrap.appendChild(img);
+ }else if(String(doc.type||"").toLowerCase()==="application/pdf"||String(doc.name||"").toLowerCase().endsWith(".pdf")){
+  const controls=document.createElement("div");controls.style.cssText="display:flex;align-items:center;justify-content:center;gap:10px;padding:8px;background:#092d20;color:#fff;flex:0 0 auto";
+  const prev=document.createElement("button"),next=document.createElement("button"),zoomOut=document.createElement("button"),zoomIn=document.createElement("button"),pageLabel=document.createElement("span");
+  [prev,next,zoomOut,zoomIn].forEach(b=>{b.type="button";b.style.cssText="border:1px solid #438568;background:#075039;color:#fff;border-radius:7px;padding:7px 10px;font-weight:700"});
+  prev.textContent="‹";next.textContent="›";zoomOut.textContent="−";zoomIn.textContent="+";
+  pageLabel.textContent="PDF loading…";pageLabel.style.cssText="font-size:12px;min-width:65px;text-align:center";
+  controls.append(prev,pageLabel,next,zoomOut,zoomIn);wrap.appendChild(controls);
+  const viewport=document.createElement("div");viewport.style.cssText="flex:1 1 auto;min-height:0;overflow:auto;background:#303834;text-align:center;padding:8px 4px;overscroll-behavior:contain";
+  const canvas=document.createElement("canvas");canvas.style.cssText="display:block;margin:0 auto 12px;background:#fff;max-width:100%;height:auto;box-shadow:0 2px 12px #0008";
+  const message=document.createElement("p");message.textContent="PDF khul raha hai…";message.style.cssText="color:#fff;font-size:13px;padding:18px";
+  viewport.append(message,canvas);wrap.appendChild(viewport);
+  let pdf=null,page=1,scale=1,renderTask=null,closed=false;
+  const updateButtons=()=>{prev.disabled=!pdf||page<=1;next.disabled=!pdf||page>=pdf.numPages;[prev,next].forEach(b=>{b.style.opacity=b.disabled?".4":"1"})};
+  const drawPage=async()=>{
+   if(!pdf||closed)return;
+   if(renderTask){try{renderTask.cancel()}catch(e){}}
+   try{
+    const p=await pdf.getPage(page);
+    const available=Math.max(240,viewport.clientWidth-12);
+    const base=p.getViewport({scale:1});
+    const fit=available/base.width;
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const vp=p.getViewport({scale:fit*scale});
+    canvas.width=Math.round(vp.width*dpr);canvas.height=Math.round(vp.height*dpr);
+    canvas.style.width=Math.round(vp.width)+"px";canvas.style.height=Math.round(vp.height)+"px";
+    const ctx=canvas.getContext("2d");
+    const transform=dpr!==1?[dpr,0,0,dpr,0,0]:null;
+    renderTask=p.render({canvasContext:ctx,viewport:vp,transform});
+    await renderTask.promise;
+    message.style.display="none";canvas.style.display="block";
+    pageLabel.textContent=page+" / "+pdf.numPages;updateButtons();viewport.scrollTop=0;
+   }catch(e){if(e&&e.name==="RenderingCancelledException")return;message.style.display="block";message.textContent="PDF page render nahi hua: "+(e.message||"Unknown error");canvas.style.display="none";}
+  };
+  prev.onclick=()=>{if(page>1){page--;drawPage()}};
+  next.onclick=()=>{if(pdf&&page<pdf.numPages){page++;drawPage()}};
+  zoomOut.onclick=()=>{scale=Math.max(.7,scale-.15);drawPage()};
+  zoomIn.onclick=()=>{scale=Math.min(2.5,scale+.15);drawPage()};
+  const loadPdf=async()=>{
+   try{
+    if(!window.pdfjsLib){
+     await new Promise((resolve,reject)=>{
+      const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";script.onload=resolve;script.onerror=()=>reject(new Error("PDF viewer library load nahi hui. Internet connection check karein."));document.head.appendChild(script);
+     });
+    }
+    if(closed)return;
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const base64=String(doc.data).split(",")[1];
+    if(!base64)throw new Error("PDF file data sahi format mein nahi hai.");
+    const binary=atob(base64),bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+    if(closed)return;
+    message.textContent="PDF ready";page=1;await drawPage();
+   }catch(e){if(!closed){message.style.display="block";message.textContent="PDF preview nahi khul paya: "+(e.message||"Unknown error")+". Original PDF record safe hai.";canvas.style.display="none";pageLabel.textContent="Preview error";}}
+  };
+  const resizeObserver=typeof ResizeObserver!=="undefined"?new ResizeObserver(()=>{if(pdf)drawPage()}):null;
+  if(resizeObserver)resizeObserver.observe(viewport);
+  close.addEventListener("click",()=>{closed=true;if(renderTask){try{renderTask.cancel()}catch(e){}}if(resizeObserver)resizeObserver.disconnect()},{once:true});
+  loadPdf();
  }else{
-  const frame=document.createElement("iframe");frame.title="Purchase bill PDF";frame.src=doc.data+"#view=FitH";frame.style.cssText="display:block;border:0;width:100%;height:calc(100% - 54px);background:#fff";wrap.appendChild(frame);
+  const message=document.createElement("p");message.textContent="Yeh file type preview ke liye supported nahi hai.";message.style.cssText="color:#fff;padding:20px";wrap.appendChild(message);
  }
  document.body.appendChild(wrap);
 }
