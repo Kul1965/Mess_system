@@ -54,21 +54,19 @@
       .crpf-pdf-make{position:relative;right:auto;bottom:auto;z-index:auto;border:1px solid #e5bb19!important;border-radius:999px!important;background:#176747!important;color:#fff!important;padding:12px 17px!important;min-height:46px;font:700 14px Arial,sans-serif!important;box-shadow:0 5px 18px #0005!important;cursor:pointer}
       .crpf-pdf-make:active{transform:scale(.97)}
       @media print{
-        @page{size:auto;margin:12mm}
-        html,body{background:#fff!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        @page{size:auto;margin:10mm}
+        html,body{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+        *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
         .sidebar,.topbar,.mobile-tabbar,.mobile-menu-toggle,.mobile-menu-backdrop,.footer,#crpfPdfActions,.crpf-pdf-make,.no-print,.app-toast,#documentPreviewModal,#crpfLocalPdfViewer{display:none!important}
-        .app,.main,.content,.page-content,.panel-wrap{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;color:#111!important;box-shadow:none!important}
-        .panel,.card,.stat,.summary-box,.menu-panel,.guide-card,.table-wrap,.table-panel{background:#fff!important;color:#111!important;border-color:#999!important;box-shadow:none!important;break-inside:avoid}
-        h1,h2,h3,h4,p,small,label,th,td,span,strong,b,li{color:#111!important}
-        table{width:100%!important;border-collapse:collapse!important}
-        th,td{border:1px solid #888!important;padding:6px!important;color:#111!important}
+        .app,.main,.content,.page-content,.panel-wrap{width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;overflow:visible!important;box-shadow:none!important}
         button:not(.print-keep),input[type=button],input[type=submit]{display:none!important}
         img{max-width:100%!important}
-        a{color:#111!important;text-decoration:none!important}
-        .stats,.cards,.formgrid{break-inside:avoid}
+        a{text-decoration:none!important}
+        table{max-width:100%!important;border-collapse:collapse!important}
+        tr, .panel,.card,.stat,.summary-box,.menu-panel,.guide-card,.table-wrap,.table-panel{break-inside:avoid}
       }
       @media(max-width:600px){.crpf-pdf-make{padding:11px 14px!important;font-size:13px!important}}
-    `;
+    `
     document.head.appendChild(style);
     const actions=document.createElement("div");
     actions.id="crpfPdfActions";actions.style.cssText="position:fixed;right:14px;bottom:18px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end";
