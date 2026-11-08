@@ -340,7 +340,24 @@ td{
  .topbar>.top-info>.so-pill{white-space:nowrap!important;max-width:none!important}
 }
 
-.flag-art{display:inline-flex;position:relative;flex-direction:column;width:42px;height:28px;flex:0 0 auto;overflow:hidden;border:1px solid rgba(255,255,255,.35);box-shadow:0 1px 3px #001b12;border-radius:2px;vertical-align:middle}.flag-art i{display:block;flex:1;width:100%}.flag-art i:nth-child(1){background:#ff9933}.flag-art i:nth-child(2){background:#fff}.flag-art i:nth-child(3){background:#138808}.flag-art b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:13px;line-height:1;color:#000080;font-weight:700}.side-flag.flag-art{width:29px;height:19px}.side-flag.flag-art b{font-size:9px}.india-flag.flag-art{width:46px;height:30px}.india-flag.flag-art b{font-size:14px}</style>
+.flag-art{display:inline-flex;position:relative;flex-direction:column;width:42px;height:28px;flex:0 0 auto;overflow:hidden;border:1px solid rgba(255,255,255,.35);box-shadow:0 1px 3px #001b12;border-radius:2px;vertical-align:middle}.flag-art i{display:block;flex:1;width:100%}.flag-art i:nth-child(1){background:#ff9933}.flag-art i:nth-child(2){background:#fff}.flag-art i:nth-child(3){background:#138808}.flag-art b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:13px;line-height:1;color:#000080;font-weight:700}.side-flag.flag-art{width:29px;height:19px}.side-flag.flag-art b{font-size:9px}.india-flag.flag-art{width:46px;height:30px}.india-flag.flag-art b{font-size:14px}
+/* Dashboard visual alignment with Members page */
+@media(max-width:850px){
+ .mobile-tabbar{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:2px!important;padding:6px 4px 7px!important;align-items:stretch!important;overflow:hidden!important}
+ .mobile-tabbar a,.mobile-tabbar .tab-menu{min-width:0!important;width:100%!important;padding:7px 1px!important;font-size:clamp(8px,2.5vw,10px)!important;white-space:nowrap!important;overflow:hidden!important}
+ .mobile-tabbar a b{font-size:clamp(16px,4.8vw,20px)!important;line-height:1.1!important;margin-bottom:3px!important}
+ .mobile-tabbar .tab-menu{font-size:20px!important}
+ .page-title{margin-bottom:20px!important}
+ .page-title h2{font-size:27px!important;font-weight:800!important;letter-spacing:-.3px}
+ .page-title p{font-size:14px!important;color:#a9c9bb!important}
+ .stat{background:linear-gradient(145deg,#0b3b2b,#073021)!important;border:2px solid #287b52!important;border-radius:20px!important;box-shadow:none!important}
+ .panel{background:linear-gradient(145deg,#0b3b2b,#08271c)!important;border:2px solid #287b52!important;border-radius:20px!important}
+ .dashboard-backup-card{min-height:145px!important;padding:20px!important;border-left:5px solid #e5bb19!important}
+ .dashboard-backup-card h3{color:#f2c51a!important;font-size:19px!important}
+ .dashboard-backup-card p{color:#c8ded3!important}
+ .dashboard-backup-card strong{color:#fff!important}
+}
+</style>
 </head>
 
 <body>
@@ -409,9 +426,9 @@ td{
       <h2>▦ Dashboard</h2>
       <p>Overview of Mess Operations</p>
     </div>
-    <a href="backup.html" class="panel" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 16px;text-decoration:none;color:inherit;border-left:5px solid #176747">
-      <div><h3 style="margin:0 0 4px;color:#176747">💾 Backup & Restore</h3><p style="margin:0;color:#78857e">Apne mess ka poora data backup karein</p></div>
-      <strong style="color:#176747;white-space:nowrap">Open →</strong>
+    <a href="backup.html" class="panel dashboard-backup-card" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 16px;text-decoration:none;color:inherit">
+      <div><h3 style="margin:0 0 4px">💾 Backup & Restore</h3><p style="margin:0">Apne mess ka poora data backup karein</p></div>
+      <strong style="white-space:nowrap">Open →</strong>
     </a>
 
     <!-- SUMMARY CARDS -->
