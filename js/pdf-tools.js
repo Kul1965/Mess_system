@@ -50,7 +50,7 @@
     if(document.getElementById("crpfPdfMakeButton")) return;
     const style=document.createElement("style");
     style.id="crpfPdfToolsStyle";
-    style.textContent=`
+    style.textContent=`\n      .crpf-pdf-title-row{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important}\n      .crpf-pdf-title-actions{position:relative;z-index:2;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:7px;margin:0 0 0 auto;padding:0;flex:0 0 auto}\n      .crpf-pdf-title-actions .crpf-pdf-make{position:relative!important;right:auto!important;bottom:auto!important;padding:9px 13px!important;min-height:38px!important;font-size:13px!important;box-shadow:0 3px 10px #0003!important}\n      @media(max-width:600px){.crpf-pdf-title-row{align-items:flex-start!important}.crpf-pdf-title-actions{width:100%;justify-content:flex-start;margin:2px 0 0}.crpf-pdf-title-actions .crpf-pdf-make{padding:8px 11px!important;min-height:35px!important;font-size:12px!important}}
       .crpf-pdf-make{position:relative;right:auto;bottom:auto;z-index:auto;border:1px solid #e5bb19!important;border-radius:999px!important;background:#176747!important;color:#fff!important;padding:12px 17px!important;min-height:46px;font:700 14px Arial,sans-serif!important;box-shadow:0 5px 18px #0005!important;cursor:pointer}
       .crpf-pdf-make:active{transform:scale(.97)}
       @media print{
@@ -89,7 +89,7 @@
       try{await showLocalPdf(file);}catch(error){alert("PDF nahi khul payi: "+(error&&error.message||"Unknown error"));}
       picker.value="";
     });
-    actions.append(openButton,button,picker);\n    const host=document.querySelector(".content")||document.querySelector(".main")||document.body;\n    host.appendChild(actions);
+    actions.append(openButton,button,picker);\n    actions.className="crpf-pdf-title-actions";\n    const title=document.querySelector(".page-title,.pagehead,.pagehead-row");\n    if(title){title.classList.add("crpf-pdf-title-row");title.appendChild(actions);}\n    else{const host=document.querySelector(".content")||document.querySelector(".main")||document.body;host.insertBefore(actions,host.firstChild);}
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
   else init();
