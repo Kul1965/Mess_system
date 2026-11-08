@@ -279,11 +279,10 @@ td{
  .india-flag{font-size:clamp(27px,8vw,40px);margin-left:auto}
  .topbar>.top-info{grid-column:1/-1!important;grid-row:2!important;display:flex!important;flex-wrap:wrap!important;gap:6px!important;width:100%!important}
  .topbar .info-pill{font-size:11px!important;padding:7px 9px!important}
- .mobile-tabbar{display:flex;align-items:stretch;gap:2px;overflow-x:auto;white-space:nowrap;background:#043a29;border-bottom:3px solid #e5bb19;padding:5px 6px 0;scrollbar-width:none}
- .mobile-tabbar::-webkit-scrollbar{display:none}
- .mobile-tabbar a,.mobile-tabbar .tab-menu{color:#fff;text-decoration:none;min-width:58px;flex:1 0 auto;text-align:center;padding:7px 8px 9px;border:0;background:transparent;border-radius:12px 12px 0 0;font:600 11px Arial,sans-serif}
- .mobile-tabbar a b{display:block;font-size:21px;line-height:1.15;margin-bottom:3px}
- .mobile-tabbar .tab-menu{min-width:42px;max-width:48px;font-size:25px;padding:8px 3px}
+ .mobile-tabbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;overflow:visible;white-space:normal;background:#043a29;border-bottom:3px solid #e5bb19;padding:5px 6px 7px}
+ .mobile-tabbar a,.mobile-tabbar .tab-menu{color:#fff;text-decoration:none;min-width:0;max-width:none;width:100%;text-align:center;padding:6px 2px;border:0;background:transparent;border-radius:8px;font:600 10px Arial,sans-serif}
+ .mobile-tabbar a b{display:block;font-size:18px;line-height:1.15;margin-bottom:2px}
+ .mobile-tabbar .tab-menu{font-size:22px;padding:6px 2px}
  .mobile-tabbar a.selected{background:#087b52;box-shadow:inset 0 0 0 1px #31966b}
  .content{padding:16px 12px!important}
  .page-title h2{font-size:27px}
@@ -395,13 +394,20 @@ td{
   </header>
 
   <nav class="mobile-tabbar" aria-label="Main navigation">
-    <button class="tab-menu" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+    <button class="tab-menu" type="button" aria-label="Open menu" aria-expanded="false">☰ Menu</button>
     <a class="selected" href="index.html"><b>⌂</b>Home</a>
     <a href="members.html"><b>👥</b>Members</a>
     <a href="ration-store.html"><b>▣</b>Store</a>
+    <a href="purchases.html"><b>🛒</b>Purchases</a>
+    <a href="recipes.html"><b>🍲</b>Recipes</a>
     <a href="making-menu.html"><b>♨</b>Menu</a>
+    <a href="mess-staff.html"><b>👨‍🍳</b>Staff</a>
     <a href="accounts.html"><b>▤</b>Accounts</a>
     <a href="reports.html"><b>▥</b>Reports</a>
+    <a href="mess-handover.html"><b>🔄</b>Handover</a>
+    <a href="settings.html"><b>⚙️</b>Settings</a>
+    <a href="backup.html"><b>💾</b>Backup</a>
+    <a href="software-guide.html"><b>📖</b>Guide</a>
   </nav>
 
   <div class="content">
