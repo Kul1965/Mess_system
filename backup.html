@@ -76,7 +76,16 @@ async function createBackup(){
   }
   downloadBackup(blob,fixedName);
   setMessage("✓ Backup download shuru ho gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein.");
- }catch(e){if(e.name!=="AbortError")setMessage("Backup save nahi hua: "+e.message+". Browser menu se Downloads check karein.",true)}
+ }catch(e){
+  if(e.name==="AbortError")return;
+  // Android share sheets can reject with Permission denied. Fall back to a normal file download.
+  try{
+   downloadBackup(blob,fixedName);
+   setMessage("✓ Backup download dobara try kiya gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein. Agar prompt aaye to Allow/Download chunein.");
+  }catch(downloadError){
+   setMessage("Backup save nahi hua: "+downloadError.message+". Chrome Settings > Site settings > Automatic downloads allow karein, phir dobara try karein.",true);
+  }
+ }
 }
 function downloadBackup(blob,name){
  const url=URL.createObjectURL(blob),a=document.createElement("a");
