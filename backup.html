@@ -115,8 +115,9 @@ function restore(){
    // if quota or browser storage fails, the existing data must remain untouched.
    localStorage.setItem(KEY,fullText);
    const checkText=localStorage.getItem(KEY);
-   const check=JSON.parse(checkText||"null");
-   if(!check||!Array.isArray(check.members)&&!Array.isArray(check.ration)&&!Array.isArray(check.purchases)&&!Array.isArray(check.transactions))throw new Error("Saved data verification failed");
+   if(checkText!==fullText)throw new Error("Saved data verification failed");
+   const check=JSON.parse(checkText);
+   if(!check||typeof check!=="object"||Array.isArray(check))throw new Error("Saved data format verification failed");
    setMessage("✓ Restore successful. "+summary+". Page reload ho raha hai…");
    setTimeout(()=>location.reload(),1000);
   }catch(err){
