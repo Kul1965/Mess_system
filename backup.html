@@ -110,37 +110,21 @@ function restore(){
   const fullText=JSON.stringify(data);
   if(!confirm("Backup data check ho gaya. "+summary+". Restore karne se is browser ka current mess data replace hoga. Continue?"))return;
   try{
-   // This app stores all records in one localStorage entry. Clear that entry first
-   // so an old/partial value cannot consume quota during replacement.
-   localStorage.removeItem(KEY);
+   // Replace the one app-data key atomically. Never remove the old data first:
+   // if quota or browser storage fails, the existing data must remain untouched.
    localStorage.setItem(KEY,fullText);
-   const check=JSON.parse(localStorage.getItem(KEY)||"null");
-   if(!check||!Array.isArray(check.members)&&!Array.isArray(check.ration))throw new Error("Saved data verification failed");
+   const checkText=localStorage.getItem(KEY);
+   const check=JSON.parse(checkText||"null");
+   if(!check||!Array.isArray(check.members)&&!Array.isArray(check.ration)&&!Array.isArray(check.purchases)&&!Array.isArray(check.transactions))throw new Error("Saved data verification failed");
    setMessage("✓ Restore successful. "+summary+". Page reload ho raha hai…");
    setTimeout(()=>location.reload(),1000);
-   return;
   }catch(err){
-   try{
-    const reduced=JSON.parse(fullText);
-    let removed=0;
-    ["members","staff"].forEach(group=>{
-     if(Array.isArray(reduced[group]))reduced[group].forEach(item=>{
-      if(item&&typeof item==="object"&&typeof item.photo==="string"&&item.photo.startsWith("data:image/")){delete item.photo;removed++}
-     });
-    });
-    localStorage.setItem(KEY,JSON.stringify(reduced));
-    const check=JSON.parse(localStorage.getItem(KEY)||"null");
-    if(!check)throw new Error("Saved data verification failed");
-    setMessage("✓ Records restore ho gaye. Storage limit ke karan "+removed+" photos skip hui. "+summary+". Page reload ho raha hai…");
-    setTimeout(()=>location.reload(),1300);
-   }catch(second){
-    setMessage("Restore nahi ho paya: "+second.name+" — "+second.message+". Backup file safe rakhein; abhi koi aur reset na karein.",true);
-   }
+   setMessage("Restore nahi ho paya: "+err.name+" — "+err.message+". Purana browser data delete nahi kiya gaya. Backup file safe rakhein.",true);
   }
  };
  reader.readAsText(file);
 }
 refreshCounts();
-</script><script src="js/shared-header.js?v=20261108-backup-android-fix"></script>
-<script src="js/mobile-nav.js?v=20261108-backup-android-fix"></script>
+</script><script src="js/shared-header.js?v=20261108-safe-restore-nav"></script>
+<script src="js/mobile-nav.js?v=20261108-safe-restore-nav"></script>
 </body></html>
