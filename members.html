@@ -409,11 +409,8 @@ function money(v){
  return "₹"+Number(v||0).toLocaleString("en-IN");
 }
 function refresh(){
+ // Read-only refresh: preserve every member field and every transaction, including legacy Mess Advance records.
  const data=getData();
- let cleaned=false;
- (data.members||[]).forEach(x=>{if(Object.prototype.hasOwnProperty.call(x,"advance")){delete x.advance;cleaned=true;}});
- if(Array.isArray(data.transactions)){const before=data.transactions.length;data.transactions=data.transactions.filter(x=>String(x.type||"").toLowerCase()!=="advance");if(data.transactions.length!==before)cleaned=true;}
- if(cleaned)saveData(data);
  members=Array.isArray(data.members)?data.members:[];
  render();
 }
