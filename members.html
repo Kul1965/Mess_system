@@ -514,6 +514,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
   }
   const transferHistory=Array.isArray(old?.transferHistory)?[...old.transferHistory]:[];
   const member={
+   ...(old||{}),
    id:editingId||("M"+Date.now()),
    transferHistory,
    leaveHistory:Array.isArray(old?.leaveHistory)?[...old.leaveHistory]:[],
