@@ -192,17 +192,30 @@ function openDocumentPreview(id){
   const loadPdf=async()=>{
    try{
     if(!window.pdfjsLib){
-     await new Promise((resolve,reject)=>{
-      const script=document.createElement("script");script.src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";script.onload=resolve;script.onerror=()=>reject(new Error("PDF viewer library load nahi hui. Internet connection check karein."));document.head.appendChild(script);
-     });
+     const sources=[
+      ["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js","https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"],
+      ["https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js","https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js"]
+     ];
+     let loaded=false;
+     for(const pair of sources){
+      try{
+       await new Promise((resolve,reject)=>{
+        const script=document.createElement("script");script.src=pair[0];script.onload=resolve;script.onerror=()=>{script.remove();reject(new Error("PDF viewer source load nahi hui"))};document.head.appendChild(script);
+       });
+       if(window.pdfjsLib){window.pdfWorkerSource=pair[1];loaded=true;break;}
+      }catch(e){}
+     }
+     if(!loaded)throw new Error("PDF viewer library load nahi hui. Internet connection check karein.");
     }
     if(closed)return;
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-    const base64=String(doc.data).split(",")[1];
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc=window.pdfWorkerSource||"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    const rawData=String(doc.data||"");
+    const comma=rawData.indexOf(",");
+    const base64=(comma>=0?rawData.slice(comma+1):rawData).replace(/\s/g,"");
     if(!base64)throw new Error("PDF file data sahi format mein nahi hai.");
     const binary=atob(base64),bytes=new Uint8Array(binary.length);
     for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-    pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+    pdf=await window.pdfjsLib.getDocument({data:bytes,disableRange:true,disableStream:true}).promise;
     if(closed)return;
     message.textContent="PDF ready";page=1;await drawPage();
    }catch(e){if(!closed){message.style.display="block";message.textContent="PDF preview nahi khul paya: "+(e.message||"Unknown error")+". Original PDF record safe hai.";canvas.style.display="none";pageLabel.textContent="Preview error";}}
