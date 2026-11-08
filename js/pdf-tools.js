@@ -15,6 +15,7 @@
       }
     }
     if(!lib)throw new Error("Internet chalu karke dobara try karein; PDF viewer load nahi hua.");
+    if(lib.GlobalWorkerOptions&&!lib.GlobalWorkerOptions.workerSrc)lib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
     const buffer=await file.arrayBuffer();
     const pdf=await lib.getDocument({data:new Uint8Array(buffer),disableRange:true,disableStream:true}).promise;
     const old=document.getElementById("crpfLocalPdfViewer");if(old)old.remove();
@@ -54,7 +55,7 @@
       @media print{
         @page{size:auto;margin:12mm}
         html,body{background:#fff!important;color:#111!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-        .sidebar,.topbar,.mobile-tabbar,.mobile-menu-toggle,.mobile-menu-backdrop,.footer,.crpf-pdf-make,.no-print,.app-toast,#documentPreviewModal{display:none!important}
+        .sidebar,.topbar,.mobile-tabbar,.mobile-menu-toggle,.mobile-menu-backdrop,.footer,#crpfPdfActions,.crpf-pdf-make,.no-print,.app-toast,#documentPreviewModal,#crpfLocalPdfViewer{display:none!important}
         .app,.main,.content,.page-content,.panel-wrap{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;color:#111!important;box-shadow:none!important}
         .panel,.card,.stat,.summary-box,.menu-panel,.guide-card,.table-wrap,.table-panel{background:#fff!important;color:#111!important;border-color:#999!important;box-shadow:none!important;break-inside:avoid}
         h1,h2,h3,h4,p,small,label,th,td,span,strong,b,li{color:#111!important}
@@ -69,7 +70,7 @@
     `;
     document.head.appendChild(style);
     const actions=document.createElement("div");
-    actions.style.cssText="position:fixed;right:14px;bottom:18px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end";
+    actions.id="crpfPdfActions";actions.style.cssText="position:fixed;right:14px;bottom:18px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end";
     const button=document.createElement("button");
     button.type="button";button.id="crpfPdfMakeButton";button.className="crpf-pdf-make";
     button.textContent="📄 PDF Banayein";
