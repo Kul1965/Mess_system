@@ -45,6 +45,7 @@
     minus.onclick=()=>{scale=Math.max(.6,scale-.2);renderPage().catch(e=>alert(e.message))};plus.onclick=()=>{scale=Math.min(2.5,scale+.2);renderPage().catch(e=>alert(e.message))};
     await renderPage();
   }
+  window.openLocalPdfFile=showLocalPdf;
   function init(){
     if(document.getElementById("crpfPdfMakeButton")) return;
     const style=document.createElement("style");
