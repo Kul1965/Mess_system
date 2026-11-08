@@ -51,13 +51,14 @@
     const style=document.createElement("style");
     style.id="crpfPdfToolsStyle";
     style.textContent=`
-      .crpf-pdf-title-row{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important;width:100%}
-      .crpf-pdf-title-row>h2{margin:0!important;flex:1 1 170px;min-width:0}
-      .crpf-pdf-title-actions{position:relative;z-index:2;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:7px;margin:0 0 0 auto;padding:0;flex:0 1 auto}
-      .crpf-pdf-title-actions .crpf-pdf-make{position:relative!important;right:auto!important;bottom:auto!important;padding:8px 12px!important;min-height:36px!important;font-size:12px!important;box-shadow:0 3px 10px #0003!important}
+      .crpf-pdf-title-row{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;flex-wrap:nowrap!important;width:100%}
+      .crpf-pdf-title-row>h2{margin:0!important;flex:1 1 auto;min-width:0;font-size:clamp(17px,2.4vw,24px)!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+      .crpf-pdf-title-actions{position:relative;z-index:2;display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:5px;margin:0 0 0 auto;padding:0;flex:0 0 auto}
+      .crpf-pdf-title-actions .crpf-pdf-make{position:relative!important;right:auto!important;bottom:auto!important;padding:7px 9px!important;min-height:32px!important;font-size:11px!important;white-space:nowrap!important;box-shadow:0 3px 10px #0003!important}
+      .crpf-pdf-make{position:relative!important;right:auto!important;bottom:auto!important;padding:8px 12px!important;min-height:36px!important;font-size:12px!important;box-shadow:0 3px 10px #0003!important}
       .crpf-pdf-make{position:relative;right:auto;bottom:auto;z-index:auto;border:1px solid #e5bb19!important;border-radius:999px!important;background:#176747!important;color:#fff!important;padding:12px 17px!important;min-height:46px;font:700 14px Arial,sans-serif!important;box-shadow:0 5px 18px #0005!important;cursor:pointer}
       .crpf-pdf-make:active{transform:scale(.97)}
-      @media(max-width:600px){.crpf-pdf-title-row{align-items:center!important;gap:8px!important}.crpf-pdf-title-row>h2{flex-basis:100%}.crpf-pdf-title-actions{width:100%;justify-content:flex-start;margin:0}.crpf-pdf-title-actions .crpf-pdf-make{padding:8px 11px!important;min-height:34px!important;font-size:12px!important}}
+      @media(max-width:600px){.crpf-pdf-title-row{align-items:center!important;gap:5px!important}.crpf-pdf-title-row>h2{flex:1 1 0!important;font-size:clamp(14px,4.1vw,18px)!important;letter-spacing:-.35px}.crpf-pdf-title-actions{width:auto!important;flex:0 0 auto!important;gap:4px!important;justify-content:flex-end!important;margin:0!important}.crpf-pdf-title-actions .crpf-pdf-make{padding:6px 7px!important;min-height:30px!important;font-size:9px!important;letter-spacing:-.2px}}
       @media print{@page{size:auto;margin:10mm}html,body,*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}.sidebar,.topbar,.mobile-tabbar,.mobile-menu-toggle,.mobile-menu-backdrop,.footer,#crpfPdfActions,.crpf-pdf-make,.no-print,.app-toast,#documentPreviewModal,#crpfLocalPdfViewer{display:none!important}.app,.main,.content,.page-content,.panel-wrap{width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;overflow:visible!important;box-shadow:none!important}button:not(.print-keep),input[type=button],input[type=submit]{display:none!important}img{max-width:100%!important}a{text-decoration:none!important}table{max-width:100%!important;border-collapse:collapse!important}tr,.panel,.card,.stat,.summary-box,.menu-panel,.guide-card,.table-wrap,.table-panel{break-inside:avoid}}
     `;
     document.head.appendChild(style);
