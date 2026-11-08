@@ -69,7 +69,7 @@
     `
     document.head.appendChild(style);
     const actions=document.createElement("div");
-    actions.id="crpfPdfActions";actions.style.cssText="position:fixed;right:14px;bottom:18px;z-index:9000;display:flex;flex-direction:column;gap:8px;align-items:flex-end";
+    actions.id="crpfPdfActions";actions.style.cssText="position:static;z-index:1;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:flex-end;gap:8px;align-items:center;margin:18px 0 12px;padding:0";
     const button=document.createElement("button");
     button.type="button";button.id="crpfPdfMakeButton";button.className="crpf-pdf-make";
     button.textContent="📄 PDF Banayein";
@@ -89,7 +89,7 @@
       try{await showLocalPdf(file);}catch(error){alert("PDF nahi khul payi: "+(error&&error.message||"Unknown error"));}
       picker.value="";
     });
-    actions.append(openButton,button,picker);document.body.appendChild(actions);
+    actions.append(openButton,button,picker);\n    const host=document.querySelector(".content")||document.querySelector(".main")||document.body;\n    host.appendChild(actions);
   }
   if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",init);
   else init();
