@@ -142,6 +142,7 @@ body{
   min-height:190px;
 }
 .panel h3{font-size:18px;margin-bottom:18px}
+.panel.full-width{grid-column:1/-1}
 .empty{
   text-align:center;
   color:var(--muted);
@@ -509,6 +510,15 @@ td{
         <p style="margin-top:12px"><a href="purchases.html" style="display:inline-block;background:#087b45;color:#fff;text-decoration:none;padding:10px 14px;border-radius:7px;font-weight:bold">🛒 Open Purchase Items</a></p>
       </div>
 
+      <div class="panel" style="grid-column:1/-1">
+        <h3>📦 Complete Ration Store Register</h3>
+        <p style="color:var(--muted);font-size:12px;margin:-8px 0 12px">All saved Ration Store items · Stock value = current quantity × weighted-average rate</p>
+        <div class="table-wrap">
+          <table><thead><tr><th>Item</th><th>Current Stock</th><th>Rate / Unit</th><th>Stock Value</th></tr></thead>
+          <tbody id="rationRegisterRows"><tr><td colspan="4" class="no-data">No ration items available</td></tr></tbody></table>
+        </div>
+      </div>
+
       <div class="panel">
         <h3>🛒 Recent Purchases</h3>
         <div class="table-wrap">
@@ -689,6 +699,17 @@ function loadDashboard() {
   set("normalStock",ration.length-low.length);
   set("lowStock",low.length);
   set("totalStock",ration.length);
+
+  // Show every saved Ration Store item; do not create or overwrite stock records here.
+  const rationRows=document.getElementById("rationRegisterRows");
+  if(rationRows){
+    rationRows.innerHTML=ration.length?ration.map(item=>{
+      const quantity=numberValue(item.quantity ?? item.stock ?? 0);
+      const rate=numberValue(item.price ?? item.unitPrice ?? 0);
+      return `<tr><td>${safe(item.name || "Unnamed item")}</td><td>${safe(item.quantity ?? item.stock ?? 0)} ${safe(item.unit || "")}</td><td>${money(rate)}</td><td>${money(quantity*rate)}</td></tr>`;
+    }).join(""):"<tr><td colspan='4' class='no-data'>No ration items available</td></tr>";
+  }
+
   const lowBox=document.getElementById("lowStockItems");
   if(lowBox){
     lowBox.innerHTML=low.length?low.map(item=>`
