@@ -132,7 +132,7 @@ function render(){
       const id=String(x.id||"").replace(/\\/g,"");
       const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
-      return '<tr>'+cfg.cols.map(k=>{let value=x[k];if(cfg.key==="transactions"){if(k==="type"){const typeLabels={office_received:"Mess NCO ne liya",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};value=typeLabels[value]||value;}if(k==="messNcoName")value=x.type==="office_received"?x.toStaff:x.fromStaff;if(k==="messSoName")value=x.type==="office_received"?x.fromStaff:x.toStaff;}return '<td>'+((k==="document"||k==="billDocument")&&value&&value.data?'<a href="'+value.data+'" target="_blank" rel="noopener">📎 दस्तावेज देखें</a>':esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(value):value))+'</td>'}).join("")+'<td><div class="actions">'+action+'</div></td></tr>';
+      return '<tr>'+cfg.cols.map(k=>{let value=x[k];if(cfg.key==="transactions"){if(k==="type"){const typeLabels={office_received:"Mess NCO ne liya",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};value=typeLabels[value]||value;}if(k==="messNcoName")value=x.type==="office_received"?x.toStaff:x.fromStaff;if(k==="messSoName")value=x.type==="office_received"?x.fromStaff:x.toStaff;}return '<td>'+((k==="document"||k==="billDocument")&&value&&value.data?'<button class="view-btn" type="button" onclick="openDocumentPreview(&quot;'+id+'&quot;)">📄 दस्तावेज देखें</button>':esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(value):value))+'</td>'}).join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
     document.getElementById("stats").innerHTML=statsHtml(list);
@@ -143,6 +143,24 @@ function render(){
     const empty=document.getElementById("empty");
     if(empty){empty.style.display="block";empty.textContent="Page error: "+e.message+" — reload karke dobara try karein."}
   }
+}
+function openDocumentPreview(id){
+ const record=arr().find(x=>String(x.id)===String(id));
+ const doc=record&&(record.billDocument||record.document);
+ if(!doc||!doc.data){showAppAlert("Is entry mein document upload nahi hai.");return;}
+ const old=document.getElementById("documentPreviewModal");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="documentPreviewModal";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10050;background:#101714;display:flex;flex-direction:column;width:100%;height:100%;height:100dvh;overflow:hidden";
+ const header=document.createElement("div");header.style.cssText="height:54px;min-height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;background:#176747;color:#fff;gap:10px";
+ const title=document.createElement("strong");title.textContent=doc.name||"Purchase Bill";
+ const close=document.createElement("button");close.type="button";close.textContent="✕ Close";close.style.cssText="background:#fff;color:#176747;border:0;border-radius:8px;padding:9px 13px;font-weight:700";close.onclick=()=>wrap.remove();
+ header.append(title,close);wrap.appendChild(header);
+ if(String(doc.type||"").startsWith("image/")){
+  const img=document.createElement("img");img.src=doc.data;img.alt=doc.name||"Purchase bill";img.style.cssText="display:block;width:100%;height:calc(100% - 54px);object-fit:contain;background:#101714";wrap.appendChild(img);
+ }else{
+  const frame=document.createElement("iframe");frame.title="Purchase bill PDF";frame.src=doc.data+"#view=FitH";frame.style.cssText="display:block;border:0;width:100%;height:calc(100% - 54px);background:#fff";wrap.appendChild(frame);
+ }
+ document.body.appendChild(wrap);
 }
 function statsHtml(list){
   if(cfg.key==="store"){
