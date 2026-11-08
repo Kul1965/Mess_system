@@ -278,6 +278,11 @@ td.no-print{white-space:nowrap}
      <label>Member Photo</label>
      <input id="photo" type="file" accept="image/*">
     </div>
+    <div class="field">
+     <label>Member Document / PDF</label>
+     <input id="memberDocument" type="file" accept="image/*,.pdf,application/pdf">
+     <small class="muted">Optional: ID / joining / other document (PDF max 2 MB)</small>
+    </div>
     <div class="field full">
      <label>Address / Remarks</label>
      <textarea id="remarks" rows="2" placeholder="Optional details"></textarea>
@@ -495,9 +500,18 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
  const data=getData();
  data.members=Array.isArray(data.members)?data.members:[];
  const file=document.getElementById("photo").files[0];
+ const docFile=document.getElementById("memberDocument").files[0];
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
   const photo=await readPhoto(file);
+  let memberDocument=old?.document||null;
+  if(docFile){
+   if(String(docFile.type||"").startsWith("image/")){const imageData=await readPhoto(docFile);memberDocument={name:docFile.name,type:"image/jpeg",data:imageData};}
+   else if(docFile.type==="application/pdf"||/\\.pdf$/i.test(docFile.name)){
+    if(docFile.size>2*1024*1024){showToast("PDF 2 MB se chhoti honi chahiye.","error");return;}
+    memberDocument=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:docFile.name,type:"application/pdf",data:reader.result});reader.onerror=reject;reader.readAsDataURL(docFile);});
+   }else{showToast("Sirf photo ya PDF upload karein.","error");return;}
+  }
   const transferHistory=Array.isArray(old?.transferHistory)?[...old.transferHistory]:[];
   const member={
    id:editingId||("M"+Date.now()),
@@ -514,7 +528,8 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
    finalBillAmount:Number(old?.finalBillAmount||0),
    finalBillPaid:old?.finalBillPaid||"Not Paid",
    remarks:document.getElementById("remarks").value.trim(),
-   photo:photo||(old?old.photo:"")
+   photo:photo||(old?old.photo:""),
+   document:memberDocument
   };
   if(!member.forceNo||!member.name){showToast("Enter force number and member name.");return}
   const duplicate=data.members.find(m=>m.forceNo.toLowerCase()===member.forceNo.toLowerCase()&&m.id!==member.id);
@@ -566,7 +581,7 @@ function viewMember(id){
  const paid=tx.filter(t=>t.type==="collection"||t.type==="cutting_collected").reduce((s,t)=>s+Number(t.amount||0),0);
  const due=Math.max(0,mealTotal-paid),credit=Math.max(0,paid-mealTotal);
  const history=records.length?records.map(r=>'<div class="meal-entry"><div class="meal-head"><b>'+esc(r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+(r.ingredientUsage||[]).map(i=>esc(i.itemName)+': '+esc(i.quantity)+' '+esc(i.unit)).join(' • ')+'</div></div>').join(""):'<p>No meal record yet.</p>';
- document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+
+ document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+(m.document&&m.document.data?'<button type="button" class="secondary" onclick="viewMemberDocument(\''+m.id+'\')">📄 View Member Document</button><br><br>':'')+
  '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Transfer Location:</b> '+esc(m.transferLocation||"—")+'<br><b>Transfer Date:</b> '+esc(m.transferDate||"—")+'<br><b>Final Mess Bill:</b> '+money(m.finalBillAmount)+'<br><b>Final Bill Status:</b> '+esc(m.finalBillPaid||"Not Paid")+'<br><b>Remarks:</b> '+esc(m.remarks)+
  '<h3 class="view-heading">Transfer History</h3>'+(Array.isArray(m.transferHistory)&&m.transferHistory.length?m.transferHistory.map(h=>'<div class="meal-entry">'+esc(h.date)+' · '+esc(h.location||"Location not entered")+'</div>').join(""):'<p>No transfer history recorded.</p>')+
  '<h3 class="view-heading">Leave / Chhutti Details</h3><div class="meal-entry"><b>Status:</b> '+(m.status==="Leave"?"On Leave":"Not on Leave")+'<br><b>From:</b> '+esc(m.leaveFrom||"—")+'<br><b>Return Date:</b> '+esc(m.leaveTo||"—")+'<br><b>Reason:</b> '+esc(m.leaveReason||"—")+'</div>'+
@@ -575,6 +590,23 @@ function viewMember(id){
  '<h3 class="view-heading">Meal History – Kya Kya Khaya</h3>'+history+
  '<h3 class="view-heading">Payment History</h3>'+(tx.length?tx.map(t=>'<div class="meal-entry">'+esc(t.date)+' · '+esc(t.type)+' <b style="float:right">'+money(t.amount)+'</b><div>'+esc(t.description)+'</div></div>').join(""):'<p>No payment entries yet.</p>');
  document.getElementById("viewModal").style.display="block";
+}
+function viewMemberDocument(id){
+ const m=members.find(x=>String(x.id)===String(id)),doc=m&&m.document;
+ if(!doc||!doc.data){showToast("Member document nahi mila.","error");return}
+ if(String(doc.type||"").startsWith("image/")){
+  const old=document.getElementById("memberDocPreview");if(old)old.remove();
+  const wrap=document.createElement("div");wrap.id="memberDocPreview";wrap.style.cssText="position:fixed;inset:0;z-index:20000;background:#000e;display:flex;align-items:center;justify-content:center;padding:12px";
+  wrap.innerHTML='<button type="button" style="position:absolute;top:12px;right:12px;padding:10px 14px" onclick="this.parentElement.remove()">✕ Close</button><img src="'+doc.data+'" alt="Member document" style="max-width:100%;max-height:90%;object-fit:contain;background:#fff">';
+  document.body.appendChild(wrap);return;
+ }
+ try{
+  const raw=String(doc.data),comma=raw.indexOf(","),b64=comma>=0?raw.slice(comma+1):raw,binary=atob(b64),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  const file=new File([bytes],doc.name||"member-document.pdf",{type:"application/pdf"});
+  if(typeof window.openLocalPdfFile==="function")window.openLocalPdfFile(file);
+  else showToast("PDF viewer load nahi hua. Page refresh karke try karein.","error");
+ }catch(e){showToast("Document open nahi hua: "+e.message,"error")}
 }
 function openLeaveCard(){
  const m=members.find(x=>String(x.id)===String(viewingId));
