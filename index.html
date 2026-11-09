@@ -837,7 +837,7 @@ function loadDashboard() {
     .filter(t => ["collection","cutting_collected"].includes(String(t.type || "").toLowerCase()))
     .reduce((sum,t)=>sum+numberValue(t.amount),0);
   const cuttingCollected = mealRecords.reduce((sum,r)=>sum+numberValue(r.chargePerMember)*(Array.isArray(r.memberIds)?r.memberIds.length:0),0);
-  const collection = officeMoneyReceived + cuttingCollected + oldCollections;
+  const collection = officeMoneyReceived + oldCollections;
   const officeDeposited = transactions
     .filter(t=>String(t.type||"").toLowerCase()==="office_deposited")
     .reduce((sum,t)=>sum+numberValue(t.amount),0);
