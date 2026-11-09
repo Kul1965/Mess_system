@@ -514,11 +514,16 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
   const photo=await readPhoto(file);
   let memberDocument=old?.document||null;
   if(docFile){
-   if(String(docFile.type||"").startsWith("image/")){const imageData=await readPhoto(docFile);memberDocument={name:docFile.name,type:"image/jpeg",data:imageData};}
-   else if(docFile.type==="application/pdf"||/\\.pdf$/i.test(docFile.name)){
+   const docName=String(docFile.name||"").toLowerCase();
+   const isDocImage=String(docFile.type||"").startsWith("image/")||/\.(jpg|jpeg|png|webp|heic|heif)$/i.test(docName);
+   const isDocPdf=docFile.type==="application/pdf"||/\.pdf$/i.test(docName);
+   if(isDocImage){
+    const imageData=await readPhoto(docFile);
+    memberDocument={name:docFile.name||"member-document.jpg",type:"image/jpeg",data:imageData};
+   }else if(isDocPdf){
     if(docFile.size>2*1024*1024){showToast("PDF 2 MB se chhoti honi chahiye.","error");return;}
-    memberDocument=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:docFile.name,type:"application/pdf",data:reader.result});reader.onerror=reject;reader.readAsDataURL(docFile);});
-   }else{showToast("Sirf photo ya PDF upload karein.","error");return;}
+    memberDocument=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:docFile.name||"member-document.pdf",type:"application/pdf",data:reader.result});reader.onerror=()=>reject(new Error("Document read nahi ho paya."));reader.readAsDataURL(docFile);});
+   }else{showToast("Sirf JPG, PNG, WebP photo ya PDF upload karein.","error");return;}
   }
   const transferHistory=Array.isArray(old?.transferHistory)?[...old.transferHistory]:[];
   const member={
