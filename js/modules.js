@@ -404,13 +404,14 @@ async function saveCurrentRecord(event){
   const list=arr(),index=list.findIndex(x=>String(x.id)===String(record.id));
   if(index>=0)list[index]=record;else list.push(record);
  }else if(cfg.key==="purchases"){
+  const old=arr().find(x=>String(x.id)===String(editId));
+  if(old&&String(old.itemId)!==String(values.itemId)){showAppAlert("Purchase edit mein ration item nahi badal sakte, kyunki usse stock ka hisaab galat ho sakta hai. Purani entry ko same item ke saath edit karein; item badalna ho to pehle safe stock adjustment ke baad nayi entry karein.");return}
   const item=(data.ration||[]).find(x=>String(x.id)===String(values.itemId));
   if(!item){showAppAlert("Ration Store item select karein.");return}
   if(!values.quantity||values.quantity<=0||!Number.isFinite(values.rate)||values.rate<0){showAppAlert("Purchase quantity aur rate sahi enter karein.");return}
   const baseQty=purchaseInBase(values.quantity,values.unit,item.unit);
   if(baseQty===null){const u=String(item.unit||"").toLowerCase();const compatible=(u==="g"||u==="kg")?"kg ya g":(u==="ml"||u==="ltr"||u==="l"||u==="litre"||u==="liter")?"litre ya ml":"pcs";showAppAlert("Invalid purchase unit: "+item.name+" ka Store unit "+item.unit+" hai. Is item ke liye "+compatible+" select karein.");return}
   const total=values.quantity*values.rate;
-  const old=arr().find(x=>String(x.id)===String(editId));
   const currentStock=Number(item.quantity||0),currentValue=currentStock*Number(item.price||0);
   const oldBaseRaw=old?(old.baseQuantity??purchaseInBase(old.quantity,old.unit,item.unit)):0;
   if(old&&(oldBaseRaw===null||!Number.isFinite(Number(oldBaseRaw)))){showAppAlert("Purane purchase unit ka conversion available nahi hai. Is record ko safely edit nahi kar sakte.");return}
