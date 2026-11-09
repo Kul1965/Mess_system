@@ -482,13 +482,11 @@ function editMember(id){openForm(id)}
 function readPhoto(file){
  return new Promise((resolve,reject)=>{
   if(!file){resolve(null);return}
-  if(!String(file.type||"").startsWith("image/")){reject(new Error("Please select a valid image file."));return}
-  const reader=new FileReader();reader.onerror=()=>reject(new Error("Unable to read photo."));
-  reader.onload=()=>{
-   const img=new Image();img.onerror=()=>reject(new Error("Unable to process this photo."));
-   img.onload=()=>{
-    // Small JPEG keeps member photos within mobile browser storage limits.
-    let max=600,quality=0.68;const canvas=document.createElement("canvas");
+  if(!String(file.type||"").startsWith("image/")&&!/\\.(jpg|jpeg|png|webp|heic|heif)$/i.test(String(file.name||""))){reject(new Error("Please select a valid image file."));return}
+  const processImage=img=>{
+   try{
+    let max=600,quality=0.68;
+    const canvas=document.createElement("canvas");
     const encode=()=>{
      const scale=Math.min(1,max/Math.max(img.width,img.height));
      canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
@@ -498,9 +496,37 @@ function readPhoto(file){
      if(bytes>500*1024&&(quality>0.42||max>320)){if(quality>0.42)quality=Math.max(0.42,quality-0.08);else max=Math.max(320,Math.round(max*0.8));encode();return}
      if(bytes>500*1024){reject(new Error("Photo 500 KB se chhoti nahi ho payi. Camera se low-resolution photo lein."));return}
      resolve(data);
-    };encode();
-   };img.src=reader.result;
-  };reader.readAsDataURL(file);
+    };
+    encode();
+   }catch(err){reject(new Error("Unable to process this photo. Gallery se JPG photo dobara select karein."))}
+  };
+  const tryFileReader=()=>{
+   const reader=new FileReader();
+   reader.onerror=()=>reject(new Error("Phone photo file read nahi kar pa raha. Photo ko phone Gallery mein save karke dobara select karein."));
+   reader.onload=()=>{
+    const img=new Image();img.onerror=()=>reject(new Error("Photo format support nahi hua. JPG photo select karein."));
+    img.onload=()=>processImage(img);img.src=reader.result;
+   };
+   reader.readAsDataURL(file);
+  };
+  if(typeof createImageBitmap==="function"){
+   createImageBitmap(file).then(bitmap=>{
+    const img={width:bitmap.width,height:bitmap.height};
+    const canvas=document.createElement("canvas");let max=600,quality=0.68;
+    const encode=()=>{
+     const scale=Math.min(1,max/Math.max(img.width,img.height));
+     canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
+     const ctx=canvas.getContext("2d");if(!ctx){bitmap.close&&bitmap.close();tryFileReader();return}
+     ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+     const data=canvas.toDataURL("image/jpeg",quality),bytes=Math.ceil((data.length-data.indexOf(",")-1)*0.75);
+     if(bytes>500*1024&&(quality>0.42||max>320)){if(quality>0.42)quality=Math.max(0.42,quality-0.08);else max=Math.max(320,Math.round(max*0.8));encode();return}
+     if(bitmap.close)bitmap.close();
+     if(bytes>500*1024){reject(new Error("Photo 500 KB se chhoti nahi ho payi. Camera se low-resolution photo lein."));return}
+     resolve(data);
+    };
+    try{encode()}catch(err){if(bitmap.close)bitmap.close();tryFileReader()}
+   }).catch(tryFileReader);
+  }else tryFileReader();
  });
 }
 document.getElementById("memberForm").addEventListener("submit",async e=>{
