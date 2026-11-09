@@ -571,23 +571,29 @@ function reportFieldLabel(k){return String(k).replace(/([A-Z])/g," $1").replace(
 function reportValue(v){
  if(v===null||v===undefined||v==="")return "—";
  if(typeof v==="boolean")return v?"Yes":"No";
+ if(typeof v==="string"&&v.length>240)return "[Long data hidden]";
  if(typeof v!=="object")return String(v);
  return "";
 }
 function reportNested(value){
+ if(value&&typeof value==="object"&&!Array.isArray(value)&&(value.data||value.base64)){
+  const name=value.name||"Uploaded document";
+  const type=value.type||"File";
+  return '<span style="display:inline-flex;gap:6px;align-items:center;background:#edf5ef;border:1px solid #d5e5db;border-radius:7px;padding:6px 9px;font-size:12px">📎 '+esc(name)+' · '+esc(type)+'</span>';
+ }
  if(Array.isArray(value)){
   if(!value.length)return '<span class="muted">None</span>';
   if(value.every(v=>v===null||typeof v!=="object"))return '<div style="display:flex;flex-wrap:wrap;gap:6px">'+value.map(v=>'<span style="background:#eaf3ee;border:1px solid #d5e5db;border-radius:7px;padding:5px 8px;font-size:12px">'+esc(reportValue(v))+'</span>').join("")+'</div>';
   if(value.every(v=>v&&typeof v==="object"&&!Array.isArray(v))){
    return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px">'+value.map((row,i)=>{
-    const entries=Object.entries(row).filter(([k,v])=>!["id","createdAt","updatedAt"].includes(k)&&v!==""&&v!==null&&v!==undefined);
+    const entries=Object.entries(row).filter(([k,v])=>!["id","itemId","recipeId","createdAt","updatedAt","data","base64"].includes(k)&&v!==""&&v!==null&&v!==undefined);
     const heading=row.itemName||row.name||row.ingredientName||("Ingredient "+(i+1));
     return '<div style="border:1px solid #d5e5db;border-radius:9px;padding:9px;background:#f7faf8;min-width:0"><b style="display:block;margin-bottom:5px;overflow-wrap:anywhere">'+esc(heading)+'</b>'+entries.filter(([k])=>!["itemName","name","ingredientName"].includes(k)).map(([k,v])=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-top:1px solid #e6eee8;font-size:12px"><span style="color:#63766b">'+esc(reportFieldLabel(k))+'</span><b style="text-align:right;overflow-wrap:anywhere">'+esc(reportValue(v))+'</b></div>').join("")+'</div>';
    }).join("")+'</div>';
   }
   return '<div style="display:grid;gap:6px">'+value.map(v=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</div>').join("")+'</div>';
  }
- if(value&&typeof value==="object")return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px">'+Object.entries(value).filter(([k])=>!["id","createdAt","updatedAt"].includes(k)).map(([k,v])=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px;min-width:0"><small style="display:block;color:#66786d">'+esc(reportFieldLabel(k))+'</small><b style="font-size:12px;overflow-wrap:anywhere">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</b></div>').join("")+'</div>';
+ if(value&&typeof value==="object")return '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px">'+Object.entries(value).filter(([k])=>!["id","itemId","recipeId","createdAt","updatedAt","data","base64"].includes(k)).map(([k,v])=>'<div style="padding:7px;background:#f4f8f5;border-radius:7px;min-width:0"><small style="display:block;color:#66786d">'+esc(reportFieldLabel(k))+'</small><b style="font-size:12px;overflow-wrap:anywhere">'+(v&&typeof v==="object"?reportNested(v):esc(reportValue(v)))+'</b></div>').join("")+'</div>';
  return esc(reportValue(value));
 }
 function reportRecordCard(x,index,label,icon){
@@ -665,17 +671,18 @@ function renderAccountOverview(list){
  const purchaseRows=monthlyPurchases.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(p=>'<tr><td>'+esc(p.date||"—")+'</td><td>'+esc(p.bill||"—")+'</td><td>'+esc(p.itemName||"—")+'</td><td>'+esc(p.vendor||"—")+'</td><td>'+esc(p.quantity??"—")+' '+esc(p.unit||"")+'</td><td>'+money(p.total??(num(p.quantity)*num(p.rate)))+'</td></tr>').join("");
  const memberTable=memberRows.map(m=>'<tr><td>'+esc(m.name)+'</td><td>'+esc(m.force||"—")+'</td><td>'+money(m.bill)+'</td><td>'+money(m.paid)+'</td><td>'+money(m.due)+'</td><td>'+money(m.credit)+'</td></tr>').join("");
  const txRows=monthlyTx.slice().sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))).map(t=>'<tr><td>'+esc(t.date||"—")+'</td><td>'+esc(labels[t.type]||t.type||"—")+'</td><td>'+esc(t.fromStaff||t.memberName||(members.find(m=>String(m.id)===String(t.memberId))||{}).name||"—")+'</td><td>'+esc(t.toStaff||"—")+'</td><td>'+esc(t.description||"—")+'</td><td>'+esc(t.approvedBy||"—")+'</td><td>'+money(t.amount)+'</td></tr>').join("");
- const surplusColor=surplus>=0?"#b9f5cf":"#ffb5b5";
+ const surplusColor="#b9f5cf";
  let box=document.getElementById("accountOverview");
  if(!box){box=document.createElement("section");box.id="accountOverview";box.className="account-auto-overview";document.getElementById("pageSub").after(box);}
- box.innerHTML='<section class="cards">'+stat("Monthly Limit · "+activeMembers.length+" × "+money(limitPerMember),money(monthlyLimit))+stat("Office se mila",money(officeReceived))+stat("Mess Cutting (auto)",money(cuttingCollected))+stat("Office mein jama",money(officeDeposited))+stat("Bacha Cutting paisa",money(cuttingRemaining))+stat("Monthly ration bills",money(purchaseTotal))+stat("Actual other expenses",money(expenseTotal))+'</section>'+
- '<section class="panel" style="margin-top:14px"><h3>🧮 Monthly Account Reconciliation · '+esc(month)+'</h3><div class="tablewrap"><table><tbody>'+
- '<tr><th>Active members × Settings monthly limit</th><td>'+money(monthlyLimit)+'</td></tr>'+
- '<tr><th>Ration purchase bills this month</th><td>'+money(purchaseTotal)+'</td></tr>'+
- '<tr><th>Other + special + approved surplus expenses</th><td>'+money(expenseTotal)+'</td></tr>'+
- '<tr><th>Total actual expenditure</th><td><b>'+money(actualSpend)+'</b></td></tr>'+
- '<tr><th>Surplus / (Limit se adhik kharch)</th><td><b style="color:'+surplusColor+'">'+(surplus<0?"Extra expenditure ":"Surplus ")+money(Math.abs(surplus))+'</b></td></tr>'+
- '</tbody></table></div><p class="notice">Surplus alag record hai. Isse cash balance na samjhein. Surplus se kharch karne ke liye Add New mein “Surplus se approved expense” chunein aur Approval / receipt reference zaroor bharein. Yeh monthly limit-based calculation hai; opening ration stock ka value handover mein alag record hoga.</p></section>'+
+ box.innerHTML='<section class="cards">'+stat("Office se mila",money(officeReceived))+stat("Mess Cutting · meal attendance",money(cuttingCollected))+stat("Office mein jama",money(officeDeposited))+stat("Bacha Cutting paisa",money(cuttingRemaining))+stat("Ration purchase · stock added",money(purchaseTotal))+stat("Meal ration used",money(mealTotal))+stat("Other cash expenses",money(expenseTotal))+'</section>'+
+ '<section class="panel" style="margin-top:14px"><h3>🧮 Monthly Mess Account · '+esc(month)+'</h3><div class="tablewrap"><table><tbody>'+
+ '<tr><th>Meal attendance se ration cost</th><td>'+money(mealTotal)+'</td></tr>'+
+ '<tr><th>Ration purchase (stock/inventory)</th><td>'+money(purchaseTotal)+'</td></tr>'+
+ '<tr><th>Other / special / approved cash expenses</th><td>'+money(expenseTotal)+'</td></tr>'+
+ '<tr><th>Office + Mess Cutting collection</th><td>'+money(officeReceived+cuttingCollected)+'</td></tr>'+
+ '<tr><th>Office mein jama</th><td>'+money(officeDeposited)+'</td></tr>'+
+ '<tr><th>Cash balance (purchase stock ko dobara minus kiye bina)</th><td><b>'+money(officeReceived+cuttingCollected-officeDeposited-expenseTotal)+'</b></td></tr>'+
+ '</tbody></table></div><p class="notice">Ration purchase stock mein add hota hai; isliye purchase bill ko cash balance se dobara minus nahi kiya gaya. Meal attendance ka ration consumption alag dikhaya gaya hai. Monthly limit-based surplus yahan nahi dikhaya jata.</p></section>'+
  '<section class="panel" style="margin-top:14px"><h3>🏦 Cash Movement · Office / Mess Cutting</h3><div class="tablewrap"><table><tbody>'+
  '<tr><th>Office se cash mila</th><td>'+money(officeReceived)+'</td></tr><tr><th>Jawanon se Mess Cutting (meal charges se automatic)</th><td>'+money(cuttingCollected)+'</td></tr><tr><th>Office mein wapas jama (manual entry)</th><td>'+money(officeDeposited)+'</td></tr>'+
  '<tr><th>Jama ke baad bacha Cutting paisa</th><td><b>'+money(cuttingRemaining)+'</b></td></tr><tr><th>Cash movement ka net (purchases/expenses se pehle)</th><td><b>'+money(officeReceived+cuttingRemaining)+'</b></td></tr></tbody></table></div><p class="muted">Har receipt aur office deposit ko alag transaction ke roop mein enter karein. Is net figure ko actual cash-in-hand tabhi maanें jab saare cash receipts/payments record ho chuke hon.</p></section>'+
@@ -687,8 +694,8 @@ function renderAccountOverview(list){
 function buildMonthlyMessSummary(dateValue){
  const month=String(dateValue||new Date().toISOString().slice(0,10)).slice(0,7);
  const members=(data.members||[]).filter(m=>!m.status||String(m.status).toLowerCase()==="active");
- const limitPerMember=Number(data.settings?.monthlyLimitPerMember??5000)||0;
- const monthlyLimit=members.length*limitPerMember;
+ const limitPerMember=0;
+ const monthlyLimit=0;
  const inMonth=x=>String(x.date||"").slice(0,7)===month;
  const purchases=(data.purchases||[]).filter(inMonth);
  const tx=(data.transactions||[]).filter(inMonth);
@@ -710,12 +717,12 @@ function renderHandoverOverview(){
  const stockValue=stockSnapshot.reduce((s,x)=>s+x.estimatedValue,0);
  const stockRows=stockSnapshot.map(x=>'<tr><td>'+esc(x.itemName)+'</td><td>'+esc(x.quantity.toLocaleString("en-IN"))+' '+esc(x.unit)+'</td><td>'+money(x.rate)+' / '+esc(x.unit)+'</td><td>'+money(x.estimatedValue)+'</td></tr>').join("");
  const totalReceived=summary.officeReceived+summary.cuttingCollected;
- const totalOut=summary.officeDeposited+summary.purchaseTotal+summary.expenseTotal;
+ const totalOut=summary.officeDeposited+summary.expenseTotal;
  const calculatedCash=totalReceived-totalOut;
  const nco=staff.find(x=>String(x.duty||"").toLowerCase()==="mess nco");
  const so=staff.find(x=>String(x.duty||"").toLowerCase()==="mess so");
  const latest=saved.length?saved[saved.length-1]:null;
- const actualCash=Number(latest?.cash||0);
+ const actualCash=latest&&latest.cash!==undefined&&latest.cash!==null&&latest.cash!==""?Number(latest.cash):calculatedCash;
  const physicalHandoverValue=actualCash+stockValue;
  const cashDifference=actualCash-calculatedCash;
  const cashColor=calculatedCash>=0?"#b9f5cf":"#ffb5b5";
@@ -731,7 +738,8 @@ function renderHandoverOverview(){
   "Office mein jama: "+money(summary.officeDeposited),
   "Ration purchase bills: "+money(summary.purchaseTotal),
   "Other / special / approved expense: "+money(summary.expenseTotal),
-  "Kul jama/kharch: "+money(totalOut),
+  "Office deposit + other cash expenses: "+money(totalOut),
+  "Ration purchase (inventory; not subtracted twice from cash): "+money(summary.purchaseTotal),
   "Hisab se bacha cash (ledger): "+money(calculatedCash),
   "Actual ginā hua cash (latest saved handover): "+money(actualCash),
   "Cash hisaab ka antar: "+money(cashDifference),
@@ -745,7 +753,7 @@ function renderHandoverOverview(){
  let box=document.getElementById("handoverAuto");
  if(!box){box=document.createElement("section");box.id="handoverAuto";box.className="panel handover-auto";document.getElementById("tablePanel").before(box);}
  box.innerHTML='<div class="handover-actions" style="display:flex;flex-wrap:wrap;gap:9px;margin-bottom:16px"><button type="button" onclick="window.print()">📄 Handover PDF / Print</button><a class="btn" href="'+waUrl+'" target="_blank" rel="noopener" style="background:#138b50;color:#fff;text-decoration:none;padding:11px 15px;border-radius:9px;font-weight:700">🟢 Naye Mess NCO ko WhatsApp</a></div>'+
- '<section class="panel" style="border:2px solid #f2c94c;background:linear-gradient(145deg,#10432f,#082b20);margin-bottom:16px;padding:18px"><h2 style="color:#f2c94c;margin:0 0 12px;text-align:center">मेस की बचत / Surplus</h2><p>मासिक सीमा: '+summary.activeMembers+' जवान × '+money(summary.limitPerMember)+' = <b>'+money(summary.monthlyLimit)+'</b></p><p>राशन खरीद + दर्ज अन्य खर्च: <b>'+money(summary.totalExpense)+'</b></p><div style="text-align:center;border:2px dashed #f2c94c;border-radius:12px;padding:13px;margin:10px 0"><small>इस महीने की बचत / सीमा से अधिक खर्च</small><div style="font-size:30px;font-weight:800;color:'+surplusColor+'">'+money(Math.abs(summary.surplus))+'</div><b>'+(summary.surplus>=0?"यह बचत अलग रहेगी; अनुमति मिलने पर ही खर्च करें।":"मासिक सीमा से अधिक खर्च")+'</b></div><p style="font-size:13px">Surplus खर्च के लिए Accounts में स्वीकृति / रसीद संदर्भ दर्ज करें।</p></section>'+
+ '<section class="panel" style="border:2px solid #d8b63d;background:linear-gradient(145deg,#10432f,#082b20);margin-bottom:16px;padding:18px"><h2 style="color:#f2c94c;margin:0 0 12px;text-align:center">📊 वास्तविक मेस स्थिति · '+esc(summary.month)+'</h2><div class="cards">'+stat("Meal ration used",money((data.mealRecords||[]).filter(x=>String(x.date||"").slice(0,7)===summary.month).reduce((s,x)=>s+Number(x.totalCost||0),0))+stat("Ration purchases · stock added",money(summary.purchaseTotal))+stat("Other expenses",money(summary.expenseTotal))+stat("Balance ration value",money(stockValue))+'</div><p class="notice">Surplus ko monthly limit se nahi nikala ja raha. Meal ka ration cost attendance se aata hai; purchase stock mein judta hai. Dono ko alag rakha gaya hai taaki ek hi paisa do baar kharcha na ginein.</p></section>'+
  '<h3>स्वचालित मेस हैंडओवर सारांश · '+esc(summary.month)+'</h3><section class="cards">'+stat("Office se mila",money(summary.officeReceived))+stat("Jawan Mess Cutting · auto",money(summary.cuttingCollected))+stat("कुल प्राप्त रकम",money(totalReceived))+stat("Office mein jama",money(summary.officeDeposited))+stat("Ration purchase",money(summary.purchaseTotal))+stat("Other expense",money(summary.expenseTotal))+stat("Balance Ration value",money(stockValue))+stat("हिसाब से बचा Cash",money(calculatedCash))+stat("Actual Cash + Ration · Handover Value",money(physicalHandoverValue))+'</section>'+
  '<section class="panel" style="margin-top:14px"><h4>💰 नकद का पूरा मिलान</h4><div class="tablewrap"><table><tbody><tr><th>Office se Mess NCO ko mila</th><td>'+money(summary.officeReceived)+'</td></tr><tr><th>Jawan Mess Cutting — automatic</th><td>+ '+money(summary.cuttingCollected)+'</td></tr><tr><th><b>कुल प्राप्त रकम</b></th><td><b>'+money(totalReceived)+'</b></td></tr><tr><th>Office mein Mess SO ko jama</th><td>− '+money(summary.officeDeposited)+'</td></tr><tr><th>Ration purchase bills</th><td>− '+money(summary.purchaseTotal)+'</td></tr><tr><th>Other / special / approved expense</th><td>− '+money(summary.expenseTotal)+'</td></tr><tr><th><b>हिसाब से बचा नकद</b></th><td><b style="color:'+cashColor+'">'+money(calculatedCash)+'</b></td></tr><tr><th>Actual ginā hua cash (latest saved handover)</th><td>'+money(actualCash)+'</td></tr><tr><th>Cash hisaab ka antar (actual − ledger)</th><td>'+money(cashDifference)+'</td></tr><tr><th><b>Physical Handover Value (actual cash + राशन)</b></th><td><b>'+money(physicalHandoverValue)+'</b></td></tr></tbody></table></div><p class="notice">Mess Cutting meal attendance se automatic calculate hoti hai. Office se liya aur office mein jama paisa Accounts mein manually enter karein. Purchase bills aur expenses minus hote hain. Opening cash / purana balance is monthly calculation mein shamil nahi hai. Handover Value actual ginā hua cash (latest saved handover form) + current ration stock value hai. Ledger cash balance aur actual cash ka antar alag verify karein.</p></section>'+
  '<section class="panel" style="margin-top:14px"><h4>📦 Balance Ration — item-wise closing stock</h4><div class="tablewrap"><table><thead><tr><th>राशन वस्तु</th><th>बची मात्रा</th><th>दर</th><th>कुल मूल्य</th></tr></thead><tbody>'+(stockRows||'<tr><td colspan="4">Ration Store mein item nahi hai.</td></tr>')+'</tbody><tfoot><tr><th colspan="3">कुल Balance Ration की अनुमानित कीमत</th><th>'+money(stockValue)+'</th></tr></tfoot></table></div><p class="notice">Quantity Ration Store ke current balance se automatic aati hai. Purchase add aur meal save hone par stock update hota hai. Handover se pehle har item ka physical weight / count verify karein. Value current weighted-average store rate se estimate hai.</p></section>'+
