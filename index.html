@@ -828,12 +828,26 @@ function loadDashboard() {
     sum + Number(p.total || p.amount || 0),0
   );
 
-  const totalExpenses = transactions
-    .filter(t => String(t.type || "").toLowerCase() === "expense")
-    .reduce((sum,t) => sum + Number(t.amount || 0),0);
-
-  const collection = Number(data.totalCollection || 0);
-  const dues = Number(data.totalDues || 0);
+  const mealCost = mealRecords.reduce((sum,r)=>sum+numberValue(r.totalCost ?? (numberValue(r.chargePerMember)*(Array.isArray(r.memberIds)?r.memberIds.length:0))),0);
+  const otherCashExpenses = transactions
+    .filter(t => ["expense","special_expense","surplus_spend"].includes(String(t.type || "").toLowerCase()))
+    .reduce((sum,t) => sum + numberValue(t.amount),0);
+  const totalExpenses = mealCost + otherCashExpenses;
+  const oldCollections = transactions
+    .filter(t => ["collection","cutting_collected"].includes(String(t.type || "").toLowerCase()))
+    .reduce((sum,t)=>sum+numberValue(t.amount),0);
+  const cuttingCollected = mealRecords.reduce((sum,r)=>sum+numberValue(r.chargePerMember)*(Array.isArray(r.memberIds)?r.memberIds.length:0),0);
+  const collection = officeMoneyReceived + cuttingCollected + oldCollections;
+  const officeDeposited = transactions
+    .filter(t=>String(t.type||"").toLowerCase()==="office_deposited")
+    .reduce((sum,t)=>sum+numberValue(t.amount),0);
+  const dues = activeMembers.reduce((sum,member)=>{
+    const id=String(member.id);
+    const billed=mealRecords.filter(r=>(r.memberIds||[]).map(String).includes(id)).reduce((s,r)=>s+numberValue(r.chargePerMember),0);
+    const paid=transactions.filter(t=>String(t.memberId)===id&&["collection","cutting_collected"].includes(String(t.type||"").toLowerCase())).reduce((s,t)=>s+numberValue(t.amount),0);
+    return sum+Math.max(0,billed-paid);
+  },0);
+  const cashAvailable = collection - officeDeposited - otherCashExpenses;
 
   const set = (id,value) => {
     document.getElementById(id).textContent = value;
@@ -874,7 +888,7 @@ function loadDashboard() {
   set("collection",money(collection));
   set("balanceExpenses",money(totalExpenses));
   set("dues",money(dues));
-  set("balance",money(collection-totalExpenses));
+  set("balance",money(cashAvailable));
   
   const settings=data.settings&&typeof data.settings==="object"?data.settings:{};
   const name=settings.messName||"A Coy (CRPF)";
