@@ -276,7 +276,13 @@ td.no-print{white-space:nowrap}
     </div>
     <div class="field">
      <label>Member Photo</label>
-     <input id="photo" type="file" accept="image/*">
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+      <button type="button" class="secondary" onclick="document.getElementById('photoCamera').click()">📷 Take Photo</button>
+      <button type="button" class="secondary" onclick="document.getElementById('photo').click()">🖼️ Choose from Gallery / Files</button>
+     </div>
+     <input id="photoCamera" type="file" accept="image/*" capture="environment" style="display:none">
+     <input id="photo" type="file" accept="image/*" style="display:none">
+     <small class="muted" id="photoChoiceNote">Camera ya Gallery se photo chun sakte hain.</small>
     </div>
     <div class="field">
      <label>Movement Orders / Document / PDF</label>
@@ -501,7 +507,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const data=getData();
  data.members=Array.isArray(data.members)?data.members:[];
- const file=document.getElementById("photo").files[0];
+ const file=document.getElementById("photoCamera").files[0]||document.getElementById("photo").files[0];
  const docFile=document.getElementById("memberDocument").files[0];
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
