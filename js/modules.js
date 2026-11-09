@@ -144,11 +144,6 @@ function render(){
       const id=String(x.id||"").replace(/\\/g,"");
       const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
-      if(cfg.key==="purchases"){
-        const item=(data.ration||[]).find(a=>String(a.id)===String(x.itemId));
-        const stock=Number(item?.quantity||0),unit=item?.unit||"—",rate=Number(item?.price||0),value=stock*rate;
-        return '<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(x.itemName||item?.name||"—")+'</td><td>'+esc(x.quantity||0)+'</td><td>'+esc(x.unit||"")+'</td><td>'+money(x.rate||0)+'</td><td>'+money(x.total??(Number(x.quantity||0)*Number(x.rate||0)))+'</td><td>'+esc(x.vendor||"—")+'</td><td><b>'+esc(stock.toLocaleString("en-IN"))+' '+esc(unit)+'</b></td><td>'+money(rate)+'</td><td><b>'+money(value)+'</b></td><td><div class="actions">'+action+'</div></td></tr>';
-      }
       if(cfg.key==="handovers"){
         const ms=x.monthlySummary||{},stock=Number(x.stockTotalValue??(x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0)),due=Number(x.pendingCutting??ms.pendingCutting??0),actual=Number(x.actualCash??(Number(x.cash||0)-stock-due)),grand=Number(x.totalHandoverValue??x.cash??(actual+stock+due)),doc=x.attachment;
         return '<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(x.from||"—")+'</td><td>'+esc(x.to||"—")+'</td><td>'+money(actual)+'</td><td>'+money(stock)+'</td><td>'+money(ms.cuttingBilled||0)+'</td><td>'+money(ms.cuttingCollected||0)+'</td><td>'+money(due)+'</td><td><b>'+money(grand)+'</b></td><td>'+esc(x.notes||"—")+'</td><td>'+(doc&&doc.data?'<button class="view-btn" type="button" onclick="openDocumentPreview(&quot;'+id+'&quot;)">📄 देखें</button>':"—")+'</td><td><div class="actions">'+action+'</div></td></tr>';
