@@ -314,7 +314,7 @@ td.no-print{white-space:nowrap}
    <button class="secondary" onclick="printMember()">📄 Member PDF</button>
    <button class="primary" onclick="openPayment()">💰 Payment</button>
    <button class="secondary" onclick="openLeaveCard()">🏖️ Leave Card</button>
-   <button class="primary" onclick="printMember(true)">📲 WhatsApp PDF</button>
+   <button class="primary" onclick="shareMemberPdf()">📲 WhatsApp PDF</button>
    <button class="primary" onclick="closeView()">Close</button>
   </div>
  </div>
@@ -784,19 +784,29 @@ function printMember(shareMode){
     const blob=await window.html2pdf().set({margin:8,filename:"Member-Statement-"+String(m.forceNo||m.name).replace(/[^a-z0-9_-]/gi,"_")+".pdf",image:{type:"jpeg",quality:0.88},html2canvas:{scale:1.5,useCORS:true,allowTaint:false,backgroundColor:"#ffffff"},jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}}).from(w.document.querySelector(".sheet")).outputPdf("blob");
     const file=new File([blob],"Member-Statement-"+String(m.forceNo||m.name).replace(/[^a-z0-9_-]/gi,"_")+".pdf",{type:"application/pdf"});
     const shareText="Namaste "+m.name+" ji, aapka CRPF Mess Member Statement PDF bhej raha hoon.";
-    if(navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
-     await navigator.share({files:[file],title:"CRPF Mess Member Statement",text:shareText});
-    }else{
-     const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
-     window.open("https://wa.me/"+String(m.contact||"").replace(/\\D/g,"")+"?text="+encodeURIComponent(shareText+" PDF download karke yahan attach karein."),"_blank");
-     showToast("PDF download ho gayi. WhatsApp chat mein attach kar dein.","success");
-    }
+    window.crpfReadyMemberPdf={file:file,text:shareText,phone:String(m.contact||"").replace(/\\D/g,"")};
+    showToast("PDF taiyar hai. Ab WhatsApp PDF button dobara dabayein.","success");
    }catch(err){showToast(err.message||"PDF share nahi ho payi.","error");}
    finally{w.close();}
   });
  }else{
   w.document.close();const printAfterImages=()=>{const imgs=Array.from(w.document.images);Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;setTimeout(resolve,4000);}))).then(()=>{w.focus();w.print();});};printAfterImages();
  }
+}
+function shareMemberPdf(){
+ const ready=window.crpfReadyMemberPdf;
+ if(ready&&ready.file){
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[ready.file]})){
+   const sharePromise=navigator.share({files:[ready.file],title:"CRPF Mess Member Statement",text:ready.text});
+   sharePromise.catch(err=>{if(err&&err.name!=="AbortError")showToast("Share nahi ho paya. Dobara try karein.","error");});
+  }else{
+   const url=URL.createObjectURL(ready.file),a=document.createElement("a");a.href=url;a.download=ready.file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   if(ready.phone)window.open("https://wa.me/"+ready.phone+"?text="+encodeURIComponent(ready.text+" PDF download karke yahan attach karein."),"_blank");
+   showToast("PDF download ho gayi. WhatsApp chat mein attach karein.","success");
+  }
+  return;
+ }
+ printMember(true);
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
 document.getElementById("addMemberBtn").addEventListener("click",()=>openForm());
