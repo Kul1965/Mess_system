@@ -673,7 +673,8 @@ function renderAccountOverview(list){
  if(!box){box=document.createElement("section");box.id="accountOverview";box.className="account-auto-overview";document.getElementById("pageSub").after(box);}
  box.innerHTML='<section class="cards">'+stat("Office se mila",money(officeReceived))+stat("Mess Cutting · meal attendance",money(cuttingCollected))+stat("Office mein jama",money(officeDeposited))+stat("Bacha Cutting paisa",money(cuttingRemaining))+stat("Ration purchase · stock added",money(purchaseTotal))+stat("Meal ration used",money(mealTotal))+stat("Other cash expenses",money(expenseTotal))+'</section>'+
  '<section class="panel" style="margin-top:14px"><h3>🧮 Monthly Mess Account · '+esc(month)+'</h3><div class="tablewrap"><table><tbody>'+
- '<tr><th>Meal attendance se ration cost</th><td>'+money(mealTotal)+'</td></tr>'+
+ '<tr><th>Meal attendance se ration cost (bill)</th><td>'+money(mealTotal)+'</td></tr>'+
+ '<tr><th>Mess Cutting actually collected</th><td>'+money(cuttingCollected)+'</td></tr>'+
  '<tr><th>Ration purchase (stock/inventory)</th><td>'+money(purchaseTotal)+'</td></tr>'+
  '<tr><th>Other / special / approved cash expenses</th><td>'+money(expenseTotal)+'</td></tr>'+
  '<tr><th>Office + Mess Cutting collection</th><td>'+money(officeReceived+cuttingCollected)+'</td></tr>'+
