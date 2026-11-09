@@ -37,7 +37,7 @@
   backdrop.addEventListener("click",close);
   sidebar.querySelectorAll("a").forEach(a=>a.addEventListener("click",close));
   document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
-  window.addEventListener("resize",()=>{if(window.innerWidth>1400)close()});
+
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
  else init();
