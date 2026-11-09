@@ -6,7 +6,7 @@
   if(!sidebar||!topbar)return;
   // Keep the lower mobile tab-bar menu control; do not add a second
   // hamburger button to the top header.
-  const button=document.querySelector(".mobile-tabbar .tab-menu");
+  const button=document.querySelector(".top-nav .tab-menu");
   if(!button)return;
   button.setAttribute("aria-expanded","false");
   let backdrop=document.querySelector(".mobile-menu-backdrop");
