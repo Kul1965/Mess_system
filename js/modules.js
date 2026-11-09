@@ -57,6 +57,26 @@ function arr(){
   list.forEach((x,i)=>{if(x && !x.id)x.id="R"+Date.now()+"_"+i;});
   return list;
 }
+function purchaseLowStockItem(id){
+ const item=(data.ration||[]).find(x=>String(x.id)===String(id));
+ if(!item){showAppAlert("Ration item nahi mila. Ration Store refresh karein.");return}
+ openForm();
+ const field=document.getElementById("f_itemId");
+ if(field)field.value=item.id;
+}
+function renderLowRationPurchaseList(){
+ const body=document.getElementById("lowRationPurchaseRows");
+ if(!body)return;
+ const low=(data.ration||[]).filter(isLowStock);
+ const count=document.getElementById("lowRationCount");
+ if(count)count.textContent=low.length+" items";
+ const empty=document.getElementById("lowRationPurchaseEmpty");
+ if(empty)empty.hidden=low.length>0;
+ body.innerHTML=low.map(item=>{
+  const qty=Number(item.quantity||0),min=Number(item.minimum||0),unit=item.unit||"",id=String(item.id||"").replace(/\\/g,"");
+  return '<tr><td><b>'+esc(item.name||"—")+'</b></td><td>'+esc(qty.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+esc(min.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+money(item.price||0)+' / '+esc(unit)+'</td><td><span style="color:#ffb5b5;font-weight:700">'+(qty<=0?"Out of stock":"Low stock")+'</span></td><td><button type="button" class="view-btn" onclick="purchaseLowStockItem(&quot;'+id+'&quot;)">🛒 Purchase</button></td></tr>';
+ }).join("");
+}
 function isLowStock(x){
   const qty=Number.parseFloat(x.quantity ?? x.stock ?? 0) || 0;
   const min=Number.parseFloat(x.minimum ?? x.minStock ?? x.minimumStock ?? x.min ?? x.reorderLevel ?? 0) || 0;
@@ -139,6 +159,7 @@ function render(){
     document.getElementById("stats").innerHTML=statsHtml(list);
     if(cfg.key==="transactions")renderAccountOverview(list);
     if(cfg.key==="handovers")renderHandoverOverview(list);
+    if(cfg.key==="purchases")renderLowRationPurchaseList();
   }catch(e){
     console.error("Page render error",e);
     const empty=document.getElementById("empty");
