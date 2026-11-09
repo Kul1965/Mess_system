@@ -481,14 +481,16 @@ function readPhoto(file){
   reader.onload=()=>{
    const img=new Image();img.onerror=()=>reject(new Error("Unable to process this photo."));
    img.onload=()=>{
-    let max=900,quality=0.82;const canvas=document.createElement("canvas");
+    // Small JPEG keeps member photos within mobile browser storage limits.
+    let max=600,quality=0.68;const canvas=document.createElement("canvas");
     const encode=()=>{
      const scale=Math.min(1,max/Math.max(img.width,img.height));
      canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));
-     const ctx=canvas.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+     const ctx=canvas.getContext("2d");if(!ctx){reject(new Error("Photo processing unavailable. Please choose another photo."));return}
+     ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
      const data=canvas.toDataURL("image/jpeg",quality),bytes=Math.ceil((data.length-data.indexOf(",")-1)*0.75);
-     if(bytes>1800*1024&&(quality>0.5||max>480)){if(quality>0.5)quality=Math.max(0.5,quality-0.1);else max=Math.max(480,Math.round(max*0.8));encode();return}
-     if(bytes>1800*1024){reject(new Error("Photo compress nahi ho payi. Chhoti photo select karein."));return}
+     if(bytes>500*1024&&(quality>0.42||max>320)){if(quality>0.42)quality=Math.max(0.42,quality-0.08);else max=Math.max(320,Math.round(max*0.8));encode();return}
+     if(bytes>500*1024){reject(new Error("Photo 500 KB se chhoti nahi ho payi. Camera se low-resolution photo lein."));return}
      resolve(data);
     };encode();
    };img.src=reader.result;
