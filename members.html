@@ -797,7 +797,6 @@ function printMember(shareMode){
  }else{
   w.document.close();const printAfterImages=()=>{const imgs=Array.from(w.document.images);Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;setTimeout(resolve,4000);}))).then(()=>{w.focus();w.print();});};printAfterImages();
  }
-}()=>{const imgs=Array.from(w.document.images);Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;setTimeout(resolve,4000);}))).then(()=>{w.focus();w.print();});};printAfterImages();
 }
 document.getElementById("date").textContent=new Date().toLocaleDateString();
 document.getElementById("addMemberBtn").addEventListener("click",()=>openForm());
