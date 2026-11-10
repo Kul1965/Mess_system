@@ -814,8 +814,9 @@ function renderHandoverOverview(){
 })();
 
 document.getElementById("recordForm")?.addEventListener("submit",saveCurrentRecord);
-migrateRateUnits();
-render();
+ // SAFETY: Never auto-rewrite historical stock rates on page load.
+ // Legacy rates can already be stored per base unit; dividing by 1000 silently corrupts stock value.
+ render();
 if(cfg.key==="purchases"){
   const wanted=new URLSearchParams(location.search).get("item");
   if(wanted){
