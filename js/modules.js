@@ -594,7 +594,7 @@ function renderReports(){
   ["All Mess Records","📚","__all__"],
   ["Members","👥","members"],["Ration Store","📦","ration"],
   ["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],
-  ["Planned Menu","📅","menu"],["Making Menu / Saved Meals","🍽️","mealRecords"],
+  ["Weekly Planned Menu","📅","weeklyMenus"],["Making Menu / Saved Meals","🍽️","mealRecords"],
   ["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],
   ["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]
  ];
@@ -674,7 +674,7 @@ function showAllRecordCategories(){
 }
 function showRecordCategory(key,label,icon){
  const fresh=read();data=fresh&&typeof fresh==="object"?fresh:{};
- const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
+ const sources={members:data.members||[],ration:data.ration||[],purchases:data.purchases||[],recipes:data.recipes||[],menu:data.menu||[],weeklyMenus:data.weeklyMenus||[],mealRecords:data.mealRecords||[],transactions:data.transactions||[],staff:data.staff||[],handovers:data.handovers||[],stockMovements:data.stockMovements||[]};
  const list=Array.isArray(sources[key])?sources[key]:[];
  const old=document.getElementById("recordCategoryPopup");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="recordCategoryPopup";
