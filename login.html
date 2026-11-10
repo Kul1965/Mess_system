@@ -45,6 +45,10 @@ function setMode(m){
  $("intro").textContent=m==="setup"?"Pehli baar ke liye Mess NCO ka naya username aur password banayein.":m==="change"?"Purane NCO ka password verify karke naye NCO ka login set karein.":"Apna username aur password daal kar mess system kholiye.";
  $("submitBtn").textContent=m==="setup"?"Create NCO Login":m==="change"?"Save New NCO Login":"Login";
  $("passwordLabel").textContent=m==="change"?"CURRENT PASSWORD":"PASSWORD";
+ // Hidden required fields can block the browser from submitting the form.
+ $("password").required=m!=="setup";
+ $("newPassword").required=m==="setup"||m==="change";
+ $("confirmPassword").required=m==="setup"||m==="change";
 }
 if(!record){setMode("setup");}
 else if(sessionStorage.getItem(SESSION)==="yes"){
