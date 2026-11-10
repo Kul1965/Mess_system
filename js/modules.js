@@ -74,7 +74,7 @@ function renderLowRationPurchaseList(){
  if(empty)empty.hidden=low.length>0;
  body.innerHTML=low.map(item=>{
   const qty=Number(item.quantity||0),min=Number(item.minimum||0),unit=item.unit||"",id=String(item.id||"").replace(/\\/g,"");
-  return '<tr><td><b>'+esc(item.name||"—")+'</b></td><td>'+esc(qty.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+esc(min.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+money(item.price||0)+' / '+esc(unit)+'</td><td><span style="color:#ffb5b5;font-weight:700">'+(qty<=0?"Out of stock":"Low stock")+'</span></td><td><button type="button" class="view-btn" onclick="purchaseLowStockItem(&quot;'+id+'&quot;)">🛒 Purchase</button></td></tr>';
+  return '<tr><td><b>'+esc(item.name||"—")+'</b></td><td>'+esc(qty.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+esc(min.toLocaleString("en-IN"))+' '+esc(unit)+'</td><td>'+rateMoney(item.price||0)+' / '+esc(unit)+'</td><td><span style="color:#ffb5b5;font-weight:700">'+(qty<=0?"Out of stock":"Low stock")+'</span></td><td><button type="button" class="view-btn" onclick="purchaseLowStockItem(&quot;'+id+'&quot;)">🛒 Purchase</button></td></tr>';
  }).join("");
 }
 function isLowStock(x){
@@ -84,6 +84,7 @@ function isLowStock(x){
 }
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function money(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2})}
+function rateMoney(v){return "Rs "+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:4})}
 async function compressUploadImage(file){
  const maxBytes=1800*1024;
  const dataUrl=await new Promise((resolve,reject)=>{
@@ -148,7 +149,7 @@ function render(){
         const ms=x.monthlySummary||{},stock=Number(x.stockTotalValue??(x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0)),due=Number(x.pendingCutting??ms.pendingCutting??0),actual=Number(x.actualCash??(Number(x.cash||0)-stock-due)),grand=Number(x.totalHandoverValue??x.cash??(actual+stock+due)),doc=x.attachment;
         return '<tr><td>'+esc(x.date||"—")+'</td><td>'+esc(x.from||"—")+'</td><td>'+esc(x.to||"—")+'</td><td>'+money(actual)+'</td><td>'+money(stock)+'</td><td>'+money(ms.cuttingBilled||0)+'</td><td>'+money(ms.cuttingCollected||0)+'</td><td>'+money(due)+'</td><td><b>'+money(grand)+'</b></td><td>'+esc(x.notes||"—")+'</td><td>'+(doc&&doc.data?'<button class="view-btn" type="button" onclick="openDocumentPreview(&quot;'+id+'&quot;)">📄 देखें</button>':"—")+'</td><td><div class="actions">'+action+'</div></td></tr>';
       }
-      return '<tr>'+cfg.cols.map(k=>{let value=x[k];if(cfg.key==="transactions"){if(k==="type"){const typeLabels={office_received:"Mess NCO ne liya",cutting_collected:"Jawan se Mess Cutting mili",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};value=typeLabels[value]||value;}if(k==="messNcoName")value=x.type==="office_received"?x.toStaff:x.fromStaff;if(k==="messSoName")value=x.type==="office_received"?x.fromStaff:x.toStaff;}return '<td>'+((k==="document"||k==="billDocument"||k==="attachment")&&value&&value.data?'<button class="view-btn" type="button" style="white-space:nowrap;min-width:108px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:7px 9px;font-size:11px;line-height:1.2" onclick="openDocumentPreview(&quot;'+id+'&quot;)">📄 दस्तावेज देखें</button>':esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?money(value):value))+'</td>'}).join("")+'<td><div class="actions">'+action+'</div></td></tr>';
+      return '<tr>'+cfg.cols.map(k=>{let value=x[k];if(cfg.key==="transactions"){if(k==="type"){const typeLabels={office_received:"Mess NCO ne liya",cutting_collected:"Jawan se Mess Cutting mili",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};value=typeLabels[value]||value;}if(k==="messNcoName")value=x.type==="office_received"?x.toStaff:x.fromStaff;if(k==="messSoName")value=x.type==="office_received"?x.fromStaff:x.toStaff;}return '<td>'+((k==="document"||k==="billDocument"||k==="attachment")&&value&&value.data?'<button class="view-btn" type="button" style="white-space:nowrap;min-width:108px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;padding:7px 9px;font-size:11px;line-height:1.2" onclick="openDocumentPreview(&quot;'+id+'&quot;)">📄 दस्तावेज देखें</button>':esc(k==="amount"||k==="total"||k==="rate"||k==="price"||k==="costPerServing"||k==="totalCost"?(cfg.key==="ration"&&k==="price"?rateMoney(value):money(value)):value))+'</td>'}).join("")+'<td><div class="actions">'+action+'</div></td></tr>';
     }).join("");
     document.getElementById("empty").style.display=rows.length?"none":"block";
     document.getElementById("stats").innerHTML=statsHtml(list);
