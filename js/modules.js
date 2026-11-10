@@ -289,7 +289,7 @@ function addIngredientRow(itemId="",quantity=""){
  let box=document.getElementById("ingredientRows");if(!box)return;
  let opts='<option value="">Select ration item</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+recipeUnitFor(i)+' (Store '+esc(i.unit)+')</option>').join("");
  let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:minmax(0,1fr) 88px auto 30px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);width:100%;min-width:0;box-sizing:border-box";
- row.innerHTML='<div style="min-width:0"><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()" style="width:100%;min-width:0;max-width:100%;padding:9px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts+'</select><small class="ingredient-rate muted" style="display:block;margin-top:4px">Rate: —</small></div><input class="ingredient-qty" type="number" min="0.001" step="any" style="width:100%;min-width:0;padding:9px 5px" placeholder="Qty in g / ml / pcs" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><strong class="ingredient-cost">Rs 0.00</strong><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';
+ row.innerHTML='<select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()" style="width:100%;min-width:0;max-width:100%;padding:9px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts+'</select><input class="ingredient-qty" type="number" min="0.001" step="any" style="width:100%;min-width:0;padding:9px 5px" placeholder="Qty" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><div style="min-width:0;text-align:right;white-space:nowrap"><strong class="ingredient-cost">Rs 0.00</strong><small class="ingredient-rate muted" style="display:block;font-size:10px;white-space:nowrap">Rate: —</small></div><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';
  box.appendChild(row);refreshRecipeCost();
 }
 function refreshRecipeCost(){
@@ -299,7 +299,7 @@ function refreshRecipeCost(){
   const q=Number(row.querySelector(".ingredient-qty").value||0),unit=item?recipeUnitFor(item):"",stockQty=item&&q>0?purchaseInBase(q,unit,item.unit):null;
   const rate=Number(item?.price||0),cost=stockQty===null?0:stockQty*rate;total+=cost;
   const rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");
-  if(rateEl)rateEl.textContent=item?"Store rate: "+money(rate)+" / "+item.unit+" · Recipe unit: "+unit:"Rate: —";
+  if(rateEl)rateEl.textContent=item?"Rate "+Number(rate).toLocaleString("en-IN",{maximumFractionDigits:4})+"/"+item.unit:"Rate: —";
   if(costEl)costEl.textContent=money(cost);
  });
  const p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total);
