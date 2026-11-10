@@ -61,10 +61,13 @@
   selected=index;const r=catalogue[index],items=activeData.ration||[];
   $("premadeTitle").textContent=r.name+" · "+r.type;
   $("premadeIngredientRows").innerHTML=r.ingredients.map((ing,i)=>{
-   const auto=matchItem(ing.n,items),wantedKind=factor(ing.u)?.kind;
+   const existing=(activeData.recipes||[]).find(x=>norm(x.name)===norm(r.name)&&x.source==="premade");
+   const saved=existing&&(existing.ingredients||[]).find(x=>norm(x.itemName)===norm(ing.n)||norm(x.recipeIngredient)===norm(ing.n));
+   const auto=saved?items.find(it=>String(it.id)===String(saved.itemId)):matchItem(ing.n,items),wantedKind=factor(ing.u)?.kind;
    const options=items.filter(it=>factor(it.unit)?.kind===wantedKind);
-   const opts='<option value="">👇 Yahan apna Ration Store item chunein</option>'+options.map(it=>'<option value="'+esc(it.id)+'" '+(auto&&String(auto.id)===String(it.id)?"selected":"")+'>'+esc(it.name)+' · '+esc(it.unit)+'</option>').join("");
-   return '<div data-index="'+i+'" style="padding:11px;border:1px solid #dce8df;border-radius:10px;background:#fbfefc"><b style="display:block;margin-bottom:7px">'+esc(ing.n)+'</b><label style="display:block;font-size:12px;color:#65796d">Quantity per serving</label><div style="display:flex;align-items:center;gap:8px;margin:5px 0 9px"><input class="pm-qty" type="number" min="0.001" step="any" value="'+ing.q+'" style="width:110px;padding:9px"> <b>'+esc(ing.u)+'</b></div><label style="display:block;font-size:12px;color:#65796d">Ration Store mein is item ko select karein</label><select class="pm-item" style="width:100%;padding:11px;margin-top:5px">'+opts+'</select><div class="pm-cost" style="text-align:right;font-weight:700;margin-top:7px">Store item select karein</div></div>';
+   const opts='<option value="">👇 Yahan apna Ration Store item chunein</option>'+options.map(it=>'<option value="'+esc(it.id)+'" '+(auto&&String(auto.id)===String(it.id)?"selected":"")+'>'+esc(it.name)+' · '+esc(it.unit)+' · Rs '+Number(it.price||0).toFixed(4)+'/'+esc(it.unit)+'</option>').join("");
+   const startQty=saved?Number(saved.quantity||saved.recipeQuantity||ing.q):ing.q;
+   return '<div data-index="'+i+'" style="padding:11px;border:1px solid #dce8df;border-radius:10px;background:#fbfefc"><b style="display:block;margin-bottom:7px">'+esc(ing.n)+'</b><label style="display:block;font-size:12px;color:#65796d">Quantity per serving — edit kar sakte hain</label><div style="display:flex;align-items:center;gap:8px;margin:5px 0 9px"><input class="pm-qty" type="number" min="0.001" step="any" value="'+startQty+'" style="width:110px;padding:9px"> <b>'+esc(ing.u)+'</b></div><label style="display:block;font-size:12px;color:#65796d">Ration Store item — badal sakte hain</label><select class="pm-item" style="width:100%;padding:11px;margin-top:5px">'+opts+'</select><div class="pm-cost" style="text-align:right;font-weight:700;margin-top:7px">Store item select karein</div></div>';
   }).join("");
   $("premadeEditor").style.display="block";
   $("premadeIngredientRows").querySelectorAll("select,input").forEach(el=>el.addEventListener("change",calcTotal));
@@ -93,15 +96,18 @@
    ingredients.push({itemId:item.id,itemName:item.name,quantity:qty,unit:ing.u,stockUnit:item.unit,rate:Number(item.price||0),lineCost:base*Number(item.price||0)});
   }
   const total=ingredients.reduce((s,x)=>s+x.lineCost,0);
-  if(!(total>0)){alert("Recipe cost zero aa rahi hai. Store items ke rates check karein; recipe save nahi ki.");return}
+  const zeroRate=ingredients.filter(x=>!(Number(x.rate)>0)).map(x=>x.itemName);
+  if(zeroRate.length){alert("In Store items ka rate zero hai: "+zeroRate.join(", ")+". Purchases page par purchase rate check karein. Recipe abhi save nahi ki.");return}
   d.recipes=Array.isArray(d.recipes)?d.recipes:[];
-  if(d.recipes.some(x=>norm(x.name)===norm(template.name))){alert("Is naam ki recipe pehle se maujood hai. Existing recipe ko edit karein ya uska naam badlein.");return}
-  d.recipes.push({id:"PM"+Date.now(),name:template.name,notes:"Pre-made "+template.type+" recipe · suggested 1-serving quantities; verify local cooking standard.",ingredients,totalCost:total,costPerServing:total,ingredientSummary:ingredients.map(x=>x.itemName+" "+x.quantity+" "+x.unit).join(", "),source:"premade",catalogId:selected+1});
+  const existingIndex=d.recipes.findIndex(x=>norm(x.name)===norm(template.name)&&x.source==="premade");
+  const old=existingIndex>=0?d.recipes[existingIndex]:null;
+  const record={...(old||{}),id:old?.id||("PM"+Date.now()),name:template.name,notes:"Pre-made "+template.type+" recipe · quantities and Store mapping can be edited; verify local cooking standard.",ingredients,totalCost:total,costPerServing:total,ingredientSummary:ingredients.map(x=>x.itemName+" "+x.quantity+" "+x.unit).join(", "),source:"premade",catalogId:selected+1};
+  if(existingIndex>=0)d.recipes[existingIndex]=record;else d.recipes.push(record);
   try{
    const json=JSON.stringify(d);localStorage.setItem(KEY,json);
    if(localStorage.getItem(KEY)!==json)throw new Error("Save verification failed");
   }catch(e){alert("Recipe save nahi hui. Browser storage full ho sakta hai. Existing data ko change nahi kiya gaya ho sakta; Backup check karein. "+e.message);return}
-  alert("Recipe My Recipes mein add ho gayi. Ab Making Menu page par is dish ko choose kar sakte hain. Stock abhi deduct nahi hua; Meal Save karne par hoga.");
+  alert((old?"Pre-made recipe update ho gayi.":"Pre-made recipe My Recipes mein add ho gayi.")+" Ab Making Menu mein select karein. Stock sirf Meal Save karne par deduct hoga.");
   $("premadeRecipeModal").remove();location.reload();
  }
  window.openPremadeRecipePicker=open;
