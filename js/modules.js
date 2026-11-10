@@ -287,9 +287,9 @@ function recipeIngredientEditor(){return '<div class="field" style="grid-column:
 function recipeUnitFor(item){const u=String(item?.unit||"").toLowerCase();if(["kg","kgs","g","gram","grams"].includes(u))return "g";if(["ltr","l","litre","liter","ml"].includes(u))return "ml";return "pcs"}
 function addIngredientRow(itemId="",quantity=""){
  let box=document.getElementById("ingredientRows");if(!box)return;
- let opts='<option value="">Ration Store item chunein</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+recipeUnitFor(i)+'</option>').join("");
- let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:1fr;gap:8px;padding:12px;margin:9px 0;border:1px solid var(--border);border-radius:12px;background:rgba(255,255,255,.04)";
- row.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Ration Ingredient</b><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.closest(\'.ingredient-row\').remove();refreshRecipeCost()">✕ Hataayein</button></div><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()" style="width:100%">'+opts+'</select><div style="display:flex;align-items:center;gap:10px"><input class="ingredient-qty" type="number" min="0.001" step="any" placeholder="Quantity" value="'+esc(quantity)+'" oninput="refreshRecipeCost()" style="width:130px"><b class="ingredient-unit">g / ml / pcs</b></div><div class="ingredient-rate muted">Store rate: —</div><strong class="ingredient-cost">Cost: Rs 0.00</strong>';
+ let opts='<option value="">Select ration item</option>'+(data.ration||[]).map(i=>'<option value="'+esc(i.id)+'" '+(String(i.id)===String(itemId)?'selected':'')+'>'+esc(i.name)+' — '+recipeUnitFor(i)+' (Store '+esc(i.unit)+')</option>').join("");
+ let row=document.createElement("div");row.className="ingredient-row";row.style.cssText="display:grid;grid-template-columns:minmax(130px,2fr) minmax(75px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)";
+ row.innerHTML='<div><select class="ingredient-item" aria-label="Ration ingredient" onchange="refreshRecipeCost()">'+opts+'</select><small class="ingredient-rate muted" style="display:block;margin-top:4px">Rate: —</small></div><input class="ingredient-qty" type="number" min="0.001" step="any" placeholder="Qty in g / ml / pcs" value="'+esc(quantity)+'" oninput="refreshRecipeCost()"><strong class="ingredient-cost">Rs 0.00</strong><button type="button" class="danger" aria-label="Remove ingredient" onclick="this.parentElement.remove();refreshRecipeCost()">✕</button>';
  box.appendChild(row);refreshRecipeCost();
 }
 function refreshRecipeCost(){
@@ -298,10 +298,9 @@ function refreshRecipeCost(){
   const item=(data.ration||[]).find(i=>String(i.id)===String(row.querySelector(".ingredient-item").value));
   const q=Number(row.querySelector(".ingredient-qty").value||0),unit=item?recipeUnitFor(item):"",stockQty=item&&q>0?purchaseInBase(q,unit,item.unit):null;
   const rate=Number(item?.price||0),cost=stockQty===null?0:stockQty*rate;total+=cost;
-  const rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost"),unitEl=row.querySelector(".ingredient-unit");
-  if(unitEl)unitEl.textContent=unit||"g / ml / pcs";
-  if(rateEl)rateEl.textContent=item?"Store rate: Rs "+rate.toLocaleString("en-IN",{maximumFractionDigits:4})+" / "+item.unit:"Store rate: —";
-  if(costEl)costEl.textContent="Cost: "+money(cost);
+  const rateEl=row.querySelector(".ingredient-rate"),costEl=row.querySelector(".ingredient-cost");
+  if(rateEl)rateEl.textContent=item?"Store rate: "+money(rate)+" / "+item.unit+" · Recipe unit: "+unit:"Rate: —";
+  if(costEl)costEl.textContent=money(cost);
  });
  const p=document.getElementById("recipeCostPreview");if(p)p.textContent="Recipe cost (1 serving): "+money(total);
 }
