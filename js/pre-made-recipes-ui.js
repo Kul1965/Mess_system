@@ -75,7 +75,7 @@
    const wantedKind=factor(ing.u)?.kind,options=items.filter(it=>!wantedKind||factor(it.unit)?.kind===wantedKind);
    const auto=items.find(it=>String(it.id)===String(ing.itemId))||matchItem(ing.n,options);
    const opts='<option value="">Select ration item</option>'+options.map(it=>'<option value="'+esc(it.id)+'" '+(auto&&String(auto.id)===String(it.id)?"selected":"")+'>'+esc(it.name)+' — '+recipeUnit(it)+' (Store '+esc(it.unit)+')</option>').join("");
-   return '<div class="ingredient-row" data-index="'+i+'" style="display:grid;grid-template-columns:minmax(130px,2fr) minmax(75px,1fr) minmax(120px,1fr) auto;gap:7px;align-items:center;padding:9px 0;border-bottom:1px solid #dce8df"><div><select class="pm-item" aria-label="Ration ingredient">'+opts+'</select><small class="pm-rate" style="display:block;margin-top:4px;color:#65796d">Rate: —</small></div><input class="pm-qty" type="number" min="0.001" step="any" placeholder="Qty in g / ml / pcs" value="'+(ing.q||"")+'"><strong class="pm-cost">Rs 0.00</strong><button type="button" class="pm-remove" data-remove="'+i+'" style="background:#bd3942;color:white;border:0;border-radius:7px;padding:8px">✕</button></div>';
+   return '<div class="ingredient-row" data-index="'+i+'" style="display:grid;grid-template-columns:minmax(0,1fr) 88px minmax(112px,auto) 34px;gap:6px;align-items:center;padding:9px 0;border-bottom:1px solid #dce8df;min-width:0"><select class="pm-item" aria-label="Ration ingredient" style="width:100%;min-width:0;padding:9px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+opts+'</select><input class="pm-qty" type="number" min="0.001" step="any" placeholder="Qty" value="'+(ing.q||"") +'" style="width:100%;min-width:0;padding:9px 5px"><div style="min-width:0;text-align:right"><strong class="pm-cost" style="display:block;white-space:nowrap">Rs 0.00</strong><small class="pm-rate" style="display:block;color:#65796d;white-space:nowrap;font-size:11px">Rate: —</small></div><button type="button" class="pm-remove" data-remove="'+i+'" aria-label="Remove ingredient" style="background:#bd3942;color:white;border:0;border-radius:7px;padding:7px">✕</button></div>';
   }).join("");
   $("premadeIngredientRows").querySelectorAll(".pm-item").forEach(el=>el.addEventListener("change",e=>{
    const row=e.target.closest("[data-index]"),idx=Number(row.dataset.index),item=items.find(x=>String(x.id)===String(e.target.value));
@@ -92,7 +92,7 @@
    const idx=Number(row.dataset.index),ing=activeIngredients[idx],item=(activeData.ration||[]).find(x=>String(x.id)===String(row.querySelector(".pm-item").value));
    const qty=Number(row.querySelector(".pm-qty").value||0),unit=ing.isExtra&&item?recipeUnit(item):ing.u,base=item?toBase(qty,unit,item.unit):null;
    const cost=base===null?0:base*Number(item.price||0);total+=cost;
-   row.querySelector(".pm-cost").textContent=money(cost);const rateEl=row.querySelector(".pm-rate");if(rateEl)rateEl.textContent=item?"Rate: "+Number(item.price||0).toLocaleString("en-IN",{maximumFractionDigits:4})+" / "+item.unit+" · Recipe unit: "+unit:"Rate: —";
+   row.querySelector(".pm-cost").textContent=money(cost);const rateEl=row.querySelector(".pm-rate");if(rateEl)rateEl.textContent=item?"Rate "+Number(item.price||0).toLocaleString("en-IN",{maximumFractionDigits:4})+"/"+item.unit:"Rate: —";
   });
   $("premadeTotal").textContent="Cost / serving: "+money(total);
   return total;
