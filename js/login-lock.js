@@ -10,13 +10,15 @@
  function addControls(){
    if(document.getElementById("messLoginControls"))return;
    const wrap=document.createElement("div");wrap.id="messLoginControls";
-   wrap.style.cssText="position:fixed;right:12px;bottom:12px;z-index:99999;display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end";
-   const style="border:1px solid #d8b63d;border-radius:9px;background:#06452f;color:#fff;padding:10px 12px;font:700 12px Arial;box-shadow:0 3px 12px #0007;cursor:pointer";
-   const change=document.createElement("button");change.type="button";change.textContent="🔑 NCO Login Change";change.style.cssText=style;
+   wrap.style.cssText="display:flex;align-items:center;gap:5px;flex:0 0 auto;margin-left:4px";
+   const style="border:1px solid #d8b63d;border-radius:7px;background:#06452f;color:#fff;padding:5px 8px;font:700 10px Arial;box-shadow:0 2px 5px #0005;cursor:pointer;white-space:nowrap";
+   const change=document.createElement("button");change.type="button";change.textContent="🔑 Login Change";change.style.cssText=style;
    change.addEventListener("click",()=>location.href="login.html?change=1");
    const out=document.createElement("button");out.type="button";out.textContent="🔒 Logout";out.style.cssText=style;
    out.addEventListener("click",()=>{sessionStorage.removeItem(SESSION);location.replace("login.html");});
-   wrap.append(change,out);document.body.appendChild(wrap);
+   wrap.append(change,out);
+   const info=document.querySelector(".dh-info");
+   if(info){info.appendChild(wrap);}else{wrap.style.margin="8px 12px";document.querySelector(".topbar")?.insertAdjacentElement("afterend",wrap);}
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",addControls);else addControls();
 })();
