@@ -83,7 +83,7 @@ function updatePreview(){
  }
  function renderRecords(){
   const d=read(),rows=(d.mealRecords||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  $("mealRecordRows").innerHTML=rows.map(r=>{
+  const heading=document.querySelector(".menu-panel h3:last-of-type");if(heading)heading.textContent="Saved Meal Records — "+rows.length+" Entries";$("mealRecordRows").innerHTML=rows.map(r=>{
    const names=(d.members||[]).filter(m=>(r.memberIds||[]).includes(m.id)).map(m=>m.name).join(", ");
    const dishes=(r.recipeNames||[r.recipeName||""]).join(" + ");
    return '<tr><td>'+esc(r.date)+'</td><td>'+esc(r.mealType||"—")+'</td><td>'+esc(dishes)+'</td><td>'+esc(names)+'</td><td>'+money(r.chargePerMember)+'</td><td>'+money(r.totalCost||r.chargePerMember*(r.memberIds||[]).length)+'</td></tr>';
