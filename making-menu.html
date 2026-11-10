@@ -11,7 +11,7 @@
 <section class="panel menu-panel"><h3>1. Meal Details</h3><div class="menu-grid">
 <label>Date<input type="date" id="mealDate"></label>
 <label>Meal Type<select id="mealType"><option>Morning Tea</option><option>Breakfast</option><option>Midday Tea</option><option>Lunch</option><option>Evening Tea</option><option>Dinner</option><option>Snacks</option></select></label>
-<div class="wide"><label>Choose Dishes / Recipes (ek se zyada select kar sakte hain)</label><div id="mealRecipeList" class="member-list" style="margin-top:8px"></div><small id="recipeHelp" class="help">Jaise Dal, Chawal, Sabji — sab select kar sakte hain.</small></div>
+<div class="wide"><label>Choose Recipes — apni ya Pre-made</label><div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:9px 0"><button type="button" id="showOwnRecipes" class="btn active">1. Apni Recipes</button><button type="button" id="showPremadeRecipes" class="btn">2. Pre-made Recipes</button></div><div id="mealRecipeList" style="margin-top:8px"></div><small id="recipeHelp" class="help">Dono list mein se ek ya zyada dishes tick karein.</small></div>
 </div></section>
 <section class="panel menu-panel"><h3>2. Ration & Meal Cost</h3><div class="summary-grid">
 <div class="summary-box"><small>Cost per member</small><strong id="mealChargeView">Rs 0.00</strong></div>
@@ -22,7 +22,7 @@
 <div style="margin-top:18px"><button type="button" class="save-meal" onclick="saveMealAttendance()">✓ Save Meal & Deduct Ration</button></div></section>
 <section class="panel menu-panel"><h3>Saved Meal Records</h3><div class="tablewrap"><table><thead><tr><th>Date</th><th>Meal</th><th>Dishes</th><th>Members</th><th>Cost / Person</th><th>Total Cost</th></tr></thead><tbody id="mealRecordRows"></tbody></table></div></section>
 </div><footer class="footer">CRPF Mess Management System • Saved locally in this browser</footer></main></div>
-<script src="js/meal-attendance.js?v=20261109-mess-report-final2"></script><script src="js/shared-header.js?v=20261109-desktop-drawer3"></script>
+<script src="js/meal-attendance.js?v=20261110-recipe-tabs1"></script><script src="js/shared-header.js?v=20261109-desktop-drawer3"></script>
 <script src="js/mobile-nav.js?v=20261109-desktop-drawer3"></script>
 <script src="js/pdf-tools.js?v=20261108-pdf-title8"></script>
 </body></html>
