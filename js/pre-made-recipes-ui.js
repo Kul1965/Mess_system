@@ -62,7 +62,7 @@
   $("premadeTitle").textContent=r.name+" · "+r.type;
   $("premadeIngredientRows").innerHTML=r.ingredients.map((ing,i)=>{
    const existing=(activeData.recipes||[]).find(x=>norm(x.name)===norm(r.name)&&x.source==="premade");
-   const saved=existing&&(existing.ingredients||[]).find(x=>norm(x.itemName)===norm(ing.n)||norm(x.recipeIngredient)===norm(ing.n));
+   const saved=existing&&(existing.ingredients||[]).find(x=>norm(x.recipeIngredient||x.itemName)===norm(ing.n));
    const auto=saved?items.find(it=>String(it.id)===String(saved.itemId)):matchItem(ing.n,items),wantedKind=factor(ing.u)?.kind;
    const options=items.filter(it=>factor(it.unit)?.kind===wantedKind);
    const opts='<option value="">👇 Yahan apna Ration Store item chunein</option>'+options.map(it=>'<option value="'+esc(it.id)+'" '+(auto&&String(auto.id)===String(it.id)?"selected":"")+'>'+esc(it.name)+' · '+esc(it.unit)+' · Rs '+Number(it.price||0).toFixed(4)+'/'+esc(it.unit)+'</option>').join("");
@@ -93,7 +93,7 @@
    const ing=template.ingredients[Number(row.dataset.index)],item=(d.ration||[]).find(x=>String(x.id)===String(row.querySelector(".pm-item").value)),qty=Number(row.querySelector(".pm-qty").value||0);
    if(!item||qty<=0){alert("Is ingredient ke liye dropdown se Ration Store item chunein aur quantity check karein: "+ing.n);row.querySelector(".pm-item").focus();return}
    const base=toBase(qty,ing.u,item.unit);if(base===null){alert("Unit match nahi hai: "+ing.n+". Store item ka unit check karein.");return}
-   ingredients.push({itemId:item.id,itemName:item.name,quantity:qty,unit:ing.u,stockUnit:item.unit,rate:Number(item.price||0),lineCost:base*Number(item.price||0)});
+   ingredients.push({itemId:item.id,itemName:item.name,recipeIngredient:ing.n,quantity:qty,unit:ing.u,stockUnit:item.unit,rate:Number(item.price||0),lineCost:base*Number(item.price||0)});
   }
   const total=ingredients.reduce((s,x)=>s+x.lineCost,0);
   const zeroRate=ingredients.filter(x=>!(Number(x.rate)>0)).map(x=>x.itemName);
