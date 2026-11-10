@@ -32,9 +32,13 @@
   updatePreview();
  }
  function renderRecipeOptions(){
-  const d=read(),recipes=d.recipes||[];
-  $("mealRecipeList").innerHTML=recipes.map(r=>'<label class="member-option"><input type="checkbox" class="meal-recipe" value="'+esc(r.id)+'"><span><b>'+esc(r.name)+'</b><small class="help" style="display:block">'+money(r.costPerServing||r.totalCost)+' / member</small></span></label>').join("")||'<p>Recipe nahi hai. Pehle Recipes page par Dal, Chawal, Sabji jaise dishes banayein.</p>';
-  $("recipeHelp").textContent=recipes.length?"Ek meal mein kai dishes tick karein — jaise Dal + Chawal + Sabji.":"Pehle Recipes page par har dish ki recipe banayein.";
+  const d=read(),recipes=d.recipes||[],own=recipes.filter(r=>r.source!=="premade"),pre=recipes.filter(r=>r.source==="premade");
+  const card=r=>'<label class="member-option"><input type="checkbox" class="meal-recipe" value="'+esc(r.id)+'"><span><b>'+esc(r.name)+'</b><small class="help" style="display:block">'+money(r.costPerServing||r.totalCost)+' / member</small></span></label>';
+  $("mealRecipeList").innerHTML='<div id="ownRecipePanel"><b>Apni Recipes</b><div class="member-list" style="margin-top:8px">'+(own.map(card).join("")||'<p>Abhi apni recipe nahi bani. Recipes page par banayein.</p>')+'</div></div><div id="premadeRecipePanel" style="display:none"><b>Pre-made Recipes</b><div class="member-list" style="margin-top:8px">'+(pre.map(card).join("")||'<p>Pre-made list abhi khali hai. Neeche diye button se 31 ready recipes kholein.</p>')+'</div><a class="btn" href="recipes.html" style="display:inline-block;margin-top:10px">📚 Pre-made Recipe Library (31) kholein</a></div>';
+  $("recipeHelp").textContent="Pehle Apni Recipes ya Pre-made Recipes option chunein. Ek meal mein kai dishes tick kar sakte hain.";
+  const ownBtn=$("showOwnRecipes"),preBtn=$("showPremadeRecipes");
+  if(ownBtn&&!ownBtn.dataset.bound){ownBtn.dataset.bound="1";ownBtn.addEventListener("click",()=>{ $("ownRecipePanel").style.display="block";$("premadeRecipePanel").style.display="none";ownBtn.classList.add("active");preBtn.classList.remove("active");});}
+  if(preBtn&&!preBtn.dataset.bound){preBtn.dataset.bound="1";preBtn.addEventListener("click",()=>{ $("ownRecipePanel").style.display="none";$("premadeRecipePanel").style.display="block";preBtn.classList.add("active");ownBtn.classList.remove("active");});}
   updatePreview();
  }
  function unitFactor(unit){
