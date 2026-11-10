@@ -77,18 +77,18 @@
  }
  function calcTotal(){
   let total=0;
-  $("premadeIngredientRows").querySelectorAll("tr").forEach(row=>{
+  $("premadeIngredientRows").querySelectorAll("[data-index]").forEach(row=>{
    const ing=catalogue[selected].ingredients[Number(row.dataset.index)],item=(activeData.ration||[]).find(x=>String(x.id)===String(row.querySelector(".pm-item").value));
    const qty=Number(row.querySelector(".pm-qty").value||0),base=item?toBase(qty,ing.u,item.unit):null;
    const cost=base===null?0:base*Number(item.price||0);total+=cost;
-   row.querySelector(".pm-cost").textContent=item&&base!==null?money(cost):"Map item";
+   row.querySelector(".pm-cost").textContent=item&&base!==null?"Cost: "+money(cost)+" · Rate: "+money(item.price||0)+"/"+item.unit:"Store item select karein";
   });
   $("premadeTotal").textContent="Cost / serving: "+money(total);
   return total;
  }
  function saveSelected(){
   const d=read();if(!d){alert("Mess data read nahi hua; save cancel kiya.");return}
-  const template=catalogue[selected],rows=[...$("premadeIngredientRows").querySelectorAll("tr")],ingredients=[];
+  const template=catalogue[selected],rows=[...$("premadeIngredientRows").querySelectorAll("[data-index]")],ingredients=[];
   for(const row of rows){
    const ing=template.ingredients[Number(row.dataset.index)],item=(d.ration||[]).find(x=>String(x.id)===String(row.querySelector(".pm-item").value)),qty=Number(row.querySelector(".pm-qty").value||0);
    if(!item||qty<=0){alert("Is ingredient ke liye dropdown se Ration Store item chunein aur quantity check karein: "+ing.n);row.querySelector(".pm-item").focus();return}
