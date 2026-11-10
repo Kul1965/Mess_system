@@ -31,7 +31,7 @@
   const added=[];
   items.forEach((entry,i)=>{
    const [name,category,unit]=entry,key=norm(name);
-   const aliasKeys=aliasesFlat.filter(([alias,target])=>target===key).map(([alias])=>alias);
+   const aliasKeys=aliasesFlat.filter(([alias,target])=>norm(target)===key).map(([alias])=>alias);
    if(existing.has(key)||aliasKeys.some(a=>existing.has(a)))return;
    added.push({id:"RCP"+Date.now()+"_"+i,name,category,unit,quantity:0,minimum:unit==="pcs"?10:1000,price:0,source:"recipe-catalogue"});
    existing.add(key);
