@@ -543,11 +543,37 @@ function clearPurchaseHistory(){
  });
 }
 function deleteRow(id){
- let x=arr().find(a=>a.id===id);
+ let x=arr().find(a=>String(a.id)===String(id));
  if(!x)return;
+ if(cfg.key==="purchases"){
+  const ration=Array.isArray(data.ration)?data.ration:[];
+  const linked=ration.find(item=>String(item.id)===String(x.itemId));
+  if(!linked){
+   const sameName=ration.filter(item=>String(item.name||"").trim().toLowerCase()===String(x.itemName||"").trim().toLowerCase());
+   if(sameName.length===1){
+    const adjusted={...x,itemId:sameName[0].id};
+    showDeleteConfirm(()=>{
+     if(!reversePurchase(adjusted))return;
+     const index=arr().findIndex(a=>String(a.id)===String(id));if(index<0)return;
+     arr().splice(index,1);if(!save())return;render();
+     showAppAlert("Purchase delete ho gaya. Store item naam se match karke stock adjust kiya.");
+    });
+    return;
+   }
+   showDeleteConfirm(()=>{
+    const index=arr().findIndex(a=>String(a.id)===String(id));if(index<0)return;
+    arr().splice(index,1);
+    if(!save())return;
+    render();
+    showAppAlert("Purchase history delete ho gayi. Is purchase ka Store item maujood nahi tha, isliye stock/rate mein koi badlaav nahi kiya.");
+   });
+   return;
+  }
+ }
  showDeleteConfirm(()=>{
   if(cfg.key==="purchases"&&!reversePurchase(x))return;
-  arr().splice(arr().findIndex(a=>a.id===id),1);
+  const index=arr().findIndex(a=>String(a.id)===String(id));if(index<0)return;
+  arr().splice(index,1);
   if(!save())return;
   render();
   showAppAlert((cfg.title||"Record")+" deleted successfully.");
