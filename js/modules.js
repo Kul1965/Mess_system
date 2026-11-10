@@ -594,7 +594,7 @@ function renderReports(){
   ["All Mess Records","📚","__all__"],
   ["Members","👥","members"],["Ration Store","📦","ration"],
   ["Purchases","🛒","purchases"],["Recipes","🍲","recipes"],
-  ["Making Menu","📅","menu"],["Meal Records","🍽️","mealRecords"],
+  ["Planned Menu","📅","menu"],["Making Menu / Saved Meals","🍽️","mealRecords"],
   ["Accounts & Payments","💰","transactions"],["Mess Staff","👨‍🍳","staff"],
   ["Mess Handover","🔄","handovers"],["Stock Movements","📦","stockMovements"]
  ];
