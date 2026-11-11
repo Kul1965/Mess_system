@@ -29,6 +29,7 @@
   if(!cookSelect||!cookField)return;
   const selected=(read().staff||[]).find(s=>String(s.id)===String(cookSelect.value));
   cookField.value=selected?String(selected.phone||selected.mobile||selected.contact||"").replace(/[^0-9]/g,""):"";
+  if($("cookWhatsAppForm"))$("cookWhatsAppForm").value=cookField.value;
  }
  if(cookSelect)cookSelect.addEventListener("change",syncCookPhone);
  const checkedIds=()=>[...document.querySelectorAll(".meal-member:checked")].map(x=>x.value);
