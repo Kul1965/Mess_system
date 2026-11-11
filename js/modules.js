@@ -506,11 +506,14 @@ function reversePurchase(purchase){
  const baseRaw=purchase.baseQuantity??purchaseInBase(purchase.quantity,purchase.unit,item.unit);
  if(baseRaw===null||!Number.isFinite(Number(baseRaw))){showAppAlert("Purchase unit conversion available nahi hai; stock change nahi kiya.");return false}
  const qty=Number(baseRaw),total=Number(purchase.total??(Number(purchase.quantity||0)*Number(purchase.rate||0)));
- const stock=Number(item.quantity||0),value=stock*Number(item.price||0);
- if(stock+1e-9<qty){showAppAlert("Is purchase ka kuch stock use ho chuka hai. Safe stock adjustment possible nahi; delete cancel kiya.");return false}
- const next=stock-qty,nextValue=value-total;
- item.quantity=Math.max(0,next);
- item.price=item.quantity>0?Math.max(0,nextValue)/item.quantity:0;
+ const stock=Math.max(0,Number(item.quantity||0)),value=stock*Number(item.price||0);
+ // Purchase deletion must remain possible even when some/all of its stock
+ // has already been consumed. Remove only stock that is still available;
+ // never create negative stock. Remove the purchase value from the current
+ // stock valuation, flooring it at zero.
+ const next=Math.max(0,stock-qty),nextValue=Math.max(0,value-total);
+ item.quantity=next;
+ item.price=item.quantity>0?nextValue/item.quantity:0;
  refreshAllRecipeCosts();
  return true;
 }
