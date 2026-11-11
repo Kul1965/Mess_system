@@ -276,10 +276,15 @@ td.no-print{white-space:nowrap}
     </div>
     <div class="field">
      <label>Member Photo</label>
-     <button type="button" class="secondary" style="margin:6px 0;padding:12px 18px" onclick="document.getElementById('photo').click()">🖼️ Choose Photo</button>
-     <input id="photoCamera" type="file" accept="image/*" style="display:none">
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('photoCamera').click()">📷 कैमरा</button>
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('photo').click()">🖼️ गैलरी</button>
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('photoFile').click()">📁 फ़ाइल चुनें</button>
+     </div>
+     <input id="photoCamera" type="file" accept="image/*" capture="environment" style="display:none">
      <input id="photo" type="file" accept="image/*" style="display:none">
-     <small class="muted" id="photoChoiceNote">Choose Photo दबाकर Gallery या Files से सदस्य की फोटो चुनें। फोटो अपने आप छोटा होकर सेव होगी।</small>
+     <input id="photoFile" type="file" accept="image/*" style="display:none">
+     <small class="muted" id="photoChoiceNote">कैमरा, गैलरी या फ़ाइलों में से फोटो चुनें। फोटो अपने आप छोटी होकर सेव होगी।</small>
     </div>
     <div class="field">
      <label>Movement Orders / Document / PDF</label>
@@ -530,7 +535,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const data=getData();
  data.members=Array.isArray(data.members)?data.members:[];
- const file=document.getElementById("photoCamera").files[0]||document.getElementById("photo").files[0];
+ const file=document.getElementById("photoCamera").files[0]||document.getElementById("photo").files[0]||document.getElementById("photoFile").files[0];
  const docFile=document.getElementById("memberDocument").files[0];
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
