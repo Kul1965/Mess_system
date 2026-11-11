@@ -124,16 +124,26 @@ function updatePreview(){
    if(Number(item.quantity||0)+1e-9<u.quantity){alert("Stock kam hai: "+item.name+". Zaroorat "+u.recipeQuantity+" "+recipeUnitFor(item)+" (Store mein "+u.quantity+" "+item.unit+"), available "+item.quantity+" "+item.unit+".");return}
   }
   const totalCost=perMember*ids.length,dishNames=recipes.map(r=>r.name);
-  if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga."))return;
+  const cookPhone=String($("cookWhatsApp").value||"").replace(/[^0-9]/g,"");
+  if(!cookPhone){alert("Meal save karne se pehle Cook ka WhatsApp number country code ke saath select / enter karein.");return}
+  const duplicate=(d.mealRecords||[]).find(r=>r.date===date&&r.mealType===mealType&&
+   JSON.stringify((r.recipeIds||[]).map(String).sort())===JSON.stringify(recipes.map(r=>String(r.id)).sort())&&
+   JSON.stringify((r.memberIds||[]).map(String).sort())===JSON.stringify(ids.map(String).sort()));
+  if(duplicate){alert("Yeh Meal pehle hi save ho chuka hai. WhatsApp dobara nahi bheja jayega.");return}
+  if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga aur Cook ko WhatsApp khulega."))return;
+  const rationLines=ingredients.map(i=>i.itemName+": "+(i.perServing*ids.length)+" "+i.unit);
+  const cookMessage=["CRPF MESS — RATION LIST","Date: "+date,"Meal: "+mealType,"Dishes: "+dishNames.join(" + "),"Members: "+ids.length,"Required ration:",...rationLines,"Please ration prepare karein. — Mess NCO"].join("\n");
+  const cookUrl="https://wa.me/"+cookPhone+"?text="+encodeURIComponent(cookMessage);
+  window.open(cookUrl,"_blank");
   usage.forEach(u=>{const item=d.ration.find(x=>String(x.id)===String(u.itemId));item.quantity=Number(item.quantity||0)-u.quantity;});
   d.mealRecords=Array.isArray(d.mealRecords)?d.mealRecords:[];
-  d.mealRecords.push({id:"MEAL"+Date.now(),date,mealType,recipeIds:recipes.map(r=>r.id),recipeNames:dishNames,recipeName:dishNames.join(" + "),items:dishNames,memberIds:ids,chargePerMember:perMember,totalCost,ingredientUsage:usage,createdAt:new Date().toISOString()});
+  d.mealRecords.push({id:"MEAL"+Date.now(),date,mealType,recipeIds:recipes.map(r=>r.id),recipeNames:dishNames,recipeName:dishNames.join(" + "),items:dishNames,memberIds:ids,chargePerMember:perMember,totalCost,ingredientUsage:usage,cookWhatsAppSent:true,cookWhatsAppSentAt:new Date().toISOString(),createdAt:new Date().toISOString()});
   d.stockMovements=Array.isArray(d.stockMovements)?d.stockMovements:[];
   usage.forEach(u=>d.stockMovements.push({id:"OUT"+Date.now()+Math.random().toString(16).slice(2),date,type:"meal-consumption",itemId:u.itemId,itemName:u.itemName,quantity:u.quantity,unit:u.unit,reference:mealType+" - "+dishNames.join(" + "),memberCount:ids.length}));
   if(!write(d))return;
   document.querySelectorAll(".meal-member,.meal-recipe").forEach(x=>x.checked=false);
   updatePreview();renderRecords();
-  alert("Meal save ho gaya! "+ids.length+" members ka ration deduct hua aur "+money(totalCost)+" ka charge per meal total add hua.");
+  alert("Meal save ho gaya! Ration deduct hua aur Cook ka WhatsApp khul gaya. Message WhatsApp mein Send karein. Is Meal ke liye dobara WhatsApp nahi khulega.");
  };
  function sendCookRation(){
   const d=read(),ids=checkedIds(),chosen=selectedRecipes(),recipes=(d.recipes||[]).filter(r=>chosen.includes(r.id));
@@ -145,7 +155,7 @@ function updatePreview(){
   const message=["CRPF MESS — RATION LIST","Date: "+$("mealDate").value,"Meal: "+$("mealType").value,"Dishes: "+recipes.map(r=>r.name).join(" + "),"Members: "+ids.length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\n");
   window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank","noopener");
  }
- $("sendCookRation").addEventListener("click",sendCookRation);
+
  $("mealMemberSearch").addEventListener("input",renderMembers);
  $("mealMemberList").addEventListener("change",updatePreview);
  $("mealRecipeList").addEventListener("change",updatePreview);
