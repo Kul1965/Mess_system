@@ -288,10 +288,10 @@ td.no-print{white-space:nowrap}
     </div>
     <div class="field">
      <label>Movement Orders / Document / PDF</label>
-     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
-      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('documentCamera').click()">📷 कैमरा</button>
-      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('documentGallery').click()">🖼️ गैलरी</button>
-      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('memberDocument').click()">📁 फ़ाइल / PDF चुनें</button>
+     <div style="display:flex;gap:6px;flex-wrap:nowrap;margin:6px 0;align-items:center">
+      <button type="button" class="secondary" style="padding:10px 9px;font-size:12px;white-space:nowrap" onclick="document.getElementById('documentCamera').click()">📷 कैमरा</button>
+      <button type="button" class="secondary" style="padding:10px 9px;font-size:12px;white-space:nowrap" onclick="document.getElementById('documentGallery').click()">🖼️ गैलरी</button>
+      <button type="button" class="secondary" style="padding:10px 9px;font-size:12px;white-space:nowrap" onclick="document.getElementById('memberDocument').click()">📁 फ़ाइल / PDF</button>
      </div>
      <input id="documentCamera" type="file" accept="image/*" capture="environment" style="display:none">
      <input id="documentGallery" type="file" accept="image/*" style="display:none">
