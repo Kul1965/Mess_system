@@ -288,8 +288,15 @@ td.no-print{white-space:nowrap}
     </div>
     <div class="field">
      <label>Movement Orders / Document / PDF</label>
-     <input id="memberDocument" type="file" accept="image/*,.pdf,application/pdf">
-     <small class="muted">Optional: ID / joining / other document (PDF max 2 MB)</small>
+     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('documentCamera').click()">📷 कैमरा</button>
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('documentGallery').click()">🖼️ गैलरी</button>
+      <button type="button" class="secondary" style="padding:11px 13px" onclick="document.getElementById('memberDocument').click()">📁 फ़ाइल / PDF चुनें</button>
+     </div>
+     <input id="documentCamera" type="file" accept="image/*" capture="environment" style="display:none">
+     <input id="documentGallery" type="file" accept="image/*" style="display:none">
+     <input id="memberDocument" type="file" accept="image/*,.pdf,application/pdf" style="display:none">
+     <small class="muted">Movement Order की फोटो कैमरे से लें, गैलरी से चुनें या PDF / फ़ाइल अपलोड करें। PDF अधिकतम 2 MB।</small>
     </div>
     <div class="field full">
      <label>Address / Remarks</label>
@@ -536,7 +543,7 @@ document.getElementById("memberForm").addEventListener("submit",async e=>{
  const data=getData();
  data.members=Array.isArray(data.members)?data.members:[];
  const file=document.getElementById("photoCamera").files[0]||document.getElementById("photo").files[0]||document.getElementById("photoFile").files[0];
- const docFile=document.getElementById("memberDocument").files[0];
+ const docFile=document.getElementById("documentCamera").files[0]||document.getElementById("documentGallery").files[0]||document.getElementById("memberDocument").files[0];
  try{
   const old=editingId?data.members.find(m=>m.id===editingId):null;
   const photo=await readPhoto(file);
