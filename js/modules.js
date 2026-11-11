@@ -143,7 +143,7 @@ function render(){
     let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
-      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':cfg.key==="transactions"?'<button class="view-btn" type="button" onclick="viewTransaction(&quot;'+id+'&quot;)">👁 View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
+      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':cfg.key==="transactions"?'<button class="view-btn" type="button" onclick="viewTransaction(&quot;'+id+'&quot;)">👁 View</button>':(cfg.key==="purchases"||cfg.key==="ration")&&((x.billDocument||x.attachment||x.document)?.data)?'<button class="view-btn" type="button" onclick="viewSmallRecordDocument(&quot;'+id+'&quot;)">📄 View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
       if(cfg.key==="handovers"){
         const ms=x.monthlySummary||{},stock=Number(x.stockTotalValue??(x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0)),due=Number(x.pendingCutting??ms.pendingCutting??0),actual=Number(x.actualCash??(Number(x.cash||0)-stock-due)),grand=Number(x.totalHandoverValue??x.cash??(actual+stock+due)),doc=x.attachment;
@@ -476,6 +476,19 @@ async function saveCurrentRecord(event){
 }
 
 function closeForm(){document.getElementById("modal").hidden=true}
+function viewSmallRecordDocument(id){
+ const x=arr().find(a=>String(a.id)===String(id));if(!x)return;
+ const doc=x.billDocument||x.attachment||x.document;
+ if(!doc||!doc.data){showAppAlert("Is entry mein PDF ya photo upload nahi hai.");return;}
+ const isPdf=String(doc.type||"").toLowerCase()==="application/pdf"||String(doc.name||"").toLowerCase().endsWith(".pdf");
+ const isImage=String(doc.type||"").startsWith("image/");
+ const old=document.getElementById("smallRecordDocumentModal");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="smallRecordDocumentModal";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10040;background:#0009;display:flex;align-items:center;justify-content:center;padding:12px";
+ wrap.innerHTML='<section style="width:min(100%,390px);max-height:82vh;overflow:auto;background:#fff;color:#214d3b;border:1px solid #8bc9a8;border-radius:14px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:14px">📄 '+esc(doc.name||"Document")+'</b><button type="button" class="alt" id="closeSmallDoc">✕</button></div><div style="margin-top:10px;height:230px;max-height:45vh;min-height:150px;overflow:auto;border:1px solid #d4e2d9;border-radius:8px;background:#edf3ef;display:flex;align-items:center;justify-content:center">'+(isPdf?'<iframe title="Purchase / Ration PDF" src="'+doc.data+'" style="width:100%;height:100%;min-height:220px;border:0;background:#fff"></iframe>':isImage?'<img alt="Uploaded document" src="'+doc.data+'" style="max-width:100%;max-height:100%;object-fit:contain">':'Document preview not supported on this device.')+'</div><div style="text-align:right;margin-top:10px"><button type="button" class="alt" id="closeSmallDoc2">Close</button></div></section>';
+ document.body.appendChild(wrap);
+ const close=()=>wrap.remove();wrap.querySelector("#closeSmallDoc").onclick=close;wrap.querySelector("#closeSmallDoc2").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
+}
 function viewTransaction(id){
  const x=(data.transactions||[]).find(a=>String(a.id)===String(id));if(!x)return;
  const typeLabels={office_received:"Office se paisa mila",cutting_collected:"Jawan se Mess Cutting mili",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};
