@@ -29,7 +29,7 @@
   const previous=cookSelect.value;
   cookSelect.innerHTML='<option value="">Cook select karein</option>'+cooks.map(s=>'<option value="'+esc(s.id)+'">'+esc(s.name||"Cook")+(s.phone||s.mobile||s.contact?" — "+esc(s.phone||s.mobile||s.contact):" — Number nahi diya")+"</option>").join("");
   if(cooks.some(s=>String(s.id)===previous))cookSelect.value=previous;
-  else if(cooks.length===1)cookSelect.value=String(cooks[0].id);
+  else if(cooks.length)cookSelect.value=String(cooks[0].id);
   syncCookPhone();
  }
  function syncCookPhone(){
@@ -163,26 +163,32 @@ function updatePreview(){
   const d=read(),sel=$("cookMealRecord");if(!sel)return;
   const previous=sel.value,rows=(d.mealRecords||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(a.mealType||"").localeCompare(b.mealType||""));
   const sentMap=d.cookRationSent||{};
+  // Older build marked records as sent at save time even when WhatsApp never opened.
+  // Only the explicit send log is treated as proof that the message was handed off.
   sel.innerHTML='<option value="">Saved meal select karein</option>'+rows.map(r=>{
-   const sent=!!(r.cookWhatsAppSent||sentMap[r.date+"|"+r.mealType]);
-   return '<option value="'+esc(r.id)+'" '+(sent?'disabled':'')+'>'+esc(r.date)+' — '+esc(r.mealType)+' — '+esc((r.recipeNames||[r.recipeName||""]).join(" + "))+(sent?' ✓ WhatsApp pehle bheja ja chuka':'')+'</option>';
+   const sent=!!sentMap[r.date+"|"+r.mealType];
+   return '<option value="'+esc(r.id)+'" '+(sent?'disabled':'')+'>'+esc(r.date)+' — '+esc(r.mealType)+' — '+esc((r.recipeNames||[r.recipeName||""]).join(" + "))+(sent?' ✓ WhatsApp bhejne ke liye process ho chuka':'')+'</option>';
   }).join("");
-  if(rows.some(r=>String(r.id)===previous&&!r.cookWhatsAppSent&&!sentMap[r.date+"|"+r.mealType]))sel.value=previous;
-  $("cookMealStatus").textContent=rows.length?"Saved meals dikh rahe hain. ✓ wale meal ka WhatsApp pehle hi bheja gaya hai; baaki meal ek baar bhej sakte hain.":"Abhi koi Meal Save nahi hua. Pehle upar Save Meal & Deduct Ration karein.";
+  if(rows.some(r=>String(r.id)===previous&&!sentMap[r.date+"|"+r.mealType]))sel.value=previous;
+  $("cookMealStatus").textContent=rows.length?"Total "+rows.length+" saved meals. Jo ✓ nahi hain, unka WhatsApp abhi bheja ja sakta hai.":"Abhi koi Meal Save nahi mila. Meal Save & Deduct Ration dabayein.";
  }
  function sendCookRation(){
   const d=read(),id=$("cookMealRecord").value,record=(d.mealRecords||[]).find(r=>String(r.id)===String(id));
   if(!record){alert("Pehle Saved Meal select karein.");return}
   d.cookRationSent=d.cookRationSent||{};const key=record.date+"|"+record.mealType;
-  if(record.cookWhatsAppSent||d.cookRationSent[key]){alert("Is date ka "+record.mealType+" ration WhatsApp pehle hi bheja ja chuka hai.");renderCookMealOptions();return}
-  const phone=String($("cookWhatsAppForm").value||"").replace(/[^0-9]/g,"");if(!phone){alert("Cook ka WhatsApp number country code ke saath dalein.");return}
+  if(d.cookRationSent[key]){alert("Is date ka "+record.mealType+" ration WhatsApp pehle hi bheja ja chuka hai.");renderCookMealOptions();return}
+  const phone=String($("cookWhatsAppForm").value||"").replace(/[^0-9]/g,"");if(!phone){alert("Cook select karein; number automatic aayega.");return}
   const lines=(record.ingredientUsage||[]).map(i=>(i.itemName||"Ration")+": "+Number(i.recipeQuantity||i.quantity||0)+" "+(i.recipeUnit||i.unit||""));
   if(!lines.length){alert("Is saved meal ki ration detail nahi mili.");return}
   const dishes=(record.recipeNames||[record.recipeName||""]).join(" + ");
   const message=["CRPF MESS — RATION LIST","Date: "+record.date,"Meal: "+record.mealType,"Dishes: "+dishes,"Members: "+(record.memberIds||[]).length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\\n");
-  d.cookRationSent[key]={recordId:record.id,sentAt:new Date().toISOString(),phone};record.cookWhatsAppSent=true;record.cookWhatsAppSentAt=new Date().toISOString();
-  if(!write(d))return;window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank");renderCookMealOptions();
-  showNotice("WhatsApp Ready!",record.mealType+" ka ration message WhatsApp mein khul gaya hai. Ab Send dabayein. Is date aur meal ka ration dobara nahi bheja ja sakega.","success");
+  const waUrl="https://wa.me/"+phone+"?text="+encodeURIComponent(message);
+  const waWindow=window.open(waUrl,"_blank");
+  if(!waWindow){window.location.href=waUrl;return}
+  d.cookRationSent=d.cookRationSent||{};d.cookRationSent[key]={recordId:record.id,sentAt:new Date().toISOString(),phone};
+  record.cookWhatsAppSent=true;record.cookWhatsAppSentAt=new Date().toISOString();
+  if(!write(d))return;renderCookMealOptions();
+  showNotice("WhatsApp Ready!",record.mealType+" ki ration list WhatsApp mein khul gayi hai. Ab Send dabayein. Is date aur meal ka ration dobara nahi bheja jayega.","success");
  }
 
  $("mealMemberSearch").addEventListener("input",renderMembers);
