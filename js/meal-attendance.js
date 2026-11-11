@@ -5,6 +5,13 @@
  const write=d=>{try{localStorage.setItem(KEY,JSON.stringify(d));return true}catch(e){alert("Data save nahi hua. Browser storage full ho sakta hai.");return false}};
  const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const money=v=>"Rs "+Number(v||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+ function showNotice(title,message,kind){
+  const wrap=document.createElement("div");wrap.style.cssText="position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.58);display:grid;place-items:center;padding:18px";
+  const box=document.createElement("div");box.style.cssText="width:min(100%,390px);background:#fff;border-radius:20px;padding:24px 20px;text-align:center;box-shadow:0 18px 60px rgba(0,0,0,.3);font-family:Arial,sans-serif";
+  const icon=kind==="success"?"✅":"📲";
+  box.innerHTML='<div style="font-size:38px;margin-bottom:10px">'+icon+'</div><h3 style="margin:0 0 10px;color:#145b40;font-size:21px"></h3><p style="margin:0 0 20px;color:#46534c;line-height:1.55;font-size:15px"></p><button type="button" style="border:0;border-radius:11px;background:#176747;color:#fff;padding:12px 28px;font-weight:700;font-size:15px">ठीक है</button>';
+  box.querySelector("h3").textContent=title;box.querySelector("p").textContent=message;box.querySelector("button").onclick=()=>wrap.remove();document.body.appendChild(wrap);wrap.appendChild(box);
+ }
  const cookField=document.getElementById("cookWhatsApp");
  const cookSelect=document.getElementById("cookSelect");
  function dateISO(d){return d.toLocaleDateString("en-CA")}
@@ -29,8 +36,22 @@
   if(!cookSelect||!cookField)return;
   const selected=(read().staff||[]).find(s=>String(s.id)===String(cookSelect.value));
   cookField.value=selected?String(selected.phone||selected.mobile||selected.contact||"").replace(/[^0-9]/g,""):"";
+  if($("cookSelectForm"))$("cookSelectForm").value=cookSelect.value;
   if($("cookWhatsAppForm"))$("cookWhatsAppForm").value=cookField.value;
  }
+ function syncCookForm(){
+  const target=$("cookSelectForm");if(!target)return;
+  target.innerHTML=cookSelect?cookSelect.innerHTML:'<option value="">Cook select karein</option>';
+  if(cookSelect)target.value=cookSelect.value;
+  const selected=(read().staff||[]).find(s=>String(s.id)===String(target.value));
+  $("cookWhatsAppForm").value=selected?String(selected.phone||selected.mobile||selected.contact||"").replace(/[^0-9]/g,""):"";
+ }
+ $("cookSelectForm")?.addEventListener("change",()=>{
+  const id=$("cookSelectForm").value,staff=(read().staff||[]).find(s=>String(s.id)===String(id));
+  if(cookSelect)cookSelect.value=id;
+  if(cookField)cookField.value=staff?String(staff.phone||staff.mobile||staff.contact||"").replace(/[^0-9]/g,""):"";
+  $("cookWhatsAppForm").value=cookField?cookField.value:"";
+ });
  if(cookSelect)cookSelect.addEventListener("change",syncCookPhone);
  const checkedIds=()=>[...document.querySelectorAll(".meal-member:checked")].map(x=>x.value);
  const selectedRecipes=()=>[...document.querySelectorAll(".meal-recipe:checked")].map(c=>c.value);
@@ -136,7 +157,7 @@ function updatePreview(){
   if(!write(d))return;
   document.querySelectorAll(".meal-member,.meal-recipe").forEach(x=>x.checked=false);
   updatePreview();renderRecords();
-  renderCookMealOptions(); alert("Meal save ho gaya aur ration deduct ho gaya. Neeche Cook WhatsApp form se ration bhejein.");
+  renderCookMealOptions(); showNotice("Meal Successfully Saved","Ration stock deduct ho gaya hai. Neeche Cook WhatsApp form se saved meal select karke ration bhejein.","success");
  };
  function renderCookMealOptions(){
   const d=read(),sel=$("cookMealRecord");if(!sel)return;
@@ -158,7 +179,7 @@ function updatePreview(){
   const message=["CRPF MESS — RATION LIST","Date: "+record.date,"Meal: "+record.mealType,"Dishes: "+dishes,"Members: "+(record.memberIds||[]).length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\\n");
   d.cookRationSent[key]={recordId:record.id,sentAt:new Date().toISOString(),phone};record.cookWhatsAppSent=true;record.cookWhatsAppSentAt=new Date().toISOString();
   if(!write(d))return;window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank");renderCookMealOptions();
-  alert("WhatsApp khul gaya. Message Send karein. "+record.mealType+" ka ration ab dobara nahi bheja ja sakega.");
+  showNotice("WhatsApp Ready!",record.mealType+" ka ration message WhatsApp mein khul gaya hai. Ab Send dabayein. Is date aur meal ka ration dobara nahi bheja ja sakega.","success");
  }
 
  $("mealMemberSearch").addEventListener("input",renderMembers);
@@ -166,5 +187,5 @@ function updatePreview(){
  $("mealRecipeList").addEventListener("change",updatePreview);
  $("mealDate").value=new Date().toLocaleDateString("en-CA");$("dateNow").textContent=new Date().toLocaleDateString();
  $("planWeekStart").value=dateISO(mondayOf(dateISO(new Date())));renderPlanDates();renderPlanRecipes();renderWeeklyPlans();$("planWeekStart").addEventListener("change",()=>{renderPlanDates();renderWeeklyPlans()});$("saveWeeklyPlan").addEventListener("click",saveWeeklyPlan);$("weeklyPlanRows").addEventListener("click",e=>{const use=e.target.closest(".use-week-plan"),del=e.target.closest(".delete-week-plan");if(use)loadPlanForAttendance(use.dataset.id);if(del){const d=read();if(confirm("Is planned menu ko delete karein?")){d.weeklyMenus=(d.weeklyMenus||[]).filter(p=>String(p.id)!==String(del.dataset.id));write(d);renderWeeklyPlans()}}});
- renderCookOptions();renderMembers();renderRecipeOptions();renderRecords();renderCookMealOptions(); $("sendCookRation").addEventListener("click",sendCookRation);
+ renderCookOptions();syncCookForm();renderMembers();renderRecipeOptions();renderRecords();renderCookMealOptions(); $("sendCookRation").addEventListener("click",sendCookRation);
 })();
