@@ -161,11 +161,14 @@ function updatePreview(){
  };
  function renderCookMealOptions(){
   const d=read(),sel=$("cookMealRecord");if(!sel)return;
-  const previous=sel.value,rows=(d.mealRecords||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
-  const available=rows.filter(r=>!r.cookWhatsAppSent&&!(d.cookRationSent||{})[r.date+"|"+r.mealType]);
-  sel.innerHTML='<option value="">Saved meal select karein</option>'+available.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.date)+' — '+esc(r.mealType)+' — '+esc((r.recipeNames||[r.recipeName||""]).join(" + "))+'</option>').join("");
-  if(available.some(r=>String(r.id)===previous))sel.value=previous;
-  $("cookMealStatus").textContent=available.length?"Har date ke har meal time ka ration sirf ek baar bheja ja sakta hai.":"Koi pending saved meal nahi hai.";
+  const previous=sel.value,rows=(d.mealRecords||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(a.mealType||"").localeCompare(b.mealType||""));
+  const sentMap=d.cookRationSent||{};
+  sel.innerHTML='<option value="">Saved meal select karein</option>'+rows.map(r=>{
+   const sent=!!(r.cookWhatsAppSent||sentMap[r.date+"|"+r.mealType]);
+   return '<option value="'+esc(r.id)+'" '+(sent?'disabled':'')+'>'+esc(r.date)+' — '+esc(r.mealType)+' — '+esc((r.recipeNames||[r.recipeName||""]).join(" + "))+(sent?' ✓ WhatsApp pehle bheja ja chuka':'')+'</option>';
+  }).join("");
+  if(rows.some(r=>String(r.id)===previous&&!r.cookWhatsAppSent&&!sentMap[r.date+"|"+r.mealType]))sel.value=previous;
+  $("cookMealStatus").textContent=rows.length?"Saved meals dikh rahe hain. ✓ wale meal ka WhatsApp pehle hi bheja gaya hai; baaki meal ek baar bhej sakte hain.":"Abhi koi Meal Save nahi hua. Pehle upar Save Meal & Deduct Ration karein.";
  }
  function sendCookRation(){
   const d=read(),id=$("cookMealRecord").value,record=(d.mealRecords||[]).find(r=>String(r.id)===String(id));
@@ -187,5 +190,5 @@ function updatePreview(){
  $("mealRecipeList").addEventListener("change",updatePreview);
  $("mealDate").value=new Date().toLocaleDateString("en-CA");$("dateNow").textContent=new Date().toLocaleDateString();
  $("planWeekStart").value=dateISO(mondayOf(dateISO(new Date())));renderPlanDates();renderPlanRecipes();renderWeeklyPlans();$("planWeekStart").addEventListener("change",()=>{renderPlanDates();renderWeeklyPlans()});$("saveWeeklyPlan").addEventListener("click",saveWeeklyPlan);$("weeklyPlanRows").addEventListener("click",e=>{const use=e.target.closest(".use-week-plan"),del=e.target.closest(".delete-week-plan");if(use)loadPlanForAttendance(use.dataset.id);if(del){const d=read();if(confirm("Is planned menu ko delete karein?")){d.weeklyMenus=(d.weeklyMenus||[]).filter(p=>String(p.id)!==String(del.dataset.id));write(d);renderWeeklyPlans()}}});
- renderCookOptions();syncCookForm();renderMembers();renderRecipeOptions();renderRecords();renderCookMealOptions(); $("sendCookRation").addEventListener("click",sendCookRation);
+ renderCookOptions();syncCookForm();renderMembers();renderRecipeOptions();renderRecords();renderCookMealOptions(); $("sendCookRation").addEventListener("click",sendCookRation); $("cookMealRecord").addEventListener("change",()=>{const r=(read().mealRecords||[]).find(x=>String(x.id)===$("cookMealRecord").value);if(r&&!(r.cookWhatsAppSent||(read().cookRationSent||{})[r.date+"|"+r.mealType]))$("cookMealStatus").textContent=r.date+" — "+r.mealType+" selected. Ab Cook ko WhatsApp karein.";});
 })();
