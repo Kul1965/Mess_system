@@ -124,36 +124,40 @@ function updatePreview(){
    if(Number(item.quantity||0)+1e-9<u.quantity){alert("Stock kam hai: "+item.name+". Zaroorat "+u.recipeQuantity+" "+recipeUnitFor(item)+" (Store mein "+u.quantity+" "+item.unit+"), available "+item.quantity+" "+item.unit+".");return}
   }
   const totalCost=perMember*ids.length,dishNames=recipes.map(r=>r.name);
-  const cookPhone=String($("cookWhatsApp").value||"").replace(/[^0-9]/g,"");
-  if(!cookPhone){alert("Meal save karne se pehle Cook ka WhatsApp number country code ke saath select / enter karein.");return}
-  const duplicate=(d.mealRecords||[]).find(r=>r.date===date&&r.mealType===mealType&&
-   JSON.stringify((r.recipeIds||[]).map(String).sort())===JSON.stringify(recipes.map(r=>String(r.id)).sort())&&
-   JSON.stringify((r.memberIds||[]).map(String).sort())===JSON.stringify(ids.map(String).sort()));
-  if(duplicate){alert("Yeh Meal pehle hi save ho chuka hai. WhatsApp dobara nahi bheja jayega.");return}
-  if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga aur Cook ko WhatsApp khulega."))return;
-  const rationLines=ingredients.map(i=>i.itemName+": "+(i.perServing*ids.length)+" "+i.unit);
-  const cookMessage=["CRPF MESS — RATION LIST","Date: "+date,"Meal: "+mealType,"Dishes: "+dishNames.join(" + "),"Members: "+ids.length,"Required ration:",...rationLines,"Please ration prepare karein. — Mess NCO"].join("\n");
-  const cookUrl="https://wa.me/"+cookPhone+"?text="+encodeURIComponent(cookMessage);
-  window.open(cookUrl,"_blank");
+  const duplicate=(d.mealRecords||[]).find(r=>r.date===date&&r.mealType===mealType);
+  if(duplicate){alert("Is date ka "+mealType+" menu pehle hi save ho chuka hai. Ek meal time ka ration sirf ek baar save hoga.");return}
+  if(!confirm(mealType+" mein "+dishNames.join(" + ")+" save karein? "+ids.length+" members ka cost "+money(totalCost)+" hai. Ration stock deduct hoga."))return;
   usage.forEach(u=>{const item=d.ration.find(x=>String(x.id)===String(u.itemId));item.quantity=Number(item.quantity||0)-u.quantity;});
   d.mealRecords=Array.isArray(d.mealRecords)?d.mealRecords:[];
-  d.mealRecords.push({id:"MEAL"+Date.now(),date,mealType,recipeIds:recipes.map(r=>r.id),recipeNames:dishNames,recipeName:dishNames.join(" + "),items:dishNames,memberIds:ids,chargePerMember:perMember,totalCost,ingredientUsage:usage,cookWhatsAppSent:true,cookWhatsAppSentAt:new Date().toISOString(),createdAt:new Date().toISOString()});
+  d.mealRecords.push({id:"MEAL"+Date.now(),date,mealType,recipeIds:recipes.map(r=>r.id),recipeNames:dishNames,recipeName:dishNames.join(" + "),items:dishNames,memberIds:ids,chargePerMember:perMember,totalCost,ingredientUsage:usage,cookWhatsAppSent:false,createdAt:new Date().toISOString()});
   d.stockMovements=Array.isArray(d.stockMovements)?d.stockMovements:[];
   usage.forEach(u=>d.stockMovements.push({id:"OUT"+Date.now()+Math.random().toString(16).slice(2),date,type:"meal-consumption",itemId:u.itemId,itemName:u.itemName,quantity:u.quantity,unit:u.unit,reference:mealType+" - "+dishNames.join(" + "),memberCount:ids.length}));
   if(!write(d))return;
   document.querySelectorAll(".meal-member,.meal-recipe").forEach(x=>x.checked=false);
   updatePreview();renderRecords();
-  alert("Meal save ho gaya! Ration deduct hua aur Cook ka WhatsApp khul gaya. Message WhatsApp mein Send karein. Is Meal ke liye dobara WhatsApp nahi khulega.");
+  renderCookMealOptions(); alert("Meal save ho gaya aur ration deduct ho gaya. Neeche Cook WhatsApp form se ration bhejein.");
  };
+ function renderCookMealOptions(){
+  const d=read(),sel=$("cookMealRecord");if(!sel)return;
+  const previous=sel.value,rows=(d.mealRecords||[]).slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const available=rows.filter(r=>!r.cookWhatsAppSent&&!(d.cookRationSent||{})[r.date+"|"+r.mealType]);
+  sel.innerHTML='<option value="">Saved meal select karein</option>'+available.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.date)+' — '+esc(r.mealType)+' — '+esc((r.recipeNames||[r.recipeName||""]).join(" + "))+'</option>').join("");
+  if(available.some(r=>String(r.id)===previous))sel.value=previous;
+  $("cookMealStatus").textContent=available.length?"Har date ke har meal time ka ration sirf ek baar bheja ja sakta hai.":"Koi pending saved meal nahi hai.";
+ }
  function sendCookRation(){
-  const d=read(),ids=checkedIds(),chosen=selectedRecipes(),recipes=(d.recipes||[]).filter(r=>chosen.includes(r.id));
-  if(!recipes.length){alert("Pehle dishes / recipes select karein.");return}
-  if(!ids.length){alert("Pehle khana khane wale members select karein.");return}
-  const phone=String($("cookWhatsApp").value||"").replace(/[^0-9]/g,"");
-  if(!phone){alert("Cook ka WhatsApp number country code ke saath dalein.");return}
-  const lines=aggregate(recipes,d).map(i=>i.itemName+": "+(i.perServing*ids.length)+" "+i.unit);
-  const message=["CRPF MESS — RATION LIST","Date: "+$("mealDate").value,"Meal: "+$("mealType").value,"Dishes: "+recipes.map(r=>r.name).join(" + "),"Members: "+ids.length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\n");
-  window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank","noopener");
+  const d=read(),id=$("cookMealRecord").value,record=(d.mealRecords||[]).find(r=>String(r.id)===String(id));
+  if(!record){alert("Pehle Saved Meal select karein.");return}
+  d.cookRationSent=d.cookRationSent||{};const key=record.date+"|"+record.mealType;
+  if(record.cookWhatsAppSent||d.cookRationSent[key]){alert("Is date ka "+record.mealType+" ration WhatsApp pehle hi bheja ja chuka hai.");renderCookMealOptions();return}
+  const phone=String($("cookWhatsAppForm").value||"").replace(/[^0-9]/g,"");if(!phone){alert("Cook ka WhatsApp number country code ke saath dalein.");return}
+  const lines=(record.ingredientUsage||[]).map(i=>(i.itemName||"Ration")+": "+Number(i.recipeQuantity||i.quantity||0)+" "+(i.recipeUnit||i.unit||""));
+  if(!lines.length){alert("Is saved meal ki ration detail nahi mili.");return}
+  const dishes=(record.recipeNames||[record.recipeName||""]).join(" + ");
+  const message=["CRPF MESS — RATION LIST","Date: "+record.date,"Meal: "+record.mealType,"Dishes: "+dishes,"Members: "+(record.memberIds||[]).length,"Required ration:",...lines,"Please ration prepare karein. — Mess NCO"].join("\\n");
+  d.cookRationSent[key]={recordId:record.id,sentAt:new Date().toISOString(),phone};record.cookWhatsAppSent=true;record.cookWhatsAppSentAt=new Date().toISOString();
+  if(!write(d))return;window.open("https://wa.me/"+phone+"?text="+encodeURIComponent(message),"_blank");renderCookMealOptions();
+  alert("WhatsApp khul gaya. Message Send karein. "+record.mealType+" ka ration ab dobara nahi bheja ja sakega.");
  }
 
  $("mealMemberSearch").addEventListener("input",renderMembers);
@@ -161,5 +165,5 @@ function updatePreview(){
  $("mealRecipeList").addEventListener("change",updatePreview);
  $("mealDate").value=new Date().toLocaleDateString("en-CA");$("dateNow").textContent=new Date().toLocaleDateString();
  $("planWeekStart").value=dateISO(mondayOf(dateISO(new Date())));renderPlanDates();renderPlanRecipes();renderWeeklyPlans();$("planWeekStart").addEventListener("change",()=>{renderPlanDates();renderWeeklyPlans()});$("saveWeeklyPlan").addEventListener("click",saveWeeklyPlan);$("weeklyPlanRows").addEventListener("click",e=>{const use=e.target.closest(".use-week-plan"),del=e.target.closest(".delete-week-plan");if(use)loadPlanForAttendance(use.dataset.id);if(del){const d=read();if(confirm("Is planned menu ko delete karein?")){d.weeklyMenus=(d.weeklyMenus||[]).filter(p=>String(p.id)!==String(del.dataset.id));write(d);renderWeeklyPlans()}}});
- renderCookOptions();renderMembers();renderRecipeOptions();renderRecords();
+ renderCookOptions();renderMembers();renderRecipeOptions();renderRecords();renderCookMealOptions(); $("sendCookRation").addEventListener("click",sendCookRation);
 })();
