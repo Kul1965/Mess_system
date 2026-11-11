@@ -276,13 +276,10 @@ td.no-print{white-space:nowrap}
     </div>
     <div class="field">
      <label>Member Photo</label>
-     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0">
-      <button type="button" class="secondary" onclick="document.getElementById('photoCamera').click()">📷 Take Photo</button>
-      <button type="button" class="secondary" onclick="document.getElementById('photo').click()">🖼️ Choose from Gallery / Files</button>
-     </div>
-     <input id="photoCamera" type="file" accept="image/*" capture="environment" style="display:none">
+     <button type="button" class="secondary" style="margin:6px 0;padding:12px 18px" onclick="document.getElementById('photo').click()">🖼️ Choose Photo</button>
+     <input id="photoCamera" type="file" accept="image/*" style="display:none">
      <input id="photo" type="file" accept="image/*" style="display:none">
-     <small class="muted" id="photoChoiceNote">Camera ya Gallery se photo chun sakte hain.</small>
+     <small class="muted" id="photoChoiceNote">Choose Photo दबाकर Gallery या Files से सदस्य की फोटो चुनें। फोटो अपने आप छोटा होकर सेव होगी।</small>
     </div>
     <div class="field">
      <label>Movement Orders / Document / PDF</label>
