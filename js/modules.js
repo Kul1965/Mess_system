@@ -143,7 +143,7 @@ function render(){
     let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
-      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
+      const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':cfg.key==="transactions"?'<button class="view-btn" type="button" onclick="viewTransaction(&quot;'+id+'&quot;)">👁 View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
         (cfg.key==="ration"&&isLowStock(x)?' <a class="btn" style="background:#d8f3e5;color:#075b37;border:1px solid #8fd3ae" href="purchases.html?item='+encodeURIComponent(x.id||x.name)+'">Purchase</a>':'');
       if(cfg.key==="handovers"){
         const ms=x.monthlySummary||{},stock=Number(x.stockTotalValue??(x.stockSnapshot||[]).reduce((s,i)=>s+Number(i.estimatedValue||0),0)),due=Number(x.pendingCutting??ms.pendingCutting??0),actual=Number(x.actualCash??(Number(x.cash||0)-stock-due)),grand=Number(x.totalHandoverValue??x.cash??(actual+stock+due)),doc=x.attachment;
@@ -476,6 +476,21 @@ async function saveCurrentRecord(event){
 }
 
 function closeForm(){document.getElementById("modal").hidden=true}
+function viewTransaction(id){
+ const x=(data.transactions||[]).find(a=>String(a.id)===String(id));if(!x)return;
+ const typeLabels={office_received:"Office se paisa mila",cutting_collected:"Jawan se Mess Cutting mili",office_deposited:"Mess SO ne liya",expense:"Other expense",special_expense:"Special meal expense",surplus_spend:"Surplus se approved expense"};
+ const from=x.type==="office_received"?(x.fromStaff||"—"):(x.toStaff||"—");
+ const to=x.type==="office_received"?(x.toStaff||"—"):(x.fromStaff||"—");
+ const doc=x.document;
+ const old=document.getElementById("transactionViewModal");if(old)old.remove();
+ const wrap=document.createElement("div");wrap.id="transactionViewModal";
+ wrap.style.cssText="position:fixed;inset:0;z-index:10030;background:#000b;display:flex;align-items:center;justify-content:center;padding:14px";
+ wrap.innerHTML='<section style="width:min(100%,520px);max-height:88vh;overflow:auto;background:#fff;color:#214d3b;border:1px solid #8bc9a8;border-radius:16px;padding:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">Office Transaction Details</h3><button type="button" class="alt" id="closeTransactionView">✕</button></div><div style="margin-top:14px;line-height:1.9;overflow-wrap:anywhere"><b>Date:</b> '+esc(x.date||"—")+'<br><b>Type:</b> '+esc(typeLabels[x.type]||x.type||"—")+'<br><b>Dene wala:</b> '+esc(from)+'<br><b>Receive karne wala:</b> '+esc(to)+'<br><b>Details / Note:</b><div style="white-space:pre-wrap;background:#f1f7f3;border:1px solid #dce9e0;border-radius:9px;padding:10px;margin:5px 0 10px">'+esc(x.description||"—")+'</div><b>Approval / Reference:</b><div style="white-space:pre-wrap;background:#f1f7f3;border:1px solid #dce9e0;border-radius:9px;padding:10px;margin:5px 0 10px">'+esc(x.approvedBy||"—")+'</div><b>Amount:</b> '+money(x.amount||0)+'<br><b>Note / PDF:</b> '+(doc&&doc.data?'<button type="button" class="view-btn" id="openTransactionDocument">📄 View Note / PDF</button>':'Not uploaded')+'</div><div style="display:flex;justify-content:flex-end;margin-top:16px"><button type="button" class="alt" id="closeTransactionView2">Close</button></div></section>';
+ document.body.appendChild(wrap);
+ const close=()=>wrap.remove();wrap.querySelector("#closeTransactionView").onclick=close;wrap.querySelector("#closeTransactionView2").onclick=close;
+ const open=wrap.querySelector("#openTransactionDocument");if(open)open.onclick=()=>openDocumentPreview(id);
+ wrap.onclick=e=>{if(e.target===wrap)close()};
+}
 function viewStaff(id){
  const x=(data.staff||[]).find(a=>String(a.id)===String(id));if(!x)return;
  const member=(data.members||[]).find(a=>String(a.id)===String(x.memberId));
