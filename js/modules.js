@@ -479,13 +479,17 @@ function closeForm(){document.getElementById("modal").hidden=true}
 function viewSmallRecordDocument(id){
  const x=arr().find(a=>String(a.id)===String(id));if(!x)return;
  const doc=x.billDocument||x.attachment||x.document;
- if(!doc||!doc.data){showAppAlert("Is entry mein PDF ya photo upload nahi hai.");return;}
- const isPdf=String(doc.type||"").toLowerCase()==="application/pdf"||String(doc.name||"").toLowerCase().endsWith(".pdf");
- const isImage=String(doc.type||"").startsWith("image/");
+ const isPdf=!!(doc&&doc.data&&(String(doc.type||"").toLowerCase()==="application/pdf"||String(doc.name||"").toLowerCase().endsWith(".pdf")));
+ const isImage=!!(doc&&doc.data&&String(doc.type||"").startsWith("image/"));
+ const purchase=cfg.key==="purchases";
+ const details=purchase
+  ?[['Date',x.date],['Item',x.itemName],['Quantity',String(x.quantity??"")+' '+String(x.unit||"")],['Rate',money(x.rate||0)+' / '+String(x.unit||"")],['Total',money(x.total??(Number(x.quantity||0)*Number(x.rate||0)))],['Supplier',x.vendor],['Bill / Reference',x.bill]]
+  :[['Item',x.name],['Category',x.category],['Current Stock',String(x.quantity??0)+' '+String(x.unit||"")],['Minimum Stock',String(x.minimum??0)+' '+String(x.unit||"")],['Rate',money(x.price||0)+' / '+String(x.unit||"")]];
+ const detailHtml=details.map(([k,v])=>'<div style="display:grid;grid-template-columns:112px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid #e4eee7"><b>'+esc(k)+'</b><span style="overflow-wrap:anywhere">'+esc(v||"—")+'</span></div>').join("");
  const old=document.getElementById("smallRecordDocumentModal");if(old)old.remove();
  const wrap=document.createElement("div");wrap.id="smallRecordDocumentModal";
- wrap.style.cssText="position:fixed;inset:0;z-index:10040;background:#0009;display:flex;align-items:center;justify-content:center;padding:12px";
- wrap.innerHTML='<section style="width:min(100%,390px);max-height:82vh;overflow:auto;background:#fff;color:#214d3b;border:1px solid #8bc9a8;border-radius:14px;padding:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:14px">📄 '+esc(doc.name||"Document")+'</b><button type="button" class="alt" id="closeSmallDoc">✕</button></div><div style="margin-top:10px;height:230px;max-height:45vh;min-height:150px;overflow:auto;border:1px solid #d4e2d9;border-radius:8px;background:#edf3ef;display:flex;align-items:center;justify-content:center">'+(isPdf?'<iframe title="Purchase / Ration PDF" src="'+doc.data+'" style="width:100%;height:100%;min-height:220px;border:0;background:#fff"></iframe>':isImage?'<img alt="Uploaded document" src="'+doc.data+'" style="max-width:100%;max-height:100%;object-fit:contain">':'Document preview not supported on this device.')+'</div><div style="text-align:right;margin-top:10px"><button type="button" class="alt" id="closeSmallDoc2">Close</button></div></section>';
+ wrap.style.cssText="position:fixed;inset:0;z-index:10040;background:#0009;display:flex;align-items:center;justify-content:center;padding:10px";
+ wrap.innerHTML='<section style="width:min(100%,440px);max-height:88vh;overflow:auto;background:#fff;color:#214d3b;border:1px solid #8bc9a8;border-radius:14px;padding:13px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:15px">'+(purchase?'🧾 Purchase Details':'📦 Ration Details')+'</b><button type="button" class="alt" id="closeSmallDoc">✕</button></div><div style="margin-top:9px">'+detailHtml+'</div><b style="display:block;margin:12px 0 7px">Bill / Note / PDF</b><div style="height:220px;max-height:38vh;min-height:150px;overflow:auto;border:1px solid #d4e2d9;border-radius:8px;background:#edf3ef;display:flex;align-items:center;justify-content:center">'+(isPdf?'<iframe title="Purchase / Ration PDF" src="'+doc.data+'" style="width:100%;height:100%;min-height:210px;border:0;background:#fff"></iframe>':isImage?'<img alt="Uploaded document" src="'+doc.data+'" style="max-width:100%;max-height:100%;object-fit:contain">':(doc&&doc.data?'Document preview not supported on this device.':'No document uploaded for this record.'))+'</div><div style="text-align:right;margin-top:10px"><button type="button" class="alt" id="closeSmallDoc2">Close</button></div></section>';
  document.body.appendChild(wrap);
  const close=()=>wrap.remove();wrap.querySelector("#closeSmallDoc").onclick=close;wrap.querySelector("#closeSmallDoc2").onclick=close;wrap.onclick=e=>{if(e.target===wrap)close()};
 }
