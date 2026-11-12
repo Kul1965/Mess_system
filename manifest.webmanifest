@@ -15,12 +15,6 @@
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any"
-    },
-    {
-      "src": "./icons/crpf-monogram-192.jpg",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any"
     }
   ]
 }
