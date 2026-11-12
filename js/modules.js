@@ -142,10 +142,16 @@ function render(){
     if(cfg.key==="staff")list=list.filter(x=>!!x.memberId&&!!x.duty);
     let rows=list.filter(x=>{
       if(!q)return true;
-      const searchable=cfg.key==="ration"
-        ?[x.name,x.category,x.quantity,x.unit,x.minimum,x.price].join(" ")
-        :JSON.stringify(x);
-      return String(searchable||"").toLocaleLowerCase().includes(q.trim());
+      let searchable;
+      if(cfg.key==="ration"){
+        // Search all plain text/number fields, but skip uploaded file payloads.
+        searchable=Object.entries(x||{}).filter(([key,value])=>
+          !/document|attachment|photo|image|data|base64/i.test(key) &&
+          (typeof value==="string"||typeof value==="number")
+        ).map(([,value])=>String(value)).join(" ");
+      }else searchable=JSON.stringify(x);
+      const normalise=value=>String(value??"").normalize("NFKD").replace(/[\\u0300-\\u036f]/g,"").toLocaleLowerCase().trim();
+      return normalise(searchable).includes(normalise(q));
     });
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
