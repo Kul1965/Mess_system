@@ -130,6 +130,23 @@ function saveSettings(){
  if(!save())return;
  showAppAlert("Settings saved successfully.");
 }
+function filterRationStore(value){
+ const term=String(value||"").toLocaleLowerCase().trim();
+ const body=document.getElementById("rows");
+ if(!body)return;
+ let shown=0;
+ Array.from(body.querySelectorAll("tr")).forEach(row=>{
+  const text=String(row.innerText||row.textContent||"").toLocaleLowerCase();
+  const match=!term||text.includes(term);
+  row.hidden=!match;
+  if(match)shown++;
+ });
+ const empty=document.getElementById("empty");
+ if(empty){
+  empty.style.display=shown?"none":"block";
+  empty.textContent=term?"Koi matching saman nahi mila.":"Abhi koi saman darj nahi hai.";
+ }
+}
 function render(){
   try{
     const pageIcons={store:"📦",purchases:"🛒",recipes:"🍲",menu:"📅",accounts:"💰",staff:"👨‍🍳",reports:"📊",handover:"🔄",settings:"⚙️"};
