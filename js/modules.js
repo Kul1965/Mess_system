@@ -142,7 +142,7 @@ function render(){
     if(cfg.key==="staff")list=list.filter(x=>!!x.memberId&&!!x.duty);
     let rows=list.filter(x=>{
       if(!q)return true;
-      const searchable=cfg.key==="store"
+      const searchable=cfg.key==="ration"
         ?[x.name,x.category,x.quantity,x.unit,x.minimum,x.price].join(" ")
         :JSON.stringify(x);
       return String(searchable||"").toLocaleLowerCase().includes(q.trim());
