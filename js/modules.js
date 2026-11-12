@@ -899,6 +899,23 @@ document.getElementById("recordForm")?.addEventListener("submit",saveCurrentReco
  // SAFETY: Never auto-rewrite historical stock rates on page load.
  // Legacy rates can already be stored per base unit; dividing by 1000 silently corrupts stock value.
  render();
+// Store search fallback: filter the already-rendered rows directly on mobile browsers.
+if(cfg.key==="ration"){
+ const searchBox=document.getElementById("search");
+ const filterStoreRows=()=>{
+  const term=String(searchBox?.value||"").normalize("NFKD").toLowerCase().trim();
+  const body=document.getElementById("rows");
+  if(!body)return;
+  Array.from(body.rows).forEach(row=>{
+   const text=String(row.textContent||"").normalize("NFKD").toLowerCase();
+   row.style.display=!term||text.includes(term)?"":"none";
+  });
+  const empty=document.getElementById("empty");
+  if(empty){const visible=Array.from(body.rows).some(row=>row.style.display!=="none");empty.style.display=visible?"none":"";if(!visible)empty.textContent="Is search se koi saman nahi mila.";}
+ };
+ searchBox?.addEventListener("input",filterStoreRows);
+ searchBox?.addEventListener("keyup",filterStoreRows);
+}
 if(cfg.key==="purchases"){
   const wanted=new URLSearchParams(location.search).get("item");
   if(wanted){
