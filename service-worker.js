@@ -1,10 +1,10 @@
 /* CRPF Mess PWA service worker - network first, offline fallback */
-const CACHE_NAME = "crpf-mess-shell-v2";
+const CACHE_NAME = "crpf-mess-shell-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/crpf-monogram-192.jpg",
+  "./icons/crpf-monogram-192.png",
   "./icons/crpf-monogram-192.jpg"
 ];
 
