@@ -483,6 +483,15 @@ body.mobile-nav-open{overflow:hidden!important}
   color:#e1f5ff!important;
   -webkit-text-fill-color:#e1f5ff!important;
 }
+
+/* Fixed app shell: header and navbar stay still; only page content scrolls */
+html,body{height:100%;overflow:hidden!important}
+.app{height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
+.main{height:100vh!important;height:100dvh!important;min-height:0!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}
+.main>.topbar,.main>.top-nav{flex:0 0 auto!important}
+.main>.content{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;-webkit-overflow-scrolling:touch!important}
+.sidebar{height:100vh!important;height:100dvh!important;min-height:0!important;overflow:hidden!important}
+.sidebar>.nav{min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important}
 </style>
 </head>
 
