@@ -140,7 +140,13 @@ function render(){
     if(cfg.key==="reports"){renderReports();return}
     let list=arr(),q=(document.getElementById("search")?.value||"").toLowerCase();
     if(cfg.key==="staff")list=list.filter(x=>!!x.memberId&&!!x.duty);
-    let rows=list.filter(x=>JSON.stringify(x).toLowerCase().includes(q));
+    let rows=list.filter(x=>{
+      if(!q)return true;
+      const searchable=cfg.key==="store"
+        ?[x.name,x.category,x.quantity,x.unit,x.minimum,x.price].join(" ")
+        :JSON.stringify(x);
+      return String(searchable||"").toLocaleLowerCase().includes(q.trim());
+    });
     document.getElementById("rows").innerHTML=rows.map(x=>{
       const id=String(x.id||"").replace(/\\/g,"");
       const action=(cfg.key==="recipes"?'<button class="view-btn" type="button" onclick="viewRecipe(&quot;'+id+'&quot;)">View</button>':cfg.key==="staff"?'<button class="view-btn" type="button" onclick="viewStaff(&quot;'+id+'&quot;)">View</button>':cfg.key==="transactions"?'<button class="view-btn" type="button" onclick="viewTransaction(&quot;'+id+'&quot;)">👁 View</button>':(cfg.key==="purchases"||cfg.key==="ration")&&((x.billDocument||x.attachment||x.document)?.data)?'<button class="view-btn" type="button" onclick="viewSmallRecordDocument(&quot;'+id+'&quot;)">📄 View</button>':"")+'<button class="alt" type="button" onclick="editRow(&quot;'+id+'&quot;)">Edit</button><button class="danger" type="button" onclick="deleteRow(&quot;'+id+'&quot;)">Delete</button>'+
