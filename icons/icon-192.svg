@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="104" fill="#063c2a"/>
+  <rect x="22" y="22" width="468" height="468" rx="88" fill="none" stroke="#e5bb19" stroke-width="12"/>
+  <path d="M126 190h260v46H126zm0 72h260v46H126zm0 72h170v46H126z" fill="#fff"/>
+  <path d="M256 82l20 52 55 4-42 36 13 54-46-29-46 29 13-54-42-36 55-4z" fill="#e5bb19"/>
+  <text x="256" y="430" font-family="Arial,Helvetica,sans-serif" font-size="35" font-weight="700" text-anchor="middle" fill="#fff">CRPF MESS</text>
+</svg>
