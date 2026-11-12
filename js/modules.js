@@ -64,6 +64,17 @@ function purchaseLowStockItem(id){
  const field=document.getElementById("f_itemId");
  if(field)field.value=item.id;
 }
+function filterLowRationPurchaseRows(value){
+ const term=String(value||"").toLocaleLowerCase().trim();
+ const body=document.getElementById("lowRationPurchaseRows");if(!body)return;
+ let shown=0;
+ Array.from(body.querySelectorAll("tr")).forEach(row=>{
+  const match=!term||String(row.innerText||row.textContent||"").toLocaleLowerCase().includes(term);
+  row.hidden=!match;if(match)shown++;
+ });
+ const empty=document.getElementById("lowRationPurchaseEmpty");
+ if(empty){empty.hidden=!!shown;empty.textContent=term?"Is search se koi low-stock saman nahi mila.":"Abhi koi low-ration item nahi hai. Sabhi items ka stock minimum se upar hai.";}
+}
 function renderLowRationPurchaseList(){
  const body=document.getElementById("lowRationPurchaseRows");
  if(!body)return;
