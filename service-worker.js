@@ -1,11 +1,11 @@
 /* CRPF Mess PWA service worker - network first, offline fallback */
-const CACHE_NAME = "crpf-mess-shell-v1";
+const CACHE_NAME = "crpf-mess-shell-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./icons/icon-192.svg",
-  "./icons/icon-512.svg"
+  "./icons/crpf-monogram-192.jpg",
+  "./icons/crpf-monogram-192.jpg"
 ];
 
 self.addEventListener("install", event => {
