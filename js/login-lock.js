@@ -17,8 +17,9 @@
    const out=document.createElement("button");out.type="button";out.textContent="🔒 Logout";out.style.cssText=style;
    out.addEventListener("click",()=>{sessionStorage.removeItem(SESSION);location.replace("login.html");});
    wrap.append(change,out);
-   const info=document.querySelector(".topbar>.top-info");
-   const nco=info?.querySelector(".nco-pill");
+   wrap.style.cssText+=";align-self:center;position:relative;z-index:2";
+   const info=document.querySelector(".topbar>.dh-info")||document.querySelector(".topbar>.top-info");
+   const nco=info?.querySelector(".dh-role, .nco-pill");
    if(nco){nco.insertAdjacentElement("afterend",wrap);}
    else if(info){info.appendChild(wrap);}
    else{document.querySelector(".topbar")?.appendChild(wrap);}
