@@ -247,6 +247,18 @@ td.no-print{white-space:nowrap}
   </div>
   <div class="empty" id="empty" style="display:none">No members found. Click Add New Member to register.</div>
  </section>
+
+ <section class="panel no-print" id="foodRecordsPanel">
+  <div class="toolbar"><h3>🍽️ Food Records — Pending Ration Deduction</h3><button type="button" class="primary" onclick="deductPendingFoodRation()">📦 Deduct Ration</button></div>
+  <p style="font-size:12px;color:#a9c9bb;margin:0 0 12px">Saved food entries appear here. Deduct all pending ration together.</p>
+  <div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Date / Time</th><th>Member</th><th>Meal</th><th>Food / Recipes</th><th>Food Type</th><th>Charge</th><th>Ration Status</th></tr></thead><tbody id="foodRecordRows"></tbody></table></div>
+  <div class="empty" id="foodRecordsEmpty">Abhi koi food record nahi hai.</div>
+ </section>
+ <section class="panel no-print" id="rationDeductionRegister">
+  <div class="toolbar"><h3>📦 Ration Deduction Register</h3><span id="rationRegisterCount" style="font-size:11px;color:#a9c9bb;font-weight:bold">0 entries</span></div>
+  <div class="table-wrap"><table style="min-width:620px;font-size:12px"><thead><tr><th>Date</th><th>Member</th><th>Meal</th><th>Ration Item</th><th>Deducted Qty</th><th>Status</th></tr></thead><tbody id="rationDeductionRows"></tbody></table></div>
+  <div class="empty" id="rationDeductionEmpty">Abhi ration deduction history nahi hai.</div>
+ </section>
 </div>
 <div class="footer">CRPF Mess Management System | Members Register</div>
 </main>
@@ -340,6 +352,7 @@ td.no-print{white-space:nowrap}
   <div id="memberDetails" class="details"></div>
   <div class="form-actions">
    <button class="secondary" onclick="printMember()">📄 Member PDF</button>
+   <button class="primary" onclick="openEatFood()">🥝 Eat Food</button>
    <button class="primary" onclick="openPayment()">💰 Payment</button>
    <button class="secondary" onclick="openLeaveCard()">🏖️ Leave Card</button>
    <button class="primary" onclick="whatsAppMember()">WhatsApp</button>
@@ -347,6 +360,32 @@ td.no-print{white-space:nowrap}
   </div>
  </div>
 </div>
+
+
+<!-- EAT FOOD ENTRY -->
+<div class="modal" id="eatFoodModal">
+ <div class="modal-box">
+  <div class="modal-head"><h3>🥝 Eat Food — Member Meal Entry</h3><button class="close" type="button" onclick="closeEatFood()">✕</button></div>
+  <div id="eatFoodMember" class="meal-entry"></div>
+  <div class="form-grid">
+   <div class="field"><label>Date *</label><input id="eatFoodDate" type="date"></div>
+   <div class="field"><label>Time *</label><input id="eatFoodTime" type="time"></div>
+   <div class="field"><label>Meal Time *</label><select id="eatFoodMeal"><option>Morning Tea</option><option>Breakfast</option><option>Midday Tea</option><option>Lunch</option><option>Evening Tea</option><option>Dinner</option></select></div>
+   <div class="field"><label>Food Type</label><select id="eatFoodType"><option>Veg</option><option>Non-Veg</option><option>Both</option></select></div>
+   <div class="field full"><label>Choose Recipes / Dishes (multiple allowed)</label><div id="eatFoodRecipes" class="food-recipe-list"></div><button type="button" class="secondary" style="margin-top:9px" onclick="addEatFoodRecipeRow()">＋ Add Another Recipe</button><div id="eatFoodRecipeTotal" class="meal-entry" style="margin-top:9px">Selected food total: ₹0</div></div>
+   <div class="field full"><label>Remarks (optional)</label><input id="eatFoodNotes" type="text" placeholder="Optional note"></div>
+  </div>
+  <div class="form-actions"><button class="secondary" type="button" onclick="closeEatFood()">Cancel</button><button class="primary" type="button" onclick="saveEatFood()">💾 Save Food & Add to Member Bill</button></div>
+ </div>
+</div>
+<style>
+.food-recipe-list{display:grid;gap:8px;max-height:280px;overflow:auto}
+.food-recipe-option{display:grid;grid-template-columns:minmax(0,1fr) 82px 34px;gap:8px;align-items:center;background:#0b3022;border:1px solid #287b52;border-radius:9px;padding:9px}
+.food-recipe-option select,.food-recipe-option input{width:100%;min-width:0;background:#071b14;color:#fff;border:1px solid #287b52;border-radius:7px;padding:9px}
+.food-recipe-option .food-remove{background:#3a1720;color:#fff;border:1px solid #8b3a46;border-radius:7px;padding:8px;font-weight:700}
+.food-status-pending{color:#ffd36b;font-weight:700}.food-status-done{color:#54e6a0;font-weight:700}
+@media(max-width:480px){.food-recipe-option{grid-template-columns:minmax(0,1fr) 68px 32px;gap:5px;padding:7px}.food-recipe-option select,.food-recipe-option input{padding:8px 5px}}
+</style>
 
 <!-- MEMBER LEAVE CARD -->
 <div class="modal" id="leaveModal">
@@ -487,6 +526,7 @@ function setMemberFilter(status){
   <td><span class="status ${(m.status||"Active")==="Inactive"?"inactive":""}">${esc(m.status||"Active")}</span></td>
   <td class="no-print"><div class="actions">
    <button class="secondary" onclick="viewMember('${m.id}')">View</button>
+   <button class="primary" onclick="startEatFood('${m.id}')">🥝 Eat Food</button>
    <button class="primary" onclick="editMember('${m.id}')">Edit</button>
    <button class="danger" onclick="deleteMember('${m.id}')">Delete</button>
   </div></td>
@@ -875,6 +915,109 @@ refresh();
 </script>
 <script src="js/pdf-tools.js?v=20261108-pdf-title8"></script>
 <script src="js/shared-header.js?v=20261109-desktop-drawer3"></script>
-<script src="js/mobile-nav.js?v=20261109-desktop-drawer3"></script>
+<script src="js/mobile-nav.js?v=20261109-desktop-drawer3">function localDateValue(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
+function startEatFood(id){viewMember(id);openEatFood()}
+function openEatFood(){
+ const m=members.find(x=>String(x.id)===String(viewingId));if(!m){showToast("Member details nahi mile.","error");return}
+ const d=getData(),recipes=Array.isArray(d.recipes)?d.recipes:[];
+ document.getElementById("eatFoodMember").innerHTML="<b>Member:</b> "+esc(m.name)+" · "+esc(m.idNo??m.forceNo)+"<br><small>Dropdown se dish chunein; har dish ki serving alag set kar sakte hain.</small>";
+ const now=new Date();document.getElementById("eatFoodDate").value=localDateValue();document.getElementById("eatFoodTime").value=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
+ document.getElementById("eatFoodMeal").value="Breakfast";document.getElementById("eatFoodType").value="Veg";document.getElementById("eatFoodNotes").value="";
+ document.getElementById("eatFoodRecipes").innerHTML="";
+ if(recipes.length)addEatFoodRecipeRow();
+ else document.getElementById("eatFoodRecipes").innerHTML='<p>No recipes found. Pehle Recipes page mein recipes aur ingredients save karein.</p>';
+ updateEatFoodRecipeTotal();
+ document.getElementById("eatFoodModal").style.display="block";
+}
+function addEatFoodRecipeRow(){
+ const box=document.getElementById("eatFoodRecipes");if(!box)return;
+ const recipes=getData().recipes||[];
+ if(!recipes.length){showToast("Pehle Recipes page mein recipe add karein.","warning");return}
+ const options='<option value="">Select recipe / dish</option>'+recipes.map(r=>'<option value="'+esc(r.id)+'">'+esc(r.name||"Recipe")+' — '+money(r.costPerServing||r.totalCost||0)+'/serving</option>').join("");
+ const row=document.createElement("div");row.className="food-recipe-option";
+ row.innerHTML='<select class="eat-recipe-select" aria-label="Select recipe" onchange="updateEatFoodRecipeTotal()">'+options+'</select><input type="number" class="eat-recipe-servings" min="0.25" step="0.25" value="1" aria-label="Servings" oninput="updateEatFoodRecipeTotal()"><button type="button" class="food-remove" aria-label="Remove recipe" title="Remove this recipe" onclick="this.parentElement.remove();updateEatFoodRecipeTotal()">✕</button>';
+ box.appendChild(row);refreshEatFoodRecipeOptions();
+}
+function refreshEatFoodRecipeOptions(){
+ const selects=[...document.querySelectorAll(".eat-recipe-select")],chosen=selects.map(s=>s.value).filter(Boolean);
+ selects.forEach(select=>{[...select.options].forEach(opt=>{if(!opt.value)return;opt.disabled=chosen.includes(opt.value)&&select.value!==opt.value})});
+}
+function updateEatFoodRecipeTotal(){
+ const d=getData();let total=0;
+ document.querySelectorAll("#eatFoodRecipes .food-recipe-option").forEach(row=>{
+  const id=row.querySelector(".eat-recipe-select")?.value,qty=Number(row.querySelector(".eat-recipe-servings")?.value||0);
+  const recipe=(d.recipes||[]).find(r=>String(r.id)===String(id));
+  if(recipe&&qty>0)total+=Number(recipe.costPerServing??recipe.totalCost??0)*qty;
+ });
+ const out=document.getElementById("eatFoodRecipeTotal");if(out)out.textContent="Selected food total: "+money(total);
+ refreshEatFoodRecipeOptions();
+}
+function closeEatFood(){document.getElementById("eatFoodModal").style.display="none"}
+function saveEatFood(){
+ const d=getData(),m=(d.members||[]).find(x=>String(x.id)===String(viewingId));if(!m){showToast("Member nahi mila.","error");return}
+ const date=document.getElementById("eatFoodDate").value,time=document.getElementById("eatFoodTime").value,mealType=document.getElementById("eatFoodMeal").value,foodType=document.getElementById("eatFoodType").value;
+ if(!date||!time){showToast("Date aur time select karein.","warning");return}
+ const selected=[...document.querySelectorAll("#eatFoodRecipes .food-recipe-option")].map(row=>{const id=row.querySelector(".eat-recipe-select")?.value,r=(d.recipes||[]).find(x=>String(x.id)===String(id)),q=Number(row.querySelector(".eat-recipe-servings")?.value||0);return {recipe:r,servings:q}}).filter(x=>x.recipe);
+ if(!selected.length){showToast("Kam se kam ek recipe dropdown se select karein.","warning");return}
+ if(new Set(selected.map(x=>String(x.recipe.id))).size!==selected.length){showToast("Ek recipe do baar select hui hai. Duplicate row hata dein.","warning");return}
+ if(selected.some(x=>!Number.isFinite(x.servings)||x.servings<=0)){showToast("Har dish ki serving quantity sahi dalein.","warning");return}
+ const usageMap=new Map();let total=0;
+ const factor=u=>{u=String(u||"").toLowerCase();if(["g","gram","grams"].includes(u))return ["w",1];if(["kg","kgs"].includes(u))return ["w",1000];if(u==="ml")return ["v",1];if(["l","ltr","litre","liter"].includes(u))return ["v",1000];if(["pcs","pc","piece","pieces"].includes(u))return ["c",1];return null};
+ const unitConvert=(q,from,to)=>{const a=factor(from),b=factor(to);return !a||!b||a[0]!==b[0]?null:Number(q)*a[1]/b[1]};
+ const ration=Array.isArray(d.ration)?d.ration:[];
+ for(const x of selected){
+  const r=x.recipe,cost=Number(r.costPerServing??r.totalCost??0);total+=cost*x.servings;
+  for(const ing of (r.ingredients||[])){
+   const item=ration.find(y=>String(y.id)===String(ing.itemId));if(!item){showToast("Recipe "+r.name+": ration item nahi mila. Ingredients check karein.","error");return}
+   const qty=unitConvert(Number(ing.quantity||0)*x.servings,ing.unit||item.unit,item.unit);
+   if(qty===null){showToast(item.name+" ka unit match nahi ho raha. Recipe check karein.","error");return}
+   const old=usageMap.get(String(item.id))||{itemId:item.id,itemName:item.name,quantity:0,unit:item.unit,cost:0};old.quantity+=qty;old.cost+=qty*Number(item.price||0);usageMap.set(String(item.id),old);
+  }
+ }
+ if(selected.some(x=>!Array.isArray(x.recipe.ingredients)||!x.recipe.ingredients.length)){showToast("Selected recipe mein ration ingredients nahi hain. Recipe page par ingredients add karein.","warning");return}
+ const dishes=selected.map(x=>x.recipe.name||"Recipe"),details=selected.map(x=>({recipeId:x.recipe.id,name:x.recipe.name||"Recipe",servings:x.servings,cost:Number(x.recipe.costPerServing??x.recipe.totalCost??0)*x.servings}));
+ const record={id:"FOOD"+Date.now(),date,time,mealType,foodType,recipeIds:selected.map(x=>x.recipe.id),recipeNames:dishes,memberIds:[m.id],memberSnapshots:[{id:m.id,name:m.name,idNo:m.idNo??m.forceNo,dishes,dishDetails:details,foodChoice:foodType,charge:total}],totalCost:total,chargePerMember:total,ingredientUsage:[...usageMap.values()],rationDeducted:false,foodEntryVersion:1,notes:document.getElementById("eatFoodNotes").value.trim(),createdAt:new Date().toISOString()};
+ d.mealRecords=Array.isArray(d.mealRecords)?d.mealRecords:[];d.mealRecords.push(record);
+ try{saveData(d)}catch(e){showToast("Food record save nahi hua. Storage check karein.","error");return}
+ closeEatFood();renderFoodRecords();refresh();viewMember(m.id);showToast("Food saved. "+money(total)+" member ke bill mein add hua. Ration abhi pending hai.","success");
+}
+function renderFoodRecords(){
+ const d=getData(),rows=(d.mealRecords||[]).filter(r=>r.foodEntryVersion===1).slice().sort((a,b)=>(String(b.date||"")+" "+String(b.time||"")).localeCompare(String(a.date||"")+" "+String(a.time||"")));
+ const body=document.getElementById("foodRecordRows"),empty=document.getElementById("foodRecordsEmpty");if(!body||!empty)return;
+ body.innerHTML=rows.map(r=>{const snap=(r.memberSnapshots||[])[0]||{},member=(d.members||[]).find(m=>String(m.id)===String(snap.id||r.memberIds?.[0]));return '<tr><td>'+esc(r.date)+'<br>'+esc(r.time||"")+'</td><td>'+esc(snap.name||member?.name||"Member")+'</td><td>'+esc(r.mealType||"")+'</td><td>'+esc((r.recipeNames||[]).join(" + "))+'</td><td>'+esc(r.foodType||"")+'</td><td>'+money(r.totalCost)+'</td><td class="'+(r.rationDeducted?"food-status-done":"food-status-pending")+'">'+(r.rationDeducted?"✓ Deducted":"● Pending")+'</td></tr>'}).join("");
+ empty.style.display=rows.length?"none":"block";
+}
+function deductPendingFoodRation(){
+ const d=getData(),pending=(d.mealRecords||[]).filter(r=>r.foodEntryVersion===1&&!r.rationDeducted);
+ if(!pending.length){showToast("Koi pending food ration nahi hai.","info");return}
+ const totals=new Map();
+ pending.forEach(r=>(r.ingredientUsage||[]).forEach(x=>{const old=totals.get(String(x.itemId))||{itemId:x.itemId,itemName:x.itemName,quantity:0,unit:x.unit};old.quantity+=Number(x.quantity||0);totals.set(String(x.itemId),old)}));
+ const errors=[];totals.forEach(x=>{const item=(d.ration||[]).find(y=>String(y.id)===String(x.itemId));if(!item)errors.push(x.itemName+": store item missing");else if(Number(item.quantity||0)+1e-9<x.quantity)errors.push(x.itemName+": required "+x.quantity.toFixed(3)+" "+x.unit+", available "+Number(item.quantity||0)+" "+item.unit)});
+ if(errors.length){showToast(errors.join(" | "),"error");return}
+ const totalCharge=pending.reduce((s,r)=>s+Number(r.totalCost||0),0);
+ if(!confirm(pending.length+" food entries ka ration deduct hoga. Member bills mein "+money(totalCharge)+" add hai. Confirm karein?"))return;
+ const date=localDateValue();totals.forEach(x=>{const item=d.ration.find(y=>String(y.id)===String(x.itemId));item.quantity=Number(item.quantity||0)-x.quantity});
+ d.stockMovements=Array.isArray(d.stockMovements)?d.stockMovements:[];
+ totals.forEach(x=>d.stockMovements.push({id:"FOODOUT"+Date.now()+Math.random().toString(16).slice(2),date,type:"meal-consumption",itemId:x.itemId,itemName:x.itemName,quantity:x.quantity,unit:x.unit,reference:"Member Eat Food — "+pending.length+" entries"}));
+ pending.forEach(r=>{r.rationDeducted=true;r.rationDeductedAt=new Date().toISOString()});
+ try{saveData(d)}catch(e){showToast("Ration deduction save nahi hua. Dobara try karein.","error");return}
+ renderFoodRecords();renderRationDeductionRegister();refresh();if(viewingId)viewMember(viewingId);showToast("Ration deducted successfully. Food history safe hai.","success");
+}
+
+function renderRationDeductionRegister(){
+ const d=getData(),records=(d.mealRecords||[]).filter(r=>r.foodEntryVersion===1&&r.rationDeducted).slice().sort((a,b)=>(String(b.date||"")+" "+String(b.time||"")).localeCompare(String(a.date||"")+" "+String(a.time||"")));
+ const body=document.getElementById("rationDeductionRows"),empty=document.getElementById("rationDeductionEmpty"),count=document.getElementById("rationRegisterCount");if(!body||!empty)return;
+ const rows=[];
+ records.forEach(r=>{
+  const snap=(r.memberSnapshots||[])[0]||{},member=(d.members||[]).find(m=>String(m.id)===String(snap.id||r.memberIds?.[0]));
+  (r.ingredientUsage||[]).forEach(item=>rows.push({date:r.date,time:r.time,photo:member?.photo||"",member:snap.name||member?.name||"Member",meal:r.mealType||"",item:item.itemName||"Ration",qty:Number(item.quantity||0),unit:item.unit||"",status:"✓ Deducted"}));
+ });
+ body.innerHTML=rows.map(x=>'<tr><td><span class="ration-date">📅 '+esc(x.date||"—")+'</span><br><small>'+esc(x.time||"")+'</small></td><td>'+(x.photo?'<img class="ration-member-photo" src="'+esc(x.photo)+'" alt="Member">':'<span class="ration-photo-fallback">👤</span>')+'</td><td>'+esc(x.member)+'</td><td>'+esc(x.meal)+'</td><td>'+esc(x.item)+'</td><td class="ration-qty">'+esc(Number(x.qty.toFixed(3)))+' '+esc(x.unit)+'</td><td class="ration-done">'+x.status+'</td></tr>').join("");
+ empty.style.display=rows.length?"none":"block";if(count)count.textContent=rows.length+" entries";
+}
+
+renderFoodRecords();
+renderRationDeductionRegister();
+</script>
 </body>
 </html>
