@@ -37,23 +37,40 @@ function backupBlob(){
  const snapshot=collectFullBackup();
  return new Blob([JSON.stringify(snapshot,null,2)],{type:"application/json"});
 }
+async function writeBackupToHandle(handle,blob){
+ const writable=await handle.createWritable();
+ try{await writable.write(blob);await writable.close();}
+ catch(e){try{await writable.abort();}catch(_){}throw e;}
+}
 async function updateExistingBackup(){
  try{
+  if(!window.showOpenFilePicker){
+   setMessage("Is browser mein selected folder/file ko direct update karna supported nahi hai. Backup ko kisi doosri jagah chupke se save nahi kiya jayega. Chrome ke supported browser mein try karein.",true);
+   return;
+  }
+  const handles=await window.showOpenFilePicker({multiple:false,types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
+  if(!handles||!handles[0])return;
   const blob=backupBlob();
-  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
-  downloadBackup(blob,"CRPF-Mess-Backup-"+stamp+".json");
-  setMessage("✓ Naya full backup download ho raha hai. Downloads folder mein JSON file check karein. Purani backup file ko tabhi replace karein jab nayi file save ho jaye.");
+  await writeBackupToHandle(handles[0],blob);
+  setMessage("✓ Aapki select ki hui wahi backup file update ho gayi. Folder/location nahi badli.");
  }catch(e){
-  setMessage("Backup download nahi hua: "+e.message+". Browser mein Downloads permission check karein.",true);
+  if(e.name==="AbortError")return;
+  setMessage("Backup update nahi hua: "+e.message+". Original file ko nahi chheda gaya.",true);
  }
 }
 async function createBackup(){
  try{
-  const blob=backupBlob();
-  downloadBackup(blob,"CRPF-Mess-Backup.json");
-  setMessage("✓ Full backup download shuru ho gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein.");
+  if(!window.showSaveFilePicker){
+   setMessage("Is browser mein folder choose karke save karne ka option available nahi hai. Isliye file ko Downloads ya kisi aur folder mein chupke se save nahi kiya. Chrome ke supported browser se kholein.",true);
+   return;
+  }
+  const handle=await window.showSaveFilePicker({suggestedName:"CRPF-Mess-Backup.json",types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
+  if(!handle)return;
+  await writeBackupToHandle(handle,backupBlob());
+  setMessage("✓ Backup aapke chune hue folder mein save ho gaya: CRPF-Mess-Backup.json");
  }catch(e){
-  setMessage("Backup save nahi hua: "+e.message+". Browser mein Downloads permission check karein.",true);
+  if(e.name==="AbortError")return;
+  setMessage("Backup save nahi hua: "+e.message+". Koi doosri jagah file save nahi ki gayi.",true);
  }
 }
 function downloadBackup(blob,name){
