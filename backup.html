@@ -44,11 +44,33 @@ async function writeBackupToHandle(handle,blob){
 }
 async function updateExistingBackup(){
  try{
+  // Supported browsers: select the existing JSON and write back to that exact file handle.
+  if(window.showOpenFilePicker){
+   const handles=await window.showOpenFilePicker({
+    multiple:false,
+    types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]
+   });
+   if(!handles||!handles[0])return;
+   const selected=handles[0];
+   const file=await selected.getFile();
+   if(!file.name.toLowerCase().endsWith(".json")){
+    setMessage("Kripya CRPF Mess ki .json backup file select karein.",true);return;
+   }
+   if(!confirm("Aapki select ki hui isi file "+file.name+" mein latest CRPF Mess data overwrite hoga. Purani backup isi file mein replace hogi. Continue?"))return;
+   await writeBackupToHandle(selected,backupBlob());
+   setMessage("✓ Update successful! "+file.name+" isi selected folder mein overwrite ho gayi.");
+   return;
+  }
+  // iPad/Safari and other browsers without File System Access API:
+  // never pretend that the selected file can be overwritten.
   const picker=document.getElementById("existingBackupFile");
-  if(!picker){setMessage("Backup file selector nahi mila. Page refresh karein.",true);return;}
+  if(!picker){setMessage("File selector nahi mila. Page refresh karein.",true);return;}
   picker.value="";
   picker.click();
- }catch(e){setMessage("Purani backup file select nahi ho saki: "+e.message,true);}
+ }catch(e){
+  if(e.name==="AbortError")return;
+  setMessage("Update nahi hua: "+e.message+". Purani backup file safe rakhi gayi.",true);
+ }
 }
 async function processExistingBackupFile(file){
  if(!file)return;
