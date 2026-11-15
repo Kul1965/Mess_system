@@ -933,7 +933,9 @@ refresh();
 </script>
 <script src="js/pdf-tools.js?v=20261108-pdf-title8"></script>
 <script src="js/shared-header.js?v=20261109-desktop-drawer3"></script>
-<script src="js/mobile-nav.js?v=20261109-desktop-drawer3">function localDateValue(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
+<script src="js/mobile-nav.js?v=20261109-desktop-drawer3"></script>
+<script>
+function localDateValue(){const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-")}
 function startEatFood(id){viewMember(id);openEatFood()}
 function openEatFood(){
  const m=members.find(x=>String(x.id)===String(viewingId));if(!m){showToast("Member details nahi mile.","error");return}
