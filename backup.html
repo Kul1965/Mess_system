@@ -38,59 +38,28 @@ function backupBlob(){
  return new Blob([JSON.stringify(snapshot,null,2)],{type:"application/json"});
 }
 async function updateExistingBackup(){
- const blob=backupBlob(),fixedName="CRPF-Mess-Backup.json";
  try{
-  if(window.showOpenFilePicker){
-   const handles=await window.showOpenFilePicker({multiple:false,types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
-   const handle=handles[0];
-   if(!handle)return;
-   const writable=await handle.createWritable();
-   await writable.write(blob);
-   await writable.close();
-   setMessage("✓ Full backup updated successfully! Sabhi pages ka latest data isi file mein save ho gaya.");
-   return;
-  }
-  if(window.showSaveFilePicker){
-   const handle=await window.showSaveFilePicker({suggestedName:fixedName,types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
-   const writable=await handle.createWritable();
-   await writable.write(blob);
-   await writable.close();
-   setMessage("✓ Full backup saved. Agli baar isi file ko select karke update karein.");
-   return;
-  }
-  downloadBackup(blob,fixedName);
-  setMessage("✓ Full backup download hua. Is browser mein existing file ko direct overwrite karna supported nahi hai; Downloads mein purani file replace karein.");
+  const blob=backupBlob();
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+  downloadBackup(blob,"CRPF-Mess-Backup-"+stamp+".json");
+  setMessage("✓ Naya full backup download ho raha hai. Downloads folder mein JSON file check karein. Purani backup file ko tabhi replace karein jab nayi file save ho jaye.");
  }catch(e){
-  if(e.name==="AbortError")return;
-  setMessage("Backup update nahi hua: "+e.message,true);
+  setMessage("Backup download nahi hua: "+e.message+". Browser mein Downloads permission check karein.",true);
  }
 }
 async function createBackup(){
- const blob=backupBlob(),fixedName="CRPF-Mess-Backup.json";
  try{
-  const file=new File([blob],fixedName,{type:"application/json"});
-  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-   await navigator.share({files:[file],title:"CRPF Mess Full Backup",text:"CRPF Mess ka complete data backup"});
-   setMessage("✓ Backup file share/save ke liye taiyar hai. Share menu mein Save to Files/Downloads chunein.");
-   return;
-  }
-  downloadBackup(blob,fixedName);
-  setMessage("✓ Backup download shuru ho gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein.");
+  const blob=backupBlob();
+  downloadBackup(blob,"CRPF-Mess-Backup.json");
+  setMessage("✓ Full backup download shuru ho gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein.");
  }catch(e){
-  if(e.name==="AbortError")return;
-  // Android share sheets can reject with Permission denied. Fall back to a normal file download.
-  try{
-   downloadBackup(blob,fixedName);
-   setMessage("✓ Backup download dobara try kiya gaya. Phone ke Downloads folder mein CRPF-Mess-Backup.json check karein. Agar prompt aaye to Allow/Download chunein.");
-  }catch(downloadError){
-   setMessage("Backup save nahi hua: "+downloadError.message+". Chrome Settings > Site settings > Automatic downloads allow karein, phir dobara try karein.",true);
-  }
+  setMessage("Backup save nahi hua: "+e.message+". Browser mein Downloads permission check karein.",true);
  }
 }
 function downloadBackup(blob,name){
  const url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();
- setTimeout(()=>URL.revokeObjectURL(url),2000);
+ a.href=url;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();
+ setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},15000);
 }
 function restore(){
  const file=$("backupFile").files[0];
