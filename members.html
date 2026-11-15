@@ -163,7 +163,10 @@ td.no-print{white-space:nowrap}
  #viewModal .account-grid>div{padding:10px}
  #viewModal .form-actions button{flex:1 1 105px;font-size:12px}
 }
-</style></head>
+</style><style>
+.history-member-photo{width:24px;height:24px;min-width:24px;max-width:24px;aspect-ratio:1/1;object-fit:cover;object-position:center;border-radius:50%;border:1px solid #d8b33e;display:block;background:#0b3022;flex:none}.history-photo-fallback,.ration-photo-fallback{width:24px;height:24px;min-width:24px;max-width:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#0b3022;border:1px solid #d8b33e;font-size:12px}.ration-member-photo{width:24px;height:24px;min-width:24px;max-width:24px;aspect-ratio:1/1;object-fit:cover;object-position:center;border-radius:50%;border:1px solid #d8b33e;display:block;background:#0b3022}.history-photo-wrap{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px}
+</style>
+</head>
 <body>
 <div class="app">
 <aside class="sidebar">
@@ -250,12 +253,12 @@ td.no-print{white-space:nowrap}
  <section class="panel no-print" id="foodRecordsPanel">
   <div class="toolbar"><h3>🍽️ Food Records — Pending Ration Deduction</h3><button type="button" class="primary" onclick="deductPendingFoodRation()">📦 Deduct Ration</button></div>
   <p style="font-size:12px;color:#a9c9bb;margin:0 0 12px">Saved food entries appear here. Deduct all pending ration together.</p>
-  <div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Date / Time</th><th>Member</th><th>Meal</th><th>Food / Recipes</th><th>Food Type</th><th>Charge</th><th>Ration Status</th></tr></thead><tbody id="foodRecordRows"></tbody></table></div>
+  <div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Date / Time</th><th>Photo</th><th>Member</th><th>Meal</th><th>Food / Recipes</th><th>Food Type</th><th>Charge</th><th>Ration Status</th></tr></thead><tbody id="foodRecordRows"></tbody></table></div>
   <div class="empty" id="foodRecordsEmpty">Abhi koi food record nahi hai.</div>
  </section>
  <section class="panel no-print" id="rationDeductionRegister">
   <div class="toolbar"><h3>📦 Ration Deduction Register</h3><span id="rationRegisterCount" style="font-size:11px;color:#a9c9bb;font-weight:bold">0 entries</span></div>
-  <div class="table-wrap"><table style="min-width:620px;font-size:12px"><thead><tr><th>Date</th><th>Member</th><th>Meal</th><th>Ration Item</th><th>Deducted Qty</th><th>Status</th></tr></thead><tbody id="rationDeductionRows"></tbody></table></div>
+  <div class="table-wrap"><table style="min-width:620px;font-size:12px"><thead><tr><th>Date</th><th>Photo</th><th>Member</th><th>Meal</th><th>Ration Item</th><th>Deducted Qty</th><th>Status</th></tr></thead><tbody id="rationDeductionRows"></tbody></table></div>
   <div class="empty" id="rationDeductionEmpty">Abhi ration deduction history nahi hai.</div>
  </section>
 </div>
@@ -701,7 +704,7 @@ function viewMember(id){
   }else{
    portions=(r.ingredientUsage||[]).map(i=>{const count=Math.max(1,(r.memberIds||[]).length);const perQty=i.recipeQuantity!=null?Number(i.recipeQuantity)/count:Number(i.quantity||0)/count;return {name:i.itemName,quantity:perQty,unit:i.recipeUnit||i.unit}});
   }
-  return '<div class="meal-entry"><div class="meal-head"><b>'+esc((r.recipeNames||[]).join(" + ")||r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+portions.map(i=>esc(i.name)+': '+esc(Number(i.quantity.toFixed(3)))+' '+esc(i.unit)).join(' • ')+'</div></div>';
+  const snap=(r.memberSnapshots||[]).find(x=>String(x.id)===String(id))||(r.memberSnapshots||[])[0]||{};return '<div class="meal-entry"><div class="meal-head" style="display:flex;align-items:center;gap:8px"><span class="history-photo-wrap">'+(m.photo?'<img class="history-member-photo" src="'+esc(m.photo)+'" alt="Member photo"> ':'<span class="history-photo-fallback">👤</span>')+'</span><b style="flex:1">'+esc((r.recipeNames||[]).join(" + ")||r.recipeName||r.items?.[0]||"Menu")+'</b><b>'+money(r.chargePerMember)+'</b></div><small>'+esc(r.date)+'</small><div>'+portions.map(i=>esc(i.name)+': '+esc(Number(i.quantity.toFixed(3)))+' '+esc(i.unit)).join(' • ')+'</div></div>';
  }).join(""):'<p>No meal record yet.</p>';
  document.getElementById("memberDetails").innerHTML=(m.photo?'<img src="'+m.photo+'" alt="Member photo"><br>':'')+(m.document&&m.document.data?'<h3 class="view-heading">Movement Orders / Member Document</h3><div class="meal-entry" style="display:table;width:fit-content;max-width:100%;min-width:0;overflow:hidden;margin:8px 0;padding:5px">'+(String(m.document.type||"").startsWith("image/")?'<img src="'+m.document.data+'" alt="Member document" style="display:block;width:auto;height:auto;max-width:100%;max-height:240px;object-fit:contain;margin:8px 0;border-radius:8px;background:#f2f6f3">':'<iframe title="Member PDF Document" src="'+m.document.data+'" style="display:block;width:100%;height:220px;max-height:32vh;border:1px solid #dce5df;border-radius:8px;margin-top:10px;background:#fff"></iframe>')+'</div>':'')+
  '<b>Force Number:</b> '+esc(m.forceNo)+'<br><b>Name:</b> '+esc(m.name)+'<br><b>Rank:</b> '+esc(m.rank)+'<br><b>Contact:</b> '+esc(m.contact)+'<br><b>Joining Date:</b> '+esc(m.joiningDate)+'<br><b>Status:</b> '+esc(m.status)+'<br><b>Transfer Location:</b> '+esc(m.transferLocation||"—")+'<br><b>Transfer Date:</b> '+esc(m.transferDate||"—")+'<br><b>Final Mess Bill:</b> '+money(m.finalBillAmount)+'<br><b>Final Bill Status:</b> '+esc(m.finalBillPaid||"Not Paid")+'<br><b>Remarks:</b> '+esc(m.remarks)+
@@ -983,7 +986,7 @@ function saveEatFood(){
 function renderFoodRecords(){
  const d=getData(),rows=(d.mealRecords||[]).filter(r=>r.foodEntryVersion===1).slice().sort((a,b)=>(String(b.date||"")+" "+String(b.time||"")).localeCompare(String(a.date||"")+" "+String(a.time||"")));
  const body=document.getElementById("foodRecordRows"),empty=document.getElementById("foodRecordsEmpty");if(!body||!empty)return;
- body.innerHTML=rows.map(r=>{const snap=(r.memberSnapshots||[])[0]||{},member=(d.members||[]).find(m=>String(m.id)===String(snap.id||r.memberIds?.[0]));return '<tr><td>'+esc(r.date)+'<br>'+esc(r.time||"")+'</td><td>'+esc(snap.name||member?.name||"Member")+'</td><td>'+esc(r.mealType||"")+'</td><td>'+esc((r.recipeNames||[]).join(" + "))+'</td><td>'+esc(r.foodType||"")+'</td><td>'+money(r.totalCost)+'</td><td class="'+(r.rationDeducted?"food-status-done":"food-status-pending")+'">'+(r.rationDeducted?"✓ Deducted":"● Pending")+'</td></tr>'}).join("");
+ body.innerHTML=rows.map(r=>{const snap=(r.memberSnapshots||[])[0]||{},member=(d.members||[]).find(m=>String(m.id)===String(snap.id||r.memberIds?.[0]));return '<tr><td>'+esc(r.date)+'<br>'+esc(r.time||"")+'</td><td>'+(member?.photo?'<img class="ration-member-photo" src="'+esc(member.photo)+'" alt="Member photo">':'<span class="ration-photo-fallback">👤</span>')+'</td><td>'+esc(snap.name||member?.name||"Member")+'</td><td>'+esc(r.mealType||"")+'</td><td>'+esc((r.recipeNames||[]).join(" + "))+'</td><td>'+esc(r.foodType||"")+'</td><td>'+money(r.totalCost)+'</td><td class="'+(r.rationDeducted?"food-status-done":"food-status-pending")+'">'+(r.rationDeducted?"✓ Deducted":"● Pending")+'</td></tr>'}).join("");
  empty.style.display=rows.length?"none":"block";
 }
 function deductPendingFoodRation(){
