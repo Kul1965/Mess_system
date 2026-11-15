@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup & Restore | CRPF Mess</title><link rel="stylesheet" href="css/app.css?v=20261109-audit-refresh1"><link rel="stylesheet" href="css/mobile-fit.css?v=20261113-all-pages-fit1"></head><body><div class="app"><aside class="sidebar"><div class="brand">🛡️<b>CRPF MESS</b><small>Cooking House System</small></div><nav class="nav"><a href="index.html">▦ Dashboard</a><a href="members.html">👥 Members</a><a href="ration-store.html">📦 Ration Store</a><a href="purchases.html">🛒 Purchases</a><a href="recipes.html">🍲 Recipes</a><a href="making-menu.html">📅 Making Menu</a><a href="mess-staff.html">👨‍🍳 Mess Staff</a><a href="accounts.html">💰 Accounts</a><a href="reports.html">📊 Reports</a><a href="mess-handover.html">🔄 Mess Handover</a><a href="settings.html">⚙️ Settings</a><a class="active" href="backup.html">💾 Backup & Restore</a><a href="software-guide.html">📖 हिन्दी गाइड</a></nav></aside><main class="main"><header class="topbar"><h1>CRPF Mess Management System</h1><span id="dateNow"></span></header><div class="content"><div class="pagehead"><h2>💾 Backup & Restore</h2><div class="muted">Ek hi full backup mein sabhi pages ka data save hoga — Members, Ration, Purchases, Recipes, Menu, Accounts, Staff, Handover aur Reports ke records.</div></div><section class="cards" id="backupStats"><div class="card"><small>Members</small><strong id="members">0</strong></div><div class="card"><small>Ration Items</small><strong id="items">0</strong></div><div class="card"><small>Purchases</small><strong id="purchases">0</strong></div><div class="card"><small>Recipes</small><strong id="recipes">0</strong></div><div class="card"><small>Meal Records</small><strong id="meals">0</strong></div><div class="card"><small>Account Entries</small><strong id="transactions">0</strong></div><div class="card"><small>Mess Staff</small><strong id="staff">0</strong></div><div class="card"><small>Handover Records</small><strong id="handovers">0</strong></div></section><section class="panel"><h3>One Full Backup – Create / Update</h3><p class="muted" style="margin:10px 0 16px">Update Existing Backup dabayein aur phone se apni purani <b>CRPF-Mess-Backup.json</b> file select karein. Us file mein sabhi pages ka latest data overwrite ho jayega. Agar pehli baar hai to Create Backup dabayein.</p><button onclick="updateExistingBackup()">🔄 Update Existing Backup</button><button class="alt" style="margin-left:8px" onclick="createBackup()">💾 Create New Backup</button><p class="muted" style="margin-top:12px">Member photos aur browser mein saved tamam app records bhi backup mein shamil hain.</p></section>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Backup & Restore | CRPF Mess</title><link rel="stylesheet" href="css/app.css?v=20261109-audit-refresh1"><link rel="stylesheet" href="css/mobile-fit.css?v=20261113-all-pages-fit1"></head><body><div class="app"><aside class="sidebar"><div class="brand">🛡️<b>CRPF MESS</b><small>Cooking House System</small></div><nav class="nav"><a href="index.html">▦ Dashboard</a><a href="members.html">👥 Members</a><a href="ration-store.html">📦 Ration Store</a><a href="purchases.html">🛒 Purchases</a><a href="recipes.html">🍲 Recipes</a><a href="making-menu.html">📅 Making Menu</a><a href="mess-staff.html">👨‍🍳 Mess Staff</a><a href="accounts.html">💰 Accounts</a><a href="reports.html">📊 Reports</a><a href="mess-handover.html">🔄 Mess Handover</a><a href="settings.html">⚙️ Settings</a><a class="active" href="backup.html">💾 Backup & Restore</a><a href="software-guide.html">📖 हिन्दी गाइड</a></nav></aside><main class="main"><header class="topbar"><h1>CRPF Mess Management System</h1><span id="dateNow"></span></header><div class="content"><div class="pagehead"><h2>💾 Backup & Restore</h2><div class="muted">Ek hi full backup mein sabhi pages ka data save hoga — Members, Ration, Purchases, Recipes, Menu, Accounts, Staff, Handover aur Reports ke records.</div></div><section class="cards" id="backupStats"><div class="card"><small>Members</small><strong id="members">0</strong></div><div class="card"><small>Ration Items</small><strong id="items">0</strong></div><div class="card"><small>Purchases</small><strong id="purchases">0</strong></div><div class="card"><small>Recipes</small><strong id="recipes">0</strong></div><div class="card"><small>Meal Records</small><strong id="meals">0</strong></div><div class="card"><small>Account Entries</small><strong id="transactions">0</strong></div><div class="card"><small>Mess Staff</small><strong id="staff">0</strong></div><div class="card"><small>Handover Records</small><strong id="handovers">0</strong></div></section><section class="panel"><h3>One Full Backup – Create / Update</h3><p class="muted" style="margin:10px 0 16px">Update Existing Backup dabayein aur phone se apni purani <b>CRPF-Mess-Backup.json</b> file select karein. Us file mein sabhi pages ka latest data overwrite ho jayega. Agar pehli baar hai to Create Backup dabayein.</p><button type="button" id="updateBackupBtn">🔄 Update Existing Backup</button><button type="button" class="alt" style="margin-left:8px" id="createBackupBtn">💾 Create New Backup</button><p class="muted" style="margin-top:12px">Member photos aur browser mein saved tamam app records bhi backup mein shamil hain.</p></section>
 <section class="panel" style="margin-top:14px"><h3>Restore Full Backup</h3><p class="muted" style="margin:10px 0 16px">Restore karne par is device ka current CRPF Mess data backup wale data se replace ho jayega. Pehle current backup bana lein.</p><input id="backupFile" type="file" accept=".json,application/json"><button class="danger" style="margin-top:12px" onclick="restore()">Restore Selected Backup</button><p id="message" class="muted" style="margin-top:12px"></p></section></div></main></div><script>
 const KEY="crpfMessData";
 const $=id=>document.getElementById(id);
@@ -60,17 +60,25 @@ async function updateExistingBackup(){
 }
 async function createBackup(){
  try{
-  if(!window.showSaveFilePicker){
-   setMessage("Is browser mein folder choose karke save karne ka option available nahi hai. Isliye file ko Downloads ya kisi aur folder mein chupke se save nahi kiya. Chrome ke supported browser se kholein.",true);
+  const blob=backupBlob();
+  const file=new File([blob],"CRPF-Mess-Backup.json",{type:"application/json"});
+  // Android installed apps can use the system share sheet so the user chooses Files/folder.
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+   await navigator.share({title:"CRPF Mess Full Backup",text:"CRPF Mess ka full backup. Save to Files/Downloads ya apna folder choose karein.",files:[file]});
+   setMessage("✓ Share menu khul gaya. Files/Save to device chuniye aur apna folder select kijiye.");
    return;
   }
-  const handle=await window.showSaveFilePicker({suggestedName:"CRPF-Mess-Backup.json",types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
-  if(!handle)return;
-  await writeBackupToHandle(handle,backupBlob());
-  setMessage("✓ Backup aapke chune hue folder mein save ho gaya: CRPF-Mess-Backup.json");
+  if(window.showSaveFilePicker){
+   const handle=await window.showSaveFilePicker({suggestedName:"CRPF-Mess-Backup.json",types:[{description:"CRPF Mess Backup JSON",accept:{"application/json":[".json"]}}]});
+   if(!handle)return;
+   await writeBackupToHandle(handle,blob);
+   setMessage("✓ Backup aapke chune hue folder mein save ho gaya: CRPF-Mess-Backup.json");
+   return;
+  }
+  setMessage("Is installed browser mein folder-save/share support nahi mila. Koi file doosri jagah save nahi ki gayi. Chrome mein website kholkar try karein.",true);
  }catch(e){
   if(e.name==="AbortError")return;
-  setMessage("Backup save nahi hua: "+e.message+". Koi doosri jagah file save nahi ki gayi.",true);
+  setMessage("Backup save nahi hua: "+e.message+". Original app data safe hai.",true);
  }
 }
 function downloadBackup(blob,name){
@@ -113,6 +121,8 @@ function restore(){
  reader.readAsText(file);
 }
 refreshCounts();
+$("createBackupBtn").addEventListener("click",createBackup);
+$("updateBackupBtn").addEventListener("click",updateExistingBackup);
 </script><script src="js/shared-header.js?v=20261109-desktop-drawer3"></script>
 <script src="js/mobile-nav.js?v=20261109-desktop-drawer3"></script>
 <script src="js/pdf-tools.js?v=20261108-pdf-title8"></script>
