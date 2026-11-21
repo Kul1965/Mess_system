@@ -29,19 +29,25 @@
       const style = document.createElement("style");
       style.id = STYLE_ID;
       style.textContent =
-        "#" + BUTTON_ID + "{position:fixed;right:12px;bottom:18px;z-index:2147483000;border:1px solid #d6b54d;border-radius:28px;padding:11px 16px;background:linear-gradient(180deg,#176747,#06452f);color:#fff;font:700 13px Arial,sans-serif;box-shadow:0 3px 0 #9c7d2e,0 7px 18px rgba(0,0,0,.25);cursor:pointer}" +
+        "#" + BUTTON_ID + "{position:static;flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;margin-left:2px;border:1px solid #f0d77a;border-radius:24px;padding:7px 10px;background:linear-gradient(180deg,#176747,#06452f);color:#fff;font:700 11px Arial,sans-serif;box-shadow:0 2px 0 #9c7d2e,0 3px 8px rgba(0,0,0,.18);cursor:pointer;min-height:32px;box-sizing:border-box}" +
         "#" + BUTTON_ID + ":disabled{opacity:.75;cursor:wait}" +
         "#" + BUTTON_ID + ".available{background:linear-gradient(180deg,#e7c85b,#c99d25);color:#183d2a;border-color:#f4df91}" +
-        "@media(max-width:850px){#" + BUTTON_ID + "{bottom:calc(76px + env(safe-area-inset-bottom));right:10px;padding:10px 13px;font-size:12px}}";
+        "@media(max-width:850px){#" + BUTTON_ID + "{font-size:10px;padding:6px 8px;min-height:30px;margin-left:1px}}";
       document.head.appendChild(style);
     }
     const button = document.createElement("button");
     button.type = "button";
     button.id = BUTTON_ID;
-    button.textContent = "↻ Update App";
+    button.textContent = "↻ Update";
     button.setAttribute("aria-label", "Check for app updates and refresh");
     button.addEventListener("click", runManualUpdate);
-    document.body.appendChild(button);
+    const info = document.querySelector(".topbar .dh-info");
+    if (info) {
+      info.appendChild(button);
+    } else {
+      const topbar = document.querySelector(".topbar");
+      (topbar || document.body).appendChild(button);
+    }
   }
 
   function setButton(text, available, disabled) {
