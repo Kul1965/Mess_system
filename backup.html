@@ -55,7 +55,7 @@ async function saveBackupFile(mode){
    setMessage("✓ Backup saved/updated: "+fixedName+". Agli baar isi folder aur isi naam ko select karein.");
    return;
   }
-  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]})){
+  if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
    await navigator.share({title:mode==="update"?"Updated App Backup":"App Full Backup",text:"Latest full backup: "+fixedName+". Files mein wahi folder chunein; same naam pooche to Replace/Overwrite karein.",files:[file]});
    setMessage("✓ Backup share menu mein bhej diya. Files/Save to device mein wahi purana folder chunein aur Replace/Overwrite karein.");
    return;
